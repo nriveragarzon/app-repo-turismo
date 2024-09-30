@@ -1,0 +1,18 @@
+# Python related Ignore
+__pycache__/
+
+# Secrets folder
+.scrts/
+.secrets/
+# git rm --cached .streamlit/secrets.toml
+.streamlit/
+.streamlit/secrets.toml 
+
+# Ambiente virtual
+.venv/
+
+# Carpeta de pruebas y debug
+debug/
+
+# Cache
+__pycache__
