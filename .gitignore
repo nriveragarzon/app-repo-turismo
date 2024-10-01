@@ -16,3 +16,6 @@ debug/
 
 # Cache
 __pycache__
+
+# Datos
+data/
