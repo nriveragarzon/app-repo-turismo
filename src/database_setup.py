@@ -3,6 +3,12 @@
 # ------------------------------
 import snowflake_analitica as snowflake_analitica
 
+# Warnings
+import warnings
+
+# Suprimir todas las advertencias de tipo UserWarning
+warnings.filterwarnings("ignore", category=UserWarning)
+
 # ------------------------------------------------
 # 2. Definir archivo de configuración de Snowflake
 # ------------------------------------------------
@@ -17,9 +23,9 @@ sesion_activa, conexion_activa = snowflake_analitica.create_session_from_json(js
 # 4. Crear base de datos
 # ----------------------
 # Definir el query para crear la base de datos para el repositorio
-query_sql_database = 'CREATE OR REPLAECE DATABASE REPOSITORIO_TURISMO'
+query_sql_database = 'CREATE OR REPLACE DATABASE REPOSITORIO_TURISMO'
 # Ejecutar query
-sesion_activa.sql(query_sql_database)
+sesion_activa.sql(query_sql_database).collect()
 
 # -------------------------------------------------------
 # 5. Cambiar ubicación a la base de datos del repositorio
@@ -58,7 +64,8 @@ CREATE TABLE SEGUIMIENTO_EVENTOS (
 """
 
 # Crear tabla
-sesion_activa.sql(sql_tabla_seguimiento)
+sesion_activa.sql(sql_tabla_seguimiento).collect()
+print("Proceso de creación de base de datos y esquemas exitoso.")
 
 # ---------------------------
 # 8. Cerrar sesión y conexión

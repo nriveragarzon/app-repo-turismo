@@ -1,9 +1,9 @@
 # ------------------------------
 # 1. Importar scripts necesarios
 # ------------------------------
+import src.snowflake_analitica as snowflake_analitica
 import subprocess
-import toml
-
+import sys  # Importar el módulo sys
 
 # ----------------------------------------
 # 2. Ejecutar el setup de la base de datos
@@ -17,7 +17,7 @@ cuenta de snowflake.
 """
 
 # Ejecutar
-subprocess.run(["python", "src/0_database_setup.py"])
+subprocess.run([sys.executable, "src/database_setup.py"])
 
 
 
