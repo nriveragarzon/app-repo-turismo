@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # ------------------------------------------------
 # 2. Definir archivo de configuración de Snowflake
 # ------------------------------------------------
-json_path = 'C:/Users/nrivera/OneDrive - PROCOLOMBIA/Documentos/022-Repositorio-Turismo/app-repo-turismo/.streamlit/snowflake_credentials.json'
+json_path = './.streamlit/snowflake_credentials.json'
 
 # --------------------------
 # 3. Crear sesión y conexión
