@@ -19,5 +19,32 @@ cuenta de snowflake.
 # Ejecutar
 subprocess.run([sys.executable, "src/database_setup.py"])
 
+# ---------------------------------------
+# 3 Ejecutar cargue de datos de Geografía
+# ---------------------------------------
+
+"""
+El siguiente script se encarga de cargar a Snwflake las tablas 
+correlativas del repositorio que incluyen correlativas de DIAN y
+PAISES.No se debe correr todos los meses, solo cuando hayan cambios
+o mejoras a las tablas correlativas.
+"""
+
+# Ejecutar
+subprocess.run([sys.executable, "src/cargue_correlativas.py"])
+
+# ----------------------------------------
+# 4 Ejecutar cargue de datos de GlobalData
+# ----------------------------------------
+
+"""
+El siguiente script se encarga de cargar a Snwflake las tablas 
+de GlobalData.
+"""
+
+# Ejecutar
+subprocess.run([sys.executable, "src/cargue_global_data.py"])
+
+
 
 
