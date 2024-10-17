@@ -42,7 +42,7 @@ snowflake_analitica.update_session_params(sesion_activa, database='REPOSITORIO_T
 # -----------------------------------------
 
 # Ruta donde están los archivos CSV
-path_oag = './data/GLOBALDATA'
+path_global_data = './data/GLOBALDATA'
 
 # Lista de nombres de los archivos CSV
 nombres_archivos = [
@@ -75,7 +75,7 @@ for archivo in nombres_archivos:
     nombres_archivos_mayus.append(archivo.split('.')[0].upper())
     
     # Cargar el archivo CSV en un DataFrame, especificando el separador como ',' y el punto decimal como '.'
-    archivo_csv = os.path.join(path_oag, archivo)
+    archivo_csv = os.path.join(path_global_data, archivo)
     df = pd.read_csv(archivo_csv, sep=',', decimal='.')
     
     # Limpiar los nombres de las columnas

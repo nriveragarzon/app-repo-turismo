@@ -45,6 +45,21 @@ de GlobalData.
 # Ejecutar
 subprocess.run([sys.executable, "src/cargue_global_data.py"])
 
+# ---------------------------------
+# 5 Ejecutar cargue de datos de OAG
+# ---------------------------------
+
+"""
+El siguiente script se encarga de cargar a Snwflake las tablas 
+de OAG.
+"""
+
+# Ejecutar
+subprocess.run([sys.executable, "src/cargue_oag.py"])
+
+
+
+
 
 
 
