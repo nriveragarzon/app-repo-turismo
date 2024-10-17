@@ -148,7 +148,11 @@ for df_name, nombre_tabla in zip(bases_de_datos, nombres_tablas):
 
 # Convertir los resultados en un DataFrame para mostrar de manera organizada
 df_resultados_carga = pd.DataFrame(resultados_carga)
-df_resultados_carga
+
+# Imprimir los mensajes
+cadena_mensajes = '\n'.join(df_resultados_carga['mensajes'])
+print(cadena_mensajes)
+
 
 # Imprimir mensaje de final de proceso
 print("Proceso de cague de datos correlativas exitoso.")
