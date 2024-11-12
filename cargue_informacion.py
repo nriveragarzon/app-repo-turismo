@@ -13,34 +13,28 @@ import pandas as pd
 # ------------------------------------------
 
 
-def run_script(script_name, description):
+def run_script(script_name, description, double_confirm=False):
     """
     Ejecuta un script de Python en un subproceso y muestra la salida en la interfaz de usuario.
-
-    Esta función lanza un script en un subproceso separado para evitar que la interfaz de usuario
-    se congele durante su ejecución. Antes de ejecutar el script, solicita la confirmación del
-    usuario a través de un cuadro de diálogo. Durante la ejecución, la salida del script se
-    muestra en tiempo real en un widget de texto de la interfaz. Una vez completada la ejecución,
-    se muestra un mensaje de finalización.
 
     Args:
         script_name (str): Nombre del archivo o ruta del script de Python que se va a ejecutar.
         description (str): Descripción del script, utilizada para mostrar en mensajes al usuario.
-
-    Funcionalidad:
-        - Solicita confirmación al usuario antes de ejecutar el script.
-        - Ejecuta el script en un hilo separado para evitar bloquear la interfaz de usuario.
-        - Muestra la salida del script en un widget de texto en tiempo real.
-        - Informa al usuario cuando la ejecución ha finalizado.
-
-    Notas:
-        - El script se ejecuta en el mismo entorno de Python que la aplicación principal.
-        - Utiliza `threading.Thread` para ejecutar el proceso de forma asíncrona y evitar el congelamiento
-          de la interfaz gráfica.
+        double_confirm (bool): Indica si se requiere una doble confirmación antes de ejecutar el script.
     """
     def execute():
         # Confirmar con el usuario
         if messagebox.askyesno("Confirmar", f"¿Desea ejecutar el script para {description}?"):
+            # Si se requiere doble confirmación
+            if double_confirm:
+                if not messagebox.askyesno(
+                    "ADVERTENCIA",
+                    f"¡Este proceso puede realizar modificaciones irreversibles a la base de datos existente!\n\n"
+                    f"¿Está seguro que leyó y entendió la documentación del proceso completamente?\n\n"
+                    f"¿Está seguro de que desea continuar con {description}?"
+                ):
+                    return  # Si el usuario cancela, no se ejecuta el script
+
             # Limpiar el área de texto antes de ejecutar el nuevo script
             output_text.delete(1.0, tk.END)
 
@@ -62,6 +56,152 @@ def run_script(script_name, description):
     # Ejecutar en un hilo separado para no congelar la interfaz
     threading.Thread(target=execute).start()
 
+def ask_historico_or_mensual():
+    """
+    Muestra un cuadro de diálogo para que el usuario seleccione entre 'Histórico' y 'Mensual'.
+    Retorna 'historico' o 'mensual' según la elección del usuario.
+    """
+    # Crear una ventana de diálogo
+    dialog = tk.Toplevel(root)
+    dialog.title("Periodicidad de cargue de datos")
+    dialog.geometry("400x150")
+    dialog.resizable(False, False)
+    dialog.grab_set()  # Bloquear interacción con la ventana principal
+
+    # Centrar la ventana en la pantalla
+    dialog.update_idletasks()
+    x = (dialog.winfo_screenwidth() - dialog.winfo_reqwidth()) // 2
+    y = (dialog.winfo_screenheight() - dialog.winfo_reqheight()) // 2
+    dialog.geometry(f"+{x}+{y}")
+
+    # Etiqueta con la pregunta
+    label = tk.Label(dialog, text="¿Desea ejecutar el cargue histórico o mensual?", font=("Arial", 12))
+    label.pack(pady=20)
+
+    # Variable para almacenar la elección del usuario
+    choice = tk.StringVar()
+
+    # Funciones para los botones
+    def select_historico():
+        choice.set('historico')
+        dialog.destroy()
+
+    def select_mensual():
+        choice.set('mensual')
+        dialog.destroy()
+
+    # Frame para centrar los botones
+    button_frame = tk.Frame(dialog)
+    button_frame.pack(pady=10)
+
+    # Botones para 'Histórico' y 'Mensual'
+    btn_historico = tk.Button(button_frame, text="Histórico", width=15, command=select_historico)
+    btn_historico.pack(side='left', padx=10)
+
+    btn_mensual = tk.Button(button_frame, text="Mensual", width=15, command=select_mensual)
+    btn_mensual.pack(side='right', padx=10)
+
+    # Esperar a que el usuario haga una elección
+    dialog.wait_window()
+
+    return choice.get()
+
+def run_oag_script():
+    """
+    Pregunta al usuario qué script de OAG desea ejecutar (histórico o mensual)
+    y luego llama a run_script con los parámetros adecuados.
+    """
+    # Preguntar al usuario qué tipo de cargue desea realizar
+    opcion = ask_historico_or_mensual()
+
+    if opcion == 'historico':
+        # Ejecutar el script de cargue OAG Histórico
+        script_name = "src/cargue_oag_historico.py"
+        description = "Cargue de OAG Histórico"
+    elif opcion == 'mensual':
+        # Ejecutar el script de cargue OAG Mensual
+        script_name = "src/cargue_oag_mensual.py"
+        description = "Cargue de OAG Mensual"
+    else:
+        # El usuario cerró la ventana o no hizo una elección válida
+        return
+
+    # Llamar a run_script con el script seleccionado y doble confirmación
+    run_script(script_name, description, double_confirm=True)
+
+def ask_historico_or_trimestral():
+    """
+    Muestra un cuadro de diálogo para que el usuario seleccione entre 'Histórico' y 'Trimestral'.
+    Retorna 'historico' o 'trimestral' según la elección del usuario.
+    """
+    # Crear una ventana de diálogo
+    dialog = tk.Toplevel(root)
+    dialog.title("Periodicidad de cargue de datos")
+    dialog.geometry("400x150")
+    dialog.resizable(False, False)
+    dialog.grab_set()  # Bloquear interacción con la ventana principal
+
+    # Centrar la ventana en la pantalla
+    dialog.update_idletasks()
+    x = (dialog.winfo_screenwidth() - dialog.winfo_reqwidth()) // 2
+    y = (dialog.winfo_screenheight() - dialog.winfo_reqheight()) // 2
+    dialog.geometry(f"+{x}+{y}")
+
+    # Etiqueta con la pregunta
+    label = tk.Label(dialog, text="¿Desea ejecutar el cargue histórico o trimestral?", font=("Arial", 12))
+    label.pack(pady=20)
+
+    # Variable para almacenar la elección del usuario
+    choice = tk.StringVar()
+
+    # Funciones para los botones
+    def select_historico():
+        choice.set('historico')
+        dialog.destroy()
+
+    def select_mensual():
+        choice.set('trimestral')
+        dialog.destroy()
+
+    # Frame para centrar los botones
+    button_frame = tk.Frame(dialog)
+    button_frame.pack(pady=10)
+
+    # Botones para 'Histórico' y 'Trimestral'
+    btn_historico = tk.Button(button_frame, text="Histórico", width=15, command=select_historico)
+    btn_historico.pack(side='left', padx=10)
+
+    btn_mensual = tk.Button(button_frame, text="Trimestral", width=15, command=select_mensual)
+    btn_mensual.pack(side='right', padx=10)
+
+    # Esperar a que el usuario haga una elección
+    dialog.wait_window()
+
+    return choice.get()
+
+def run_iata_script():
+    """
+    Pregunta al usuario qué script de IATA desea ejecutar (histórico o trimestral)
+    y luego llama a run_script con los parámetros adecuados.
+    """
+    # Preguntar al usuario qué tipo de cargue desea realizar
+    opcion = ask_historico_or_trimestral()
+
+    if opcion == 'historico':
+        # Ejecutar el script de cargue OAG Histórico
+        script_name = "src/cargue_oag_historico.py"
+        description = "Cargue de IATA-GAP Histórico"
+    elif opcion == 'mensual':
+        # Ejecutar el script de cargue OAG Mensual
+        script_name = "src/cargue_oag_mensual.py"
+        description = "Cargue de OAG Mensual"
+    else:
+        # El usuario cerró la ventana o no hizo una elección válida
+        return
+
+    # Llamar a run_script con el script seleccionado y doble confirmación
+    run_script(script_name, description, double_confirm=True)
+
 # ---------------------------------
 # 3. Inicializar la ventana principal
 # ---------------------------------
@@ -82,11 +222,15 @@ output_text.pack(fill='both', expand=True)
 # 5. Crear botones para cada script
 # ---------------------------------
 
-# Botón para el setup de la base de datos
+# Botón para el setup de la base de datos con doble confirmación
 btn_setup_db = tk.Button(
     root,
     text="0. Ejecutar Setup de Base de Datos",
-    command=lambda: run_script("src/database_setup.py", "Setup de Base de Datos (crear base de datos, esquema y tabla de seguimiento)")
+    command=lambda: run_script(
+        "src/database_setup.py",
+        "Setup de Base de Datos",
+        double_confirm=True  # Activar doble confirmación
+    )
 )
 btn_setup_db.pack(fill='x')
 
@@ -94,7 +238,7 @@ btn_setup_db.pack(fill='x')
 btn_cargue_geo = tk.Button(
     root,
     text="1. Cargar tablas correlativas",
-    command=lambda: run_script("src/cargue_correlativas.py", "Cargue de Tablas Correlativas (cargar tablas de divipola y modelo relacional al esquema 'CORRELATIVAS')")
+    command=lambda: run_script("src/cargue_correlativas.py", "Cargue de Tablas Correlativas")
 )
 btn_cargue_geo.pack(fill='x')
 
@@ -102,15 +246,15 @@ btn_cargue_geo.pack(fill='x')
 btn_cargue_global = tk.Button(
     root,
     text="2. Cargar Datos de GlobalData",
-    command=lambda: run_script("src/cargue_global_data.py", "Cargue de GlobalData (cargar 8 tablas al esquema 'GLOBALDATA')")
+    command=lambda: run_script("src/cargue_global_data.py", "Cargue de GlobalData")
 )
 btn_cargue_global.pack(fill='x')
 
-# Botón para cargar datos de OAG
+# Botón para cargar datos de OAG con doble confirmación y selección de script
 btn_cargue_oag = tk.Button(
     root,
     text="3. Cargar Datos de OAG",
-    command=lambda: run_script("src/cargue_oag.py", "Cargue de OAG")
+    command=run_oag_script  # Llamar a la función que maneja la elección del usuario
 )
 btn_cargue_oag.pack(fill='x')
 

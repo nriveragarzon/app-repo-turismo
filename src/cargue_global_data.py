@@ -62,7 +62,7 @@ nombres_archivos = [
 # Lista de columnas que deben ser float64
 columnas_float64 = ['VALUE_1', 'VALUE', 'AVERAGE_LENGTH_OF_TRIP_BY_TYPE_DAYS', 'LATITUD_GENERADO', 'LONGITUD_GENERADO']
 
-# Diccionario con los nombres de datos, columnas y tipos esperados en la importación
+# Diccionario con los nombres de datos y columnas esperadas en la importación
 expected_schema = {'Categorias_gasto.csv': {'columns': ['EXPENDITURE_BY_TOURISM_TYPE',
                                       'REGION',
                                       'COUNTRY',
@@ -254,7 +254,7 @@ pprint.pprint(cadena_mensajes)
 print("Proceso de cargue de datos GlobalData terminado.")
 
 # -----------------------------------------
-# 6. Validar tipos de columnas en Snowflake
+# 7. Validar tipos de columnas en Snowflake
 # -----------------------------------------
 
 # Crear el diccionario de validación de sql
