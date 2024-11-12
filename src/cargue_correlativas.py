@@ -117,6 +117,9 @@ nombres_tablas = [
 # Cambiar ubicación de la sesión para carga de datos de correlativas
 snowflake_analitica.update_session_params(sesion_activa,  database='REPOSITORIO_TURISMO', schema='CORRELATIVAS')
 
+# Mensaje de inicio de proceso de cargue
+print('Iniciando proceso de cargue...')
+
 # Lista para almacenar los resultados de cada carga
 resultados_carga = []
 
