@@ -97,7 +97,9 @@ if columnas_faltantes:
     mensaje_validacion += f"  - Columnas faltantes: {sorted(columnas_faltantes)}\n"
     errores_criticos = True
 if columnas_extras:
-    mensaje_validacion += f"  - Columnas adicionales no esperadas: {sorted(columnas_extras)}\n"
+    mensaje_validacion += f"  - Columnas que contienen nuevos valores de trimestres: {sorted(columnas_extras)}\n"
+    mensaje_validacion += f"  - Estas columnas se refieren a los nuevos trimestres a cargar a la tabla"
+    errores_criticos = True
 if not columnas_faltantes and not columnas_extras:
     mensaje_validacion += "  Todas las columnas esperadas están presentes.\n"
 

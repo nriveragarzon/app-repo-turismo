@@ -117,11 +117,11 @@ def run_oag_script():
     if opcion == 'historico':
         # Ejecutar el script de cargue OAG Histórico
         script_name = "src/cargue_oag_historico.py"
-        description = "Cargue de OAG Histórico"
+        description = "Cargue de OAG Histórico (cargar datos de 2022/01 a 2024/09 elimnando la tabla actual y agregando estos datos)"
     elif opcion == 'mensual':
         # Ejecutar el script de cargue OAG Mensual
         script_name = "src/cargue_oag_mensual.py"
-        description = "Cargue de OAG Mensual"
+        description = "Cargue de OAG Mensual (cargar datos del último mes agregando nuevas filas a la tabla actual)"
     else:
         # El usuario cerró la ventana o no hizo una elección válida
         return
@@ -188,13 +188,13 @@ def run_iata_script():
     opcion = ask_historico_or_trimestral()
 
     if opcion == 'historico':
-        # Ejecutar el script de cargue OAG Histórico
-        script_name = "src/cargue_oag_historico.py"
-        description = "Cargue de IATA-GAP Histórico"
-    elif opcion == 'mensual':
-        # Ejecutar el script de cargue OAG Mensual
-        script_name = "src/cargue_oag_mensual.py"
-        description = "Cargue de OAG Mensual"
+        # Ejecutar el script de cargue IATA Histórico
+        script_name = "src/cargue_iata_historico.py"
+        description = "Cargue de IATA-GAP Histórico (cargar datos de 2022Q1 a 2024Q3 elimnando la tabla actual y agregando estos datos)"
+    elif opcion == 'trimestral':
+        # Ejecutar el script de cargue IATA Mensual
+        script_name = "src/cargue_iata_trimestral.py"
+        description = "Cargue de IATA-GAP Trimestral (cargar datos del último(s) Q disponible agregando nuevas filas a la tabla actual)"
     else:
         # El usuario cerró la ventana o no hizo una elección válida
         return
@@ -228,7 +228,7 @@ btn_setup_db = tk.Button(
     text="0. Ejecutar Setup de Base de Datos",
     command=lambda: run_script(
         "src/database_setup.py",
-        "Setup de Base de Datos",
+        "Setup de Base de Datos (eliminar base de datos actual, crearla, crear esquemas y tabla de seguimiento)",
         double_confirm=True  # Activar doble confirmación
     )
 )
@@ -238,7 +238,7 @@ btn_setup_db.pack(fill='x')
 btn_cargue_geo = tk.Button(
     root,
     text="1. Cargar tablas correlativas",
-    command=lambda: run_script("src/cargue_correlativas.py", "Cargue de Tablas Correlativas")
+    command=lambda: run_script("src/cargue_correlativas.py", "Cargue de Tablas Correlativas (eliminar y cargar de nuevo la información de las tablas correlativas)")
 )
 btn_cargue_geo.pack(fill='x')
 
@@ -246,7 +246,7 @@ btn_cargue_geo.pack(fill='x')
 btn_cargue_global = tk.Button(
     root,
     text="2. Cargar Datos de GlobalData",
-    command=lambda: run_script("src/cargue_global_data.py", "Cargue de GlobalData")
+    command=lambda: run_script("src/cargue_global_data.py", "Cargue de GlobalData (eliminar y cargar de nuevo la información de las tablas de GlobalData)")
 )
 btn_cargue_global.pack(fill='x')
 
@@ -257,6 +257,14 @@ btn_cargue_oag = tk.Button(
     command=run_oag_script  # Llamar a la función que maneja la elección del usuario
 )
 btn_cargue_oag.pack(fill='x')
+
+# Botón para cargar datos de IATA-GAP con doble confirmación y selección de script
+btn_cargue_iata = tk.Button(
+    root,
+    text="4. Cargar Datos de IATA-GAP",
+    command=run_iata_script  # Llamar a la función que maneja la elección del usuario
+)
+btn_cargue_iata.pack(fill='x')
 
 # -------------------------------
 # 6. Ejecutar el bucle principal
