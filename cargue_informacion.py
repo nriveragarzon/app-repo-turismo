@@ -202,6 +202,29 @@ def run_iata_script():
     # Llamar a run_script con el script seleccionado y doble confirmación
     run_script(script_name, description, double_confirm=True)
 
+def run_forward_keys_script():
+    """
+    Pregunta al usuario qué script de Forward Keys desea ejecutar (histórico o mensual)
+    y luego llama a run_script con los parámetros adecuados.
+    """
+    # Preguntar al usuario qué tipo de cargue desea realizar
+    opcion = ask_historico_or_mensual
+
+    if opcion == 'historico':
+        # Ejecutar el script de cargue Forward Keys Histórico
+        script_name = "src/cargue_forward_keys_historico.py"
+        description = "Cargue de cargue Forward Keys Histórico (cargar datos de 2022 a 2024/09 elimnando la tabla actual y agregando estos datos)"
+    elif opcion == 'trimestral':
+        # Ejecutar el script de cargue Forward Keys Mensual
+        script_name = "src/cargue_forward_keys_mensual.py"
+        description = "Cargue de IATA-GAP Trimestral (cargar datos del último(s) mes(es) disponible(s) agregando nuevas filas a la tabla actual)"
+    else:
+        # El usuario cerró la ventana o no hizo una elección válida
+        return
+
+    # Llamar a run_script con el script seleccionado y doble confirmación
+    run_script(script_name, description, double_confirm=True)
+
 # ---------------------------------
 # 3. Inicializar la ventana principal
 # ---------------------------------
@@ -265,6 +288,14 @@ btn_cargue_iata = tk.Button(
     command=run_iata_script  # Llamar a la función que maneja la elección del usuario
 )
 btn_cargue_iata.pack(fill='x')
+
+# Botón para cargar datos de Forward Keys con doble confirmación y selección de script
+btn_cargue_forward_keys = tk.Button(
+    root,
+    text="4. Cargar Datos de Forward Keys",
+    command=run_forward_keys_script  # Llamar a la función que maneja la elección del usuario
+)
+btn_cargue_forward_keys.pack(fill='x')
 
 # -------------------------------
 # 6. Ejecutar el bucle principal

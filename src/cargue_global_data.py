@@ -257,6 +257,9 @@ print("Proceso de cargue de datos GlobalData terminado.")
 # 7. Validar tipos de columnas en Snowflake
 # -----------------------------------------
 
+ # Mensaje de inicio de proceso
+print("Validando las tablas cargadas...")
+
 # Crear el diccionario de validación de sql
 expected_sql_schema = {'CATEGORIAS_GASTO': {'columns': ['AXIS',
    'COUNTRY',

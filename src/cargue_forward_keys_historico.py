@@ -133,7 +133,35 @@ cadena_mensajes = '\n'.join(df_resultados_carga['mensajes'])
 pprint.pprint(cadena_mensajes)
 
 # Imprimir mensaje de final de proceso
-print("Proceso de cague de datos IATAGAP terminado.")
+print("Proceso de cague de datos Forward Keys terminado.")
+
+# ----------------------------
+# 7. Actualizar tipos de datos
+# ----------------------------
+
+# Mensaje del proceso
+print("Iniciando proceso de transformación de texto a fechas de las columnas correspondientes")
+
+# Crear queries para actualizar el tipo de columna de fechas a date
+query_update = """
+-- Paso 1: Crear columnas temporales de tipo DATE
+ALTER TABLE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS ADD COLUMN SEARCH_DATE_TEMP DATE;
+ALTER TABLE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS ADD COLUMN SEARCH_DEPARTURE_DATE_TEMP DATE;
+
+-- Paso 2: Copiar los datos convertidos en formato DATE a las nuevas columnas
+UPDATE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS SET SEARCH_DATE_TEMP = TO_DATE(SEARCH_DATE, 'YYYY-MM-DD');
+UPDATE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS SET SEARCH_DEPARTURE_DATE_TEMP = TO_DATE(SEARCH_DEPARTURE_DATE, 'YYYY-MM-DD');
+
+-- Paso 3: Eliminar las columnas originales de tipo VARCHAR
+ALTER TABLE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS DROP COLUMN SEARCH_DATE;
+ALTER TABLE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS DROP COLUMN SEARCH_DEPARTURE_DATE;
+
+-- Paso 4: Renombrar las columnas temporales para que tengan los nombres originales
+ALTER TABLE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS RENAME COLUMN SEARCH_DATE_TEMP TO SEARCH_DATE;
+ALTER TABLE REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS RENAME COLUMN SEARCH_DEPARTURE_DATE_TEMP TO SEARCH_DEPARTURE_DATE;
+"""
+
+snowflake_analitica.ejecutar_script_sql_snowpark(sesion_activa_procolombia, query_update)
   
 # ---------------------------
 # 8. Cerrar sesión y conexión

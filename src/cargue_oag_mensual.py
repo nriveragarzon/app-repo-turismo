@@ -194,6 +194,9 @@ print("Proceso de cague de datos OAG terminado.")
 # 7. Validar tipos de columnas en Snowflake
 # -----------------------------------------
 
+# Mensaje
+print("Validando nuevas filas cargadas ...")
+
 # Crear el diccionario de validación de sql
 expected_sql_schema = {'CONECTIVIDAD_DIRECTA': {'columns': ['ARR_AIRPORT_CODE',
    'ARR_AIRPORT_NAME',

@@ -183,6 +183,9 @@ print("Proceso de cague de datos IATAGAP terminado.")
 # 7. Validar tipos de columnas en Snowflake
 # -----------------------------------------
 
+# Mensaje
+print("Validando tabla y columnas cargadas...")
+
 # Crear el diccionario de validación de sql
 expected_sql_schema = {'AGENCIAS': {'columns': ['TRAVEL_AGENCY_CITY',
    'TRAVEL_AGENCY_COUNTRY',
