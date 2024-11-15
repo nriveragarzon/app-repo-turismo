@@ -167,7 +167,7 @@ print("Proceso de cague de datos OAG terminado.")
 # -----------------------------------------
 
 # Mensaje
-print("Validando tabla y columnas cargadas ...")
+print("Validando tabla y columnas cargadas...")
 
 # Crear el diccionario de validación de sql
 expected_sql_schema = {'CONECTIVIDAD_DIRECTA': {'columns': ['ARR_AIRPORT_CODE',

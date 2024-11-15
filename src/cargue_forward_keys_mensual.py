@@ -138,7 +138,7 @@ print(f"{nombre_archivo} exportado correctamente a CSV")
 # --------------------
 
 # Ruta donde están los archivos CSV
-path_forward_keys = '../data/FORWARDKEYS/Meses'
+path_forward_keys = './data/FORWARDKEYS/Meses'
 
 # Columna que debe ser numérica
 columnas_float64 = ['SEARCH_PAX']
