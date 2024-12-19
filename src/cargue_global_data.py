@@ -60,7 +60,7 @@ nombres_archivos = [
 ]
 
 # Lista de rutas de archivos
-rutas_archivos = [os.path.join(path_global_data, archivo) for archivo in nombres_archivos]
+rutas_archivos = [path_global_data + '/' + archivo for archivo in nombres_archivos]
 
 # Lista de columnas que deben ser float64
 columnas_float64 = ['VALUE_1', 'VALUE', 'AVERAGE_LENGTH_OF_TRIP_BY_TYPE_DAYS', 'LATITUD_GENERADO', 'LONGITUD_GENERADO']

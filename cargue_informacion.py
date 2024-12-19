@@ -106,29 +106,6 @@ def ask_historico_or_mensual():
 
     return choice.get()
 
-def run_oag_script():
-    """
-    Pregunta al usuario qué script de OAG desea ejecutar (histórico o mensual)
-    y luego llama a run_script con los parámetros adecuados.
-    """
-    # Preguntar al usuario qué tipo de cargue desea realizar
-    opcion = ask_historico_or_mensual()
-
-    if opcion == 'historico':
-        # Ejecutar el script de cargue OAG Histórico
-        script_name = "src/cargue_oag_historico.py"
-        description = "Cargue de OAG Histórico (cargar datos de 2022/01 a 2024/09 elimnando la tabla actual y agregando estos datos)"
-    elif opcion == 'mensual':
-        # Ejecutar el script de cargue OAG Mensual
-        script_name = "src/cargue_oag_mensual.py"
-        description = "Cargue de OAG Mensual (cargar datos del último mes agregando nuevas filas a la tabla actual)"
-    else:
-        # El usuario cerró la ventana o no hizo una elección válida
-        return
-
-    # Llamar a run_script con el script seleccionado y doble confirmación
-    run_script(script_name, description, double_confirm=True)
-
 def ask_historico_or_trimestral():
     """
     Muestra un cuadro de diálogo para que el usuario seleccione entre 'Histórico' y 'Trimestral'.
@@ -231,7 +208,7 @@ def run_forward_keys_script():
 
 # Crear la ventana principal
 root = tk.Tk()
-root.title("Ejecutor de Scripts")
+root.title("Repositorio Cifras Turismo: Cargue dse información")
 
 # ----------------------------------
 # 4. Crear área de texto para la salida
@@ -277,7 +254,7 @@ btn_cargue_global.pack(fill='x')
 btn_cargue_oag = tk.Button(
     root,
     text="3. Cargar Datos de OAG",
-    command=run_oag_script  # Llamar a la función que maneja la elección del usuario
+    command=lambda: run_script("src/cargue_oag.py", "Cargue de OAG (cargar los últimos datos disponibles de la carpeta)")
 )
 btn_cargue_oag.pack(fill='x')
 
