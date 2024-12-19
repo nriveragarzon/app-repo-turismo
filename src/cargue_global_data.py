@@ -59,6 +59,9 @@ nombres_archivos = [
     'Rango_edad.csv'
 ]
 
+# Lista de rutas de archivos
+rutas_archivos = [os.path.join(path_global_data, archivo) for archivo in nombres_archivos]
+
 # Lista de columnas que deben ser float64
 columnas_float64 = ['VALUE_1', 'VALUE', 'AVERAGE_LENGTH_OF_TRIP_BY_TYPE_DAYS', 'LATITUD_GENERADO', 'LONGITUD_GENERADO']
 
@@ -219,9 +222,16 @@ print('Iniciando proceso de cargue...')
 resultados_carga = []
 
 # Loop para subir los DataFrames a Snowflake
-for df_name, nombre_tabla in zip(nombres_finales_dfs, nombres_archivos_mayus):
+for df_name, nombre_tabla, nombre_archivo in zip(nombres_finales_dfs, nombres_archivos_mayus, rutas_archivos):
+
+    # Cambiar ubicación de la sesión para carga de datos de globaldata
+    snowflake_analitica.update_session_params(sesion_activa, database='REPOSITORIO_TURISMO', schema='GLOBALDATA')
+
     # Obtener el DataFrame a partir del nombre almacenado en la variable global
     df = globals()[df_name]
+
+    # Obtener números de registros
+    obs = len(df)
     
     # Llamar a la función upload_dataframe_to_snowflake
     mensajes = snowflake_analitica.upload_dataframe_to_snowflake(
@@ -242,6 +252,18 @@ for df_name, nombre_tabla in zip(nombres_finales_dfs, nombres_archivos_mayus):
 
     # Agregar el resultado a la lista
     resultados_carga.append(resultado)
+
+    # Cambiar ubicación de la sesión para carga de datos a la tabla de auditoria
+    snowflake_analitica.update_session_params(sesion_activa,  database='REPOSITORIO_TURISMO', schema='AUDITORIA')
+
+    # Registrar evento de cargue
+    resultado_str = '\n'.join(mensajes)
+    snowflake_analitica.registrar_evento_auditoria(sesion_activa=sesion_activa, 
+                                                   nombre_esquema_destino='GLOBALDATA', 
+                                                   nombre_tabla=nombre_tabla, 
+                                                   ruta_archivo=nombre_archivo, 
+                                                   numero_registros=obs, 
+                                                   mensaje=resultado_str)
 
 # Convertir los resultados en un DataFrame para mostrar de manera organizada
 df_resultados_carga = pd.DataFrame(resultados_carga)

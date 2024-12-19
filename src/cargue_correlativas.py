@@ -12,6 +12,9 @@ import os
 # Importar pandas
 import pandas as pd
 
+# Prettyprint
+import pprint
+
 # Suprimir todas las advertencias de tipo UserWarning
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -205,7 +208,7 @@ df_resultados_carga = pd.DataFrame(resultados_carga)
 
 # Imprimir los mensajes
 cadena_mensajes = '\n'.join(df_resultados_carga['mensajes'])
-print(cadena_mensajes)
+pprint.pprint(cadena_mensajes)
 
 # Imprimir mensaje de final de proceso
 print("Proceso de cague de datos correlativas exitoso.")

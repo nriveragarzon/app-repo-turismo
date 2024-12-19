@@ -251,7 +251,7 @@ btn_setup_db = tk.Button(
     text="0. Ejecutar Setup de Base de Datos",
     command=lambda: run_script(
         "src/database_setup.py",
-        "Setup de Base de Datos (eliminar base de datos actual, crearla, crear esquemas y tabla de seguimiento)",
+        "Setup de Base de Datos (eliminar base de datos actual, crearla, crear esquemas y tablas de seguimiento y auditoria)",
         double_confirm=True  # Activar doble confirmación
     )
 )
