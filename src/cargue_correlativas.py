@@ -50,6 +50,11 @@ df_departamentos_divipola = pd.read_excel(path_insumos + divipola_file, sheet_na
 df_municipio_divipola = pd.read_excel(path_insumos + divipola_file, sheet_name="Municipio", dtype=str)
 df_departamentos_municipio_divipola = pd.read_excel(path_insumos + divipola_file, sheet_name="Departamento - Municipio", dtype=str)
 
+# Nombres de los archivos cargados
+df_departamentos_divipola_name = path_insumos + divipola_file + '/' + 'Departamento'
+df_municipio_divipola_name = path_insumos + divipola_file + '/' + 'Municipio'
+df_departamentos_municipio_divipola_name = path_insumos + divipola_file + '/' + 'Departamento - Municipio'
+
 # Datos del modelos relacional de países
 correlativa_file = 'MODELO RELACIONAL PAISES.xlsx'
 
@@ -72,6 +77,18 @@ df_paises_oag = df_paises_oag.drop(columns=["¿ESTA_EN_PAISES?"])
 df_paises_forwardkeys = df_paises_forwardkeys.drop(columns=["¿ESTA_EN_PAISES?"])
 df_paises_credibanco = df_paises_credibanco.drop(columns=["¿ESTA_EN_PAISES?"])
 df_paises_iatagap = df_paises_iatagap.drop(columns=["¿ESTA_EN_PAISES?"])
+
+# Nombres de los archivos cargados
+df_continentes_name = path_insumos + correlativa_file + '/' + 'CONTINENTES'
+df_region_name = path_insumos + correlativa_file + '/' + 'REGION'
+df_subregion_name = path_insumos + correlativa_file + '/' + 'SUBREGION'
+df_paises_name = path_insumos + correlativa_file + '/' + 'PAISES'
+df_paises_migracion_name = path_insumos + correlativa_file + '/' + 'MIGRACION'
+df_paises_global_data_name = path_insumos + correlativa_file + '/' + 'GLOBALDATA'
+df_paises_oag_name = path_insumos + correlativa_file + '/' + 'OAG'
+df_paises_forwardkeys_name = path_insumos + correlativa_file + '/' + 'FORWARDKEYS'
+df_paises_credibanco_name = path_insumos + correlativa_file + '/' + 'CREDIBANCO'
+df_paises_iatagap_name = path_insumos + correlativa_file + '/' + 'IATAGAP'
 
 # Lista de dfs a subir
 bases_de_datos = [
@@ -110,12 +127,27 @@ nombres_tablas = [
     'PAISES_IATAGAP'    
 ]
 
+nombres_archivos = [
+    # DANE
+    df_departamentos_divipola_name,
+    df_municipio_divipola_name,
+    df_departamentos_municipio_divipola_name,
+    # PAISES
+    df_continentes_name,
+    df_region_name,
+    df_subregion_name,
+    df_paises_name,
+    df_paises_migracion_name,
+    df_paises_global_data_name,
+    df_paises_oag_name,
+    df_paises_forwardkeys_name,
+    df_paises_credibanco_name,
+    df_paises_iatagap_name
+]
+
 # --------------------
 # 6. Subir a Snowflake
 # --------------------
-
-# Cambiar ubicación de la sesión para carga de datos de correlativas
-snowflake_analitica.update_session_params(sesion_activa,  database='REPOSITORIO_TURISMO', schema='CORRELATIVAS')
 
 # Mensaje de inicio de proceso de cargue
 print('Iniciando proceso de cargue...')
@@ -124,10 +156,16 @@ print('Iniciando proceso de cargue...')
 resultados_carga = []
 
 # Loop para subir los DataFrames a Snowflake
-for df_name, nombre_tabla in zip(bases_de_datos, nombres_tablas):
+for df_name, nombre_tabla, nombre_archivo in zip(bases_de_datos, nombres_tablas, nombres_archivos):
+
+    # Cambiar ubicación de la sesión para carga de datos de correlativas
+    snowflake_analitica.update_session_params(sesion_activa,  database='REPOSITORIO_TURISMO', schema='CORRELATIVAS')
 
     # Obtener el DataFrame a partir del nombre almacenado en la variable global
     df = globals()[df_name]
+
+    # Obtener números de registros
+    obs = len(df)
 
     # Llamar a la función upload_dataframe_to_snowflake
     mensajes = snowflake_analitica.upload_dataframe_to_snowflake(
@@ -146,6 +184,19 @@ for df_name, nombre_tabla in zip(bases_de_datos, nombres_tablas):
         'mensajes': '\n'.join(mensajes),  # Unir los mensajes en un solo string para la tabla
     }
 
+    # Cambiar ubicación de la sesión para carga de datos a la tabla de auditoria
+    snowflake_analitica.update_session_params(sesion_activa,  database='REPOSITORIO_TURISMO', schema='AUDITORIA')
+
+    # Registrar evento de cargue
+    resultado_str = '\n'.join(mensajes)
+    snowflake_analitica.registrar_evento_auditoria(sesion_activa=sesion_activa, 
+                                                   nombre_esquema_destino='CORRELATIVAS', 
+                                                   nombre_tabla=nombre_tabla, 
+                                                   ruta_archivo=nombre_archivo, 
+                                                   numero_registros=obs, 
+                                                   mensaje=resultado_str)
+
+
     # Agregar el resultado a la lista
     resultados_carga.append(resultado)
 
@@ -155,7 +206,6 @@ df_resultados_carga = pd.DataFrame(resultados_carga)
 # Imprimir los mensajes
 cadena_mensajes = '\n'.join(df_resultados_carga['mensajes'])
 print(cadena_mensajes)
-
 
 # Imprimir mensaje de final de proceso
 print("Proceso de cague de datos correlativas exitoso.")
