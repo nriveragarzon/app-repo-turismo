@@ -246,7 +246,7 @@ for df_name, nombre_tabla, nombre_archivo in zip(nombres_finales_dfs, nombres_ar
     # Almacenar el resultado en un diccionario
     resultado = {
         'nombre_tabla': nombre_tabla,
-        'df': df_name,
+        'df': nombre_archivo,
         'mensajes': '\n'.join(mensajes),  # Unir los mensajes en un solo string para la tabla
     }
 
@@ -264,6 +264,9 @@ for df_name, nombre_tabla, nombre_archivo in zip(nombres_finales_dfs, nombres_ar
                                                    ruta_archivo=nombre_archivo, 
                                                    numero_registros=obs, 
                                                    mensaje=resultado_str)
+
+    # Mensaje de resultado
+    print(f"{nombre_archivo} cargado y auditado.")
 
 # Convertir los resultados en un DataFrame para mostrar de manera organizada
 df_resultados_carga = pd.DataFrame(resultados_carga)

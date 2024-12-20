@@ -68,12 +68,15 @@ def registrar_evento_auditoria(sesion_activa, nombre_esquema_destino, nombre_tab
         print(f"Error al registrar el evento de auditoría: {e}")
         raise  # Re-lanzar la excepción para manejo adicional si es necesario
 
-# Función para comparar archivos cargados con datos a cargar
+# Función para comparar archivos cargados con datos a cargar sin tener en cuenta su path completo
 def validador_cargue(session_activa, dir, esquema):
     
     """
     Valida los archivos nuevos y repetidos comparando los existentes en un directorio local
-    contra los registros almacenados en Snowflake.
+    contra los registros almacenados en Snowflake. Extrae el nombre de los archivos cargados 
+    sin su directorio completo. Funciona para cargues en que los archivos se almacenan en una
+    carpeta y solo varia su nombre. No funciona para cargues donde los archivos se llaman igual
+    pero están en diferentes carpetas. 
 
     Args:
         - session_activa : Objeto de sesión activa de conexión a Snowflake.
@@ -85,21 +88,24 @@ def validador_cargue(session_activa, dir, esquema):
     """
 
     # Consulta para obtener los archivos cargados en Snowflake
-    command = f"""
-    SELECT SPLIT_PART(A.RUTA_ARCHIVO, '/', -1) AS NOMBRE_ARCHIVO
-    FROM REPOSITORIO_TURISMO.AUDITORIA.AUDITORIA_CARGUES AS A
-    WHERE A.NOMBRE_ESQUEMA_DESTINO = '{esquema}';
-    """
-    # Obtener la lista de archivos en Snowflake
-    archivos_sql = session_activa.sql(command).collect()
-    archivos_sql = [row['NOMBRE_ARCHIVO'] for row in archivos_sql]
+    try:
+        command = f"""
+        SELECT SPLIT_PART(A.RUTA_ARCHIVO, '/', -1) AS NOMBRE_ARCHIVO
+        FROM REPOSITORIO_TURISMO.AUDITORIA.AUDITORIA_CARGUES AS A
+        WHERE A.NOMBRE_ESQUEMA_DESTINO = '{esquema}';
+        """
+        # Obtener la lista de archivos en Snowflake
+        archivos_sql = session_activa.sql(command).collect()
+        archivos_sql = [row['NOMBRE_ARCHIVO'] for row in archivos_sql]
+    except Exception as e:
+        raise RuntimeError(f"Error al ejecutar la consulta en Snowflake: {e}")
 
     # Obtener la lista de archivos en el directorio
     archivos_dir = os.listdir(dir)
 
     # Comparar los archivos
-    archivos_repetidos = set(archivos_sql).intersection(set(archivos_dir))
-    archivos_nuevos = set(archivos_dir) - set(archivos_sql)
+    archivos_repetidos = list(set(archivos_sql).intersection(set(archivos_dir)))
+    archivos_nuevos = list(set(archivos_dir) - set(archivos_sql))
 
     # Mostrar los resultados repetidos
     print("Archivos repetidos:")
@@ -114,3 +120,60 @@ def validador_cargue(session_activa, dir, esquema):
     # Retornar la lista de archivos nuevos
     return list(archivos_nuevos)
 
+# Función para comparar archivos cargados con archivos a cargar teniendo en cuenta su path completo
+def validador_cargue_path(session_activa, files_list, esquema):
+    """
+    Valida los archivos nuevos y repetidos comparando los existentes en una lista de archivos para 
+    cargar contra los registros almacenados en Snowflake. Extrae el nombre completo de los archivos cargados
+    en Snowflake junto con su directorio completo. Funciona para cargues donde los archivos se llaman igual pero están en 
+    diferentes carpetas.
+
+    Args:
+        - session_activa : Objeto de sesión activa de conexión a Snowflake.
+        - files_list (list): Lista que contiene las rutas de los archivos a cargar.
+        - esquema (str): Nombre del esquema de Snowflake donde se consultarán los archivos cargados.
+
+    Returns:
+        - List[str]: Lista de nombres de archivos con sus rutas que están presentes en el directorio local pero no existen en los registros de Snowflake (archivos nuevos).
+    """
+
+    # Verificar que files_list no esté vacío
+    if not files_list:
+        raise ValueError("La lista de archivos a cargar está vacía. Proporcione una lista válida.")
+
+    # Consulta para obtener los archivos cargados en Snowflake
+    command = f"""
+    SELECT A.RUTA_ARCHIVO AS NOMBRE_ARCHIVO
+    FROM REPOSITORIO_TURISMO.AUDITORIA.AUDITORIA_CARGUES AS A
+    WHERE A.NOMBRE_ESQUEMA_DESTINO = '{esquema}';
+    """
+
+    # Obtener la lista de archivos en Snowflake
+    try:
+        archivos_sql = session_activa.sql(command).collect()
+        archivos_sql = [row['NOMBRE_ARCHIVO'] for row in archivos_sql]
+    except Exception as e:
+        raise RuntimeError(f"Error al ejecutar la consulta en Snowflake: {e}")
+
+    # Convertir las listas a conjuntos
+    archivos_repetidos = list(set(archivos_sql).intersection(files_list))
+    archivos_nuevos = list(set(files_list) - set(archivos_sql))
+
+    # Mostrar los resultados repetidos
+    print("Archivos repetidos:")
+    if archivos_repetidos:
+        for archivo in archivos_repetidos:
+            print(archivo)
+    else:
+        print("No se encontraron archivos repetidos.")
+
+    # Mostrar los resultados nuevos
+    print("\nArchivos nuevos en el directorio:")
+    if archivos_nuevos:
+        for archivo in archivos_nuevos:
+            print(archivo)
+    else:
+        print("No se encontraron archivos nuevos en el directorio.")
+
+    # Retornar la lista de archivos nuevos
+    return list(archivos_nuevos)

@@ -156,29 +156,6 @@ def ask_historico_or_trimestral():
 
     return choice.get()
 
-def run_iata_script():
-    """
-    Pregunta al usuario qué script de IATA desea ejecutar (histórico o trimestral)
-    y luego llama a run_script con los parámetros adecuados.
-    """
-    # Preguntar al usuario qué tipo de cargue desea realizar
-    opcion = ask_historico_or_trimestral()
-
-    if opcion == 'historico':
-        # Ejecutar el script de cargue IATA Histórico
-        script_name = "src/cargue_iata_historico.py"
-        description = "Cargue de IATA-GAP Histórico (cargar datos de 2022Q1 a 2024Q3 elimnando la tabla actual y agregando estos datos)"
-    elif opcion == 'trimestral':
-        # Ejecutar el script de cargue IATA Mensual
-        script_name = "src/cargue_iata_trimestral.py"
-        description = "Cargue de IATA-GAP Trimestral (cargar datos del último(s) Q disponible agregando nuevas filas a la tabla actual)"
-    else:
-        # El usuario cerró la ventana o no hizo una elección válida
-        return
-
-    # Llamar a run_script con el script seleccionado y doble confirmación
-    run_script(script_name, description, double_confirm=True)
-
 def run_forward_keys_script():
     """
     Pregunta al usuario qué script de Forward Keys desea ejecutar (histórico o mensual)
@@ -208,7 +185,7 @@ def run_forward_keys_script():
 
 # Crear la ventana principal
 root = tk.Tk()
-root.title("Repositorio Cifras Turismo: Cargue dse información")
+root.title("Repositorio Cifras Turismo: Cargue de información")
 
 # ----------------------------------
 # 4. Crear área de texto para la salida
@@ -262,7 +239,7 @@ btn_cargue_oag.pack(fill='x')
 btn_cargue_iata = tk.Button(
     root,
     text="4. Cargar Datos de IATA-GAP",
-    command=run_iata_script  # Llamar a la función que maneja la elección del usuario
+    command=lambda: run_script("src/cargue_iata.py", "Cargue de IATA-GAP (cargar los últimos datos disponibles de la carpeta)")
 )
 btn_cargue_iata.pack(fill='x')
 

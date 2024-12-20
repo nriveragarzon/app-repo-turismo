@@ -38,90 +38,142 @@ sesion_activa, conexion_activa = snowflake_analitica.create_session_from_json(js
 # -------------------------------------------------------
 # 4. Cambiar ubicación a la base de datos del repositorio
 # -------------------------------------------------------
-snowflake_analitica.update_session_params(sesion_activa, database='REPOSITORIO_TURISMO', schema='OAG')
+snowflake_analitica.update_session_params(sesion_activa, database='REPOSITORIO_TURISMO', schema='IATAGAP')
 
-# ----------------------------------
-# 5. Leer y transformar archivos OAG
-# ----------------------------------
+# --------------------------------------
+# 5. Leer y transformar archivos IATAGAP
+# --------------------------------------
 
-# Ruta donde están los archivos
-path_oag = './data/OAG/Meses/'
+# Ruta donde está el archivo
+path_iata = './data/IATA-GAP/Meses'
 
-# Lista de archivos nuevos para subir
-files_oag = snowflake_analitica.validador_cargue(sesion_activa, path_oag, 'OAG')
+# Obtener todas las subcarpetas dentro de path_iata
+subcarpetas = os.listdir(path_iata)
 
-# Ruta para validación de los archivos
-path_oag = './data/OAG/Meses/'
+# Crear paths con subcarpetas
+sub_paths_iata = [path_iata + '/' + subcarpeta for subcarpeta in subcarpetas]
 
-# Lista de rutas de archivos
-rutas_archivos = [path_oag + archivo for archivo in files_oag]
+# Crear lista de rutas completas de los archivos en cada subcarpeta
+rutas_archivos = []
+for sub_path in sub_paths_iata:
+    if os.path.isdir(sub_path):
+        archivos = os.listdir(sub_path)
+        rutas_archivos.extend([sub_path + '/' + archivo for archivo in archivos])
 
 # Hoja de datos
-sheet_oag = 'Export'
+sheet_iata = 'Data'
 
-# Lista de columnas que deben ser float64
-columnas_float64 = ['FREQUENCY', 'SEATS_TOTAL']
+# Listas de archivos para subir
+files_iata = snowflake_analitica.validador_cargue_path(sesion_activa, rutas_archivos, 'IATAGAP')
 
 # Diccionario con los nombres de datos y columnas esperados en la importación
-expected_schema = {'columns': ['CARRIER_NAME',
-                                'DEP_AIRPORT_CODE',
-                                'DEP_AIRPORT_NAME',
-                                'DEP_CITY_CODE',
-                                'DEP_CITY_NAME',
-                                'DEP_IATA_COUNTRY_CODE',
-                                'DEP_IATA_COUNTRY_NAME',
-                                'ARR_AIRPORT_CODE',
-                                'ARR_AIRPORT_NAME',
-                                'ARR_CITY_CODE',
-                                'ARR_CITY_NAME',
-                                'ARR_IATA_COUNTRY_CODE',
-                                'ARR_IATA_COUNTRY_NAME',
-                                'FREQUENCY',
-                                'SEATS_TOTAL',
-                                'TIME_SERIES']}
+expected_schema = {'columns': ['TRAVEL_AGENCY_NAME',
+                                'TRAVEL_AGENCY_CITY',
+                                'TRAVEL_AGENCY_COUNTRY',
+                                'TRIP_ORIGIN_CITY',
+                                'TRIP_ORIGIN_COUNTRY',
+                                'TRIP_DESTINATION_COUNTRY',
+                                'TOTAL'],
+                   'columns_melted':['TRAVEL_AGENCY_NAME', 
+                                      'TRAVEL_AGENCY_CITY', 
+                                      'TRAVEL_AGENCY_COUNTRY',
+                                      'TRIP_ORIGIN_CITY', 
+                                      'TRIP_ORIGIN_COUNTRY', 
+                                      'TRIP_DESTINATION_COUNTRY',
+                                      'YEAR', 
+                                      'VALUE']}
 
 # Mensaje de inicio de proceso de importación
 print('Iniciando proceso de importación...')
 
 # Verificar si la lista de archivos está vacía
-if not files_oag:
+if not files_iata:
     raise ValueError("No hay archivos válidos para cargar. Verifique la lista de archivos.")
 
 # Iterar sobre los archivos a importar
 
 # Crear una lista vacía para concatenar los datos
-dfs_oag = []
+dfs_iata = []
+
+# Crear lista vacía para concaen
 
 # Loop de los archivos válidos (1 o más archivos)
 
-for file_oag in files_oag:
+for file_iata in files_iata:
+
+    ################
     # Importar datos
-    df_oag_insumo = pd.read_excel(path_oag + file_oag, sheet_name=sheet_oag)
-
+    ################
+    df_iata_insumo = pd.read_excel(file_iata, sheet_name=sheet_iata, skiprows=4)
+    
+    ########################
+    # Validación de columnas
+    ########################
     # Limpiar los nombres de las columnas
-    df_oag_insumo.columns = [snowflake_analitica.clean_column_name(col) for col in df_oag_insumo.columns]
+    df_iata_insumo.columns = [snowflake_analitica.clean_column_name(col) for col in df_iata_insumo.columns]
+    
+    # Validación de columnas
+    columnas_esperadas = [snowflake_analitica.clean_column_name(col) for col in expected_schema['columns']]
+    columnas_df = list(df_iata_insumo.columns)
+    columnas_faltantes = set(columnas_esperadas) - set(columnas_df)
+    columnas_extras = set(columnas_df) - set(columnas_esperadas)
 
-    # Convertir las columnas definidas a float64 si existen en el DataFrame
-    for col in columnas_float64:
-        if col in df_oag_insumo.columns:
-            df_oag_insumo[col] = pd.to_numeric(df_oag_insumo[col], errors='coerce') 
+    # Inicializar variable para errores críticos
+    errores_criticos = False
 
-    # Convertir todas las columnas que no están en la lista 'columnas_float64' a string
-    columnas_otros = [col for col in df_oag_insumo.columns if col not in columnas_float64]
-    df_oag_insumo[columnas_otros] = df_oag_insumo[columnas_otros].astype(str)
+    # Construir el mensaje de validación
+    mensaje_validacion = "\nResultados de la validación de columnas:\n"
+    if columnas_faltantes:
+        mensaje_validacion += f"  - Columnas faltantes: {sorted(columnas_faltantes)}\n"
+        errores_criticos = True
+    if columnas_extras:
+        mensaje_validacion += f"  - Columnas adicionales o de trimestres: {sorted(columnas_extras)}\n"
+        errores_criticos = False
+
+    # Si hay errores críticos, detener el proceso
+    if errores_criticos:
+        raise ValueError("Se encontraron errores en la validación de las columnas. Proceso detenido.")
+
+    ###########################
+    # Proceso de transformación
+    ###########################
+
+    # Eliminar la columna de totales
+    df_iata_insumo = df_iata_insumo.drop(['TOTAL'], axis=1)
+
+    # Columnas a melt
+    id_columns = ['TRAVEL_AGENCY_NAME', 'TRAVEL_AGENCY_CITY', 'TRAVEL_AGENCY_COUNTRY', 'TRIP_ORIGIN_CITY', 'TRIP_ORIGIN_COUNTRY', 'TRIP_DESTINATION_COUNTRY']
+    cols_a_melt = list(set(list(df_iata_insumo.columns)) - set(id_columns))
+    # Mensaje de columnas para el melt
+    pprint.pprint(f"Columnas a realizar melt: {cols_a_melt}")
+
+    # Realizar melt
+    df_iata_insumo_melted = pd.melt(
+        df_iata_insumo,
+        id_vars=id_columns,
+        value_vars=cols_a_melt,
+        var_name='YEAR',
+        value_name='VALUE'
+    )
+
+    # Eliminar el carácter "_" de la columna 'YEAR'
+    df_iata_insumo_melted['YEAR'] = df_iata_insumo_melted['YEAR'].str.replace('_', '')
+
+    # Transformar en númerica la columna valor
+    df_iata_insumo_melted['VALUE'] = df_iata_insumo_melted['VALUE'].astype(float)
 
     # Mostrar que se ha cargado y limpiado correctamente
-    print(f"Archivo {file_oag} cargado, nombres de columnas limpiados, columnas especificadas convertidas a float64")
+    print(f"Archivo {file_iata} cargado, nombres de columnas limpiados, derretido (melted) y columnas especificadas convertidas a float64")
 
     # Agregar el DataFrame procesado a la lista
-    dfs_oag.append(df_oag_insumo)
+    dfs_iata.append(df_iata_insumo_melted)
 
 # Concatenar todos los DataFrames en uno solo para validación
-df_oag_validacion = pd.concat(dfs_oag, ignore_index=True)
+dfs_iata_validacion = pd.concat(dfs_iata, ignore_index=True)
 
 # Validación de columnas
-columnas_esperadas = [snowflake_analitica.clean_column_name(col) for col in expected_schema['columns']]
-columnas_df = list(df_oag_validacion.columns)
+columnas_esperadas = [snowflake_analitica.clean_column_name(col) for col in expected_schema['columns_melted']]
+columnas_df = list(dfs_iata_validacion.columns)
 columnas_faltantes = set(columnas_esperadas) - set(columnas_df)
 columnas_extras = set(columnas_df) - set(columnas_esperadas)
 
@@ -146,45 +198,38 @@ print(mensaje_validacion)
 if errores_criticos:
     raise ValueError("Se encontraron errores en la validación de las columnas. Proceso detenido.")
 
-# Validar que se está cargando un mes que no esté incluido en la base de datos
+# Validar que se está cargando una combinación de datos que no estén incluidos en la base de datos
 
-# Meses cargados en la base de datos
+# Combinaciones cargadas en la base de datos
 try:
-    df_meses_cargados = pd.DataFrame(sesion_activa.sql("""SELECT DISTINCT A.TIME_SERIES
-                                                          FROM REPOSITORIO_TURISMO.OAG.CONECTIVIDAD_DIRECTA AS A
-                                                          ORDER BY 1 ASC;""").collect())
-    df_meses_cargados = df_meses_cargados['TIME_SERIES'].unique()
+    df_combinaciones_cargadas = pd.DataFrame(sesion_activa.sql("""SELECT DISTINCT A.TRIP_ORIGIN_COUNTRY,
+                                                            A.TRIP_DESTINATION_COUNTRY,
+                                                            A.YEAR
+                                                        FROM REPOSITORIO_TURISMO.IATAGAP.AGENCIAS AS A
+                                                        ORDER BY 1,2,3 ASC;""").collect())
+    # Convertir las combinaciones cargadas en un conjunto de tuplas para comparar
+    combinaciones_cargadas = set(df_combinaciones_cargadas[['TRIP_ORIGIN_COUNTRY', 'TRIP_DESTINATION_COUNTRY', 'YEAR']].itertuples(index=False, name=None))
 except Exception as e:
-    print(f"Advertencia: No se pudo consultar la tabla REPOSITORIO_TURISMO.OAG.CONECTIVIDAD_DIRECTA. Detalles: {e}")
-    df_meses_cargados = []
+    print(f"Advertencia: No se pudo consultar la tabla REPOSITORIO_TURISMO.IATAGAP.AGENCIAS. Detalles: {e}")
+    combinaciones_cargadas = set()
 
-# Mes(es) que se va(van) a cargar
-df_oag_meses_a_cargar = df_oag_validacion['TIME_SERIES'].unique()
+# Combinaciones que se van a cargar
+nuevas_combinaciones = set(dfs_iata_validacion[['TRIP_ORIGIN_COUNTRY', 'TRIP_DESTINATION_COUNTRY', 'YEAR']].itertuples(index=False, name=None))
 
-# Encontrar los meses que ya están en la base de datos
-meses_duplicados = [mes for mes in df_oag_meses_a_cargar if mes in df_meses_cargados]
+# Encontrar combinaciones duplicadas
+combinaciones_duplicadas = nuevas_combinaciones.intersection(combinaciones_cargadas)
 
-# Meses que se van a cargar
-print("Meses que se van a cargar:")
-print(df_oag_meses_a_cargar)
-
-# Meses que ya están en la base de datos
-print("Meses que ya están en la base de datos:")
-print(df_meses_cargados)
-
-# Meses repetidos
-print("Meses repetidos:")
-print(meses_duplicados)
-
-# Variable para registrar errores críticos
+# Verificar si hay combinaciones duplicadas y detener el proceso si es necesario
 errores_criticos = False
-
-# Comprobar si hay meses duplicados
-if meses_duplicados:
-    print(f"Alerta: Los siguientes meses ya existen en la base de datos y no se pueden cargar: {meses_duplicados}")
-    raise ValueError("Se encontraron errores en la validación de los meses. Proceso detenido.")
+if combinaciones_duplicadas:
+    errores_criticos = True
+    print(f"Error: Las siguientes combinaciones de país de origen, país de destino y año ya existen en la base de datos y no se pueden cargar: {combinaciones_duplicadas}")
 else:
-    print("Validación exitosa: Los meses a cargar no están en la base de datos.")
+    print("Validación exitosa: Las combinaciones a cargar no están en la base de datos.")
+
+# Si hay errores críticos, detener el proceso
+if errores_criticos:
+    raise ValueError("Se encontraron errores en la validación de las combinaciones. Proceso detenido.")
 
 # --------------------
 # 6. Subir a Snowflake
@@ -197,22 +242,22 @@ print('Iniciando proceso de cargue...')
 resultados_carga = []
 
 # Loop para subir los DataFrames a Snowflake
-for df, nombre_archivo in zip(dfs_oag, rutas_archivos):
+for df, nombre_archivo in zip(dfs_iata, rutas_archivos):
 
-    # Cambiar ubicación de la sesión para carga de datos de OAG
-    snowflake_analitica.update_session_params(sesion_activa, database='REPOSITORIO_TURISMO', schema='OAG')
+    # Cambiar ubicación de la sesión para carga de datos de IATAGAP
+    snowflake_analitica.update_session_params(sesion_activa, database='REPOSITORIO_TURISMO', schema='IATAGAP')
 
     # Obtener números de registros
     obs = len(df)
 
     # Verificar que la tabla exista en Snowflake
     try:
-        tabla_existe = pd.DataFrame(sesion_activa.sql("""SELECT 1 FROM REPOSITORIO_TURISMO.OAG.CONECTIVIDAD_DIRECTA LIMIT 1;""").collect())
+        tabla_existe = pd.DataFrame(sesion_activa.sql("""SELECT 1 FROM REPOSITORIO_TURISMO.IATAGAP.AGENCIAS LIMIT 1;""").collect())
         print("La tabla existe. Se procede a cargar los datos.")
         create_table_param = False
         overwrite_param = False
     except Exception as e:
-        print(f"Advertencia: La tabla REPOSITORIO_TURISMO.OAG.CONECTIVIDAD_DIRECTA no existe. Detalles: {e}")
+        print(f"Advertencia: La tabla REPOSITORIO_TURISMO.IATAGAP.AGENCIAS no existe. Detalles: {e}")
         print("Se procede a crear la tabla para insertar los datos.")
         create_table_param = True
         overwrite_param = True
@@ -221,7 +266,7 @@ for df, nombre_archivo in zip(dfs_oag, rutas_archivos):
     mensajes = snowflake_analitica.upload_dataframe_to_snowflake(
         sesion_activa=sesion_activa, 
         df=df, 
-        nombre_tabla='CONECTIVIDAD_DIRECTA', 
+        nombre_tabla='AGENCIAS', 
         create_table=create_table_param, 
         overwrite=overwrite_param, 
         ram_gb=32
@@ -229,7 +274,7 @@ for df, nombre_archivo in zip(dfs_oag, rutas_archivos):
 
     # Almacenar el resultado en un diccionario
     resultado = {
-        'nombre_tabla': 'CONECTIVIDAD_DIRECTA',
+        'nombre_tabla': 'AGENCIAS',
         'df': nombre_archivo,
         'mensajes': '\n'.join(mensajes),  # Unir los mensajes en un solo string para la tabla
     }
@@ -243,14 +288,14 @@ for df, nombre_archivo in zip(dfs_oag, rutas_archivos):
     # Registrar evento de cargue
     resultado_str = '\n'.join(mensajes)
     snowflake_analitica.registrar_evento_auditoria(sesion_activa=sesion_activa, 
-                                                    nombre_esquema_destino='OAG', 
-                                                    nombre_tabla='CONECTIVIDAD_DIRECTA', 
+                                                    nombre_esquema_destino='IATAGAP', 
+                                                    nombre_tabla='AGENCIAS', 
                                                     ruta_archivo=nombre_archivo, 
                                                     numero_registros=obs, 
                                                     mensaje=resultado_str)
     # Mensaje de resultado
     print(f"{nombre_archivo} cargado y auditado.")
-    
+
 # Convertir los resultados en un DataFrame para mostrar de manera organizada
 df_resultados_carga = pd.DataFrame(resultados_carga)
 
@@ -259,53 +304,37 @@ cadena_mensajes = '\n'.join(df_resultados_carga['mensajes'])
 pprint.pprint(cadena_mensajes)
 
 # Imprimir mensaje de final de proceso
-print("Proceso de cague de datos OAG terminado.")
+print("Proceso de cague de datos IATAGAP terminado.")
 
 # -----------------------------------------
 # 7. Validar tipos de columnas en Snowflake
 # -----------------------------------------
 
 # Mensaje
-print("Validando tabla y columnas cargadas...")
+print("Validando nueva información cargada...")
 
 # Crear el diccionario de validación de sql
-expected_sql_schema = {'CONECTIVIDAD_DIRECTA': {'columns': ['ARR_AIRPORT_CODE',
-   'ARR_AIRPORT_NAME',
-   'ARR_CITY_CODE',
-   'ARR_CITY_NAME',
-   'ARR_IATA_COUNTRY_CODE',
-   'ARR_IATA_COUNTRY_NAME',
-   'CARRIER_NAME',
-   'DEP_AIRPORT_CODE',
-   'DEP_AIRPORT_NAME',
-   'DEP_CITY_CODE',
-   'DEP_CITY_NAME',
-   'DEP_IATA_COUNTRY_CODE',
-   'DEP_IATA_COUNTRY_NAME',
-   'FREQUENCY',
-   'SEATS_TOTAL',
-   'TIME_SERIES'],
-  'dtypes': {'ARR_AIRPORT_CODE': 'TEXT',
-   'ARR_AIRPORT_NAME': 'TEXT',
-   'ARR_CITY_CODE': 'TEXT',
-   'ARR_CITY_NAME': 'TEXT',
-   'ARR_IATA_COUNTRY_CODE': 'TEXT',
-   'ARR_IATA_COUNTRY_NAME': 'TEXT',
-   'CARRIER_NAME': 'TEXT',
-   'DEP_AIRPORT_CODE': 'TEXT',
-   'DEP_AIRPORT_NAME': 'TEXT',
-   'DEP_CITY_CODE': 'TEXT',
-   'DEP_CITY_NAME': 'TEXT',
-   'DEP_IATA_COUNTRY_CODE': 'TEXT',
-   'DEP_IATA_COUNTRY_NAME': 'TEXT',
-   'FREQUENCY': 'FLOAT',
-   'SEATS_TOTAL': 'FLOAT',
-   'TIME_SERIES': 'TEXT'}}}
+expected_sql_schema = {'AGENCIAS': {'columns': ['TRAVEL_AGENCY_CITY',
+   'TRAVEL_AGENCY_COUNTRY',
+   'TRAVEL_AGENCY_NAME',
+   'TRIP_DESTINATION_COUNTRY',
+   'TRIP_ORIGIN_CITY',
+   'TRIP_ORIGIN_COUNTRY',
+   'VALUE',
+   'YEAR'],
+  'dtypes': {'TRAVEL_AGENCY_CITY': 'TEXT',
+   'TRAVEL_AGENCY_COUNTRY': 'TEXT',
+   'TRAVEL_AGENCY_NAME': 'TEXT',
+   'TRIP_DESTINATION_COUNTRY': 'TEXT',
+   'TRIP_ORIGIN_CITY': 'TEXT',
+   'TRIP_ORIGIN_COUNTRY': 'TEXT',
+   'VALUE': 'FLOAT',
+   'YEAR': 'TEXT'}}}
 
 # Obtener una tabla con los tipos de datos de la tabla subida
 df_real_schema = pd.DataFrame(sesion_activa.sql("""SELECT A.TABLE_NAME, A.COLUMN_NAME, A.DATA_TYPE
                                                         FROM REPOSITORIO_TURISMO.INFORMATION_SCHEMA.COLUMNS AS A
-                                                        WHERE A.TABLE_SCHEMA = 'OAG'
+                                                        WHERE A.TABLE_SCHEMA = 'IATAGAP'
                                                         ORDER BY A.TABLE_NAME, A.COLUMN_NAME ASC""").collect())
 # Convertir el esquema real en un diccionario para comparar 
 
