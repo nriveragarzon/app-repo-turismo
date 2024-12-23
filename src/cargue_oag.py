@@ -50,9 +50,6 @@ path_oag = './data/OAG/Meses/'
 # Lista de archivos nuevos para subir
 files_oag = snowflake_analitica.validador_cargue(sesion_activa, path_oag, 'OAG')
 
-# Ruta para validación de los archivos
-path_oag = './data/OAG/Meses/'
-
 # Lista de rutas de archivos
 rutas_archivos = [path_oag + archivo for archivo in files_oag]
 

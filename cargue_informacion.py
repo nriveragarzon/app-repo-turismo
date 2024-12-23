@@ -56,106 +56,6 @@ def run_script(script_name, description, double_confirm=False):
     # Ejecutar en un hilo separado para no congelar la interfaz
     threading.Thread(target=execute).start()
 
-def ask_historico_or_mensual():
-    """
-    Muestra un cuadro de diálogo para que el usuario seleccione entre 'Histórico' y 'Mensual'.
-    Retorna 'historico' o 'mensual' según la elección del usuario.
-    """
-    # Crear una ventana de diálogo
-    dialog = tk.Toplevel(root)
-    dialog.title("Periodicidad de cargue de datos")
-    dialog.geometry("400x150")
-    dialog.resizable(False, False)
-    dialog.grab_set()  # Bloquear interacción con la ventana principal
-
-    # Centrar la ventana en la pantalla
-    dialog.update_idletasks()
-    x = (dialog.winfo_screenwidth() - dialog.winfo_reqwidth()) // 2
-    y = (dialog.winfo_screenheight() - dialog.winfo_reqheight()) // 2
-    dialog.geometry(f"+{x}+{y}")
-
-    # Etiqueta con la pregunta
-    label = tk.Label(dialog, text="¿Desea ejecutar el cargue histórico o mensual?", font=("Arial", 12))
-    label.pack(pady=20)
-
-    # Variable para almacenar la elección del usuario
-    choice = tk.StringVar()
-
-    # Funciones para los botones
-    def select_historico():
-        choice.set('historico')
-        dialog.destroy()
-
-    def select_mensual():
-        choice.set('mensual')
-        dialog.destroy()
-
-    # Frame para centrar los botones
-    button_frame = tk.Frame(dialog)
-    button_frame.pack(pady=10)
-
-    # Botones para 'Histórico' y 'Mensual'
-    btn_historico = tk.Button(button_frame, text="Histórico", width=15, command=select_historico)
-    btn_historico.pack(side='left', padx=10)
-
-    btn_mensual = tk.Button(button_frame, text="Mensual", width=15, command=select_mensual)
-    btn_mensual.pack(side='right', padx=10)
-
-    # Esperar a que el usuario haga una elección
-    dialog.wait_window()
-
-    return choice.get()
-
-def ask_historico_or_trimestral():
-    """
-    Muestra un cuadro de diálogo para que el usuario seleccione entre 'Histórico' y 'Trimestral'.
-    Retorna 'historico' o 'trimestral' según la elección del usuario.
-    """
-    # Crear una ventana de diálogo
-    dialog = tk.Toplevel(root)
-    dialog.title("Periodicidad de cargue de datos")
-    dialog.geometry("400x150")
-    dialog.resizable(False, False)
-    dialog.grab_set()  # Bloquear interacción con la ventana principal
-
-    # Centrar la ventana en la pantalla
-    dialog.update_idletasks()
-    x = (dialog.winfo_screenwidth() - dialog.winfo_reqwidth()) // 2
-    y = (dialog.winfo_screenheight() - dialog.winfo_reqheight()) // 2
-    dialog.geometry(f"+{x}+{y}")
-
-    # Etiqueta con la pregunta
-    label = tk.Label(dialog, text="¿Desea ejecutar el cargue histórico o trimestral?", font=("Arial", 12))
-    label.pack(pady=20)
-
-    # Variable para almacenar la elección del usuario
-    choice = tk.StringVar()
-
-    # Funciones para los botones
-    def select_historico():
-        choice.set('historico')
-        dialog.destroy()
-
-    def select_mensual():
-        choice.set('trimestral')
-        dialog.destroy()
-
-    # Frame para centrar los botones
-    button_frame = tk.Frame(dialog)
-    button_frame.pack(pady=10)
-
-    # Botones para 'Histórico' y 'Trimestral'
-    btn_historico = tk.Button(button_frame, text="Histórico", width=15, command=select_historico)
-    btn_historico.pack(side='left', padx=10)
-
-    btn_mensual = tk.Button(button_frame, text="Trimestral", width=15, command=select_mensual)
-    btn_mensual.pack(side='right', padx=10)
-
-    # Esperar a que el usuario haga una elección
-    dialog.wait_window()
-
-    return choice.get()
-
 def run_forward_keys_script():
     """
     Pregunta al usuario qué script de Forward Keys desea ejecutar (histórico o mensual)
@@ -246,8 +146,8 @@ btn_cargue_iata.pack(fill='x')
 # Botón para cargar datos de Forward Keys con doble confirmación y selección de script
 btn_cargue_forward_keys = tk.Button(
     root,
-    text="5. Cargar Datos de Forward Keys",
-    command=run_forward_keys_script  # Llamar a la función que maneja la elección del usuario
+    text="5. Cargar Datos de Forward Keys - Búsquedas",
+    command=lambda: run_script("src/cargue_forward_keys_busquedas.py", "Cargue de Forward Keys (eliminar y cargar de nuevo la información desde cero para asegurar la mayor actualización posible con los archivos disponibles de la carpeta)")
 )
 btn_cargue_forward_keys.pack(fill='x')
 
