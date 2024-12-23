@@ -216,6 +216,16 @@ pprint.pprint(cadena_mensajes)
 # Imprimir mensaje de final de proceso
 print("Proceso de cague de datos correlativas exitoso.")
 
+# Filtrar filas donde la columna 'mensajes' contiene 'Error' o 'error'
+df_errores = df_resultados_carga[df_resultados_carga['mensajes'].str.contains('Error|error', case=False, na=False)]
+
+# Verificar si el DataFrame no está vacío
+if not df_errores.empty:
+    print("Errores encontrados:")
+    print(df_errores)
+else:
+    print("No se encontraron errores.")
+
 # ---------------------------
 # 7. Cerrar sesión y conexión
 # ---------------------------

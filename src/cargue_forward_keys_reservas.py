@@ -38,60 +38,69 @@ sesion_activa_procolombia, conexion_activa_procolombia = snowflake_analitica.cre
 sesion_activa_forward_keys, conexion_activa_forward_keys = snowflake_analitica.create_session_from_json(json_file_path = json_path_forward_keys)
 print("Sesiones en Procolombia y Forward Keys creadas correctamente")
 
-# -----------------------------------------
-# 4. Obtener archivos de cargue 2024 - 2026
-# -----------------------------------------
+# -----------------------------
+# 4. Obtener archivos de cargue
+# -----------------------------
 
-# Lista de parámetros
-param_year_list = [2024, 2025, 2026]
-param_month_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+# Meses de reservas a cargar
+meses_cargue = 6
+
+# Parámetros que se utilizarán para realizar la consulta
+query_params = f"""
+SELECT CURRENT_DATE() AS FECHA_INICIAL, DATEADD(MONTH, {meses_cargue}, CURRENT_DATE()) AS FECHA_FINAL;
+"""
+
+# Ejecutar la consulta
+pprint.pprint(pd.DataFrame(sesion_activa_forward_keys.sql(query_params).collect()))
 
 # Mensaje de inicio de proceso de cargue
 print('Iniciando proceso de extracción de datos desde el servidor de Forward Keys...')
 
-# Loop a través de los parámetros
-for param_year in param_year_list:
-    for param_month in param_month_list:
+# Consulta para extraer información desde Forward Keys
+query_reservas = f"""
+SELECT 
+    A.FLIGHT_TICKET_ISSUE_DATE,
+    A.FLIGHT_LEG_LEAD_TIME,
+    A.TRIP_ORIGIN_CITY,
+    A.TRIP_ORIGIN_COUNTRY,
+    A.FLIGHT_LEG_ORIGIN_AIRPORT,
+    A.FLIGHT_LEG_ORIGIN_CITY,
+    A.FLIGHT_LEG_ORIGIN_COUNTRY,
+    A.FLIGHT_LEG_DESTINATION_AIRPORT,
+    A.FLIGHT_LEG_DESTINATION_CITY,
+    A.FLIGHT_LEG_DESTINATION_COUNTRY,
+    A.FLIGHT_LEG_DEPARTURE_DATE,
+    A.FLIGHT_LEG_ARRIVAL_DATE,
+    A.EXTRACTION_DATE,
+    A.LOS_AT_DESTINATION_CAT,
+    A.LOS_AT_DESTINATION_NIGHTS,
+    A.TRIP_CABIN_CLASS,
+    A.TRIP_INTERNATIONAL,
+    A.TRIP_ORIGIN_AIRPORT,
+    A.TRUE_ORIGIN_AIRPORT,
+    A.TRUE_ORIGIN_CITY,
+    A.PAX_PROFILE,
+    A.PAX
+FROM CUSTOM_SPACE.PUBLIC.PROYECTO_CIFRAS_RESERVAS AS A
+WHERE A.FLIGHT_LEG_ARRIVAL_DATE BETWEEN CURRENT_DATE() AND DATEADD(MONTH, {meses_cargue}, CURRENT_DATE());
+"""
 
-        # Consulta del mes a actualizar
-        query_month = f"""
-        SELECT A.SEARCH_DATE,
-            A.SEARCH_INTERNATIONAL,
-            A.SEARCH_ORIGIN_CITY,
-            A.SEARCH_ORIGIN_COUNTRY,
-            A.SEARCH_DESTINATION_CITY,
-            A.SEARCH_DESTINATION_COUNTRY,
-            A.SEGMENT_TYPE,
-            A.TRIP_TYPE,
-            A.SEARCH_DEPARTURE_DATE,
-            A.LOS_AT_DESTINATION_CAT,
-            A.SEARCH_PAX,
-            YEAR(A.SEARCH_DATE) AS YEAR,
-            MONTH(A.SEARCH_DATE) AS MONTH
-        FROM CUSTOM_SPACE.PUBLIC.PROYECTO_TURISMO_BUSQUEDAS AS A
-        WHERE YEAR(A.SEARCH_DATE) = {param_year}
-            AND MONTH(A.SEARCH_DATE) = {param_month};
-        """
+# Obtener dataframe
+df_reservas = pd.DataFrame(sesion_activa_forward_keys.sql(query_reservas).collect())
 
-        # Obtener dataframe
-        df_mes = pd.DataFrame(sesion_activa_forward_keys.sql(query_month).collect())
+# Verificar si el dataframe está vacío
+if df_reservas.empty:
+    raise ValueError("No hay datos para la elección de parámetros elegidos.")
 
-        # Verificar si el dataframe está vacío
-        if df_mes.empty:
-            print(f"No hay datos para el año {param_year} y el mes {param_month}.")
-            continue
+# Exportar a CSV de la conulta
 
-        # Exportar a CSV del mes consultado
-        # Nombre del archivo
-        nombre_archivo = f"forward_keys_{param_year}_{param_month:02d}"
-
-        # Exportar
-        try:
-            df_mes.to_csv(f'./data/FORWARDKEYS_BUSQUEDAS/Meses/{nombre_archivo}.csv', sep='|', index=False)
-            # Mensaje de éxito en la exportación
-            print(f"{nombre_archivo} exportado correctamente a CSV")
-        except Exception as e:
-            print(f"Error al exportar {nombre_archivo} a CSV. Detalles: {e}")
+# Exportar
+try:
+    df_reservas.to_csv('C:/Users/nrivera/OneDrive - PROCOLOMBIA/Documentos/022-Repositorio-Turismo/app-repo-turismo/data/FORWARDKEYS_RESERVAS/Meses/forward_keys_reservas.csv', sep='|', index=False)
+    # Mensaje de éxito en la exportación
+    print("forward_keys_reservas exportado correctamente a CSV")
+except Exception as e:
+    print(f"Error al exportar forward_keys_reservas a CSV. Detalles: {e}")
 
 # Cerrar sesión en ForwardKeys
 sesion_activa_forward_keys.close()
@@ -105,10 +114,10 @@ print("Sesión en Forward Keys cerrada correctamente")
 # -------------------------------------------
 
 # Ruta donde están los archivos
-path_forward_keys = './data/FORWARDKEYS_BUSQUEDAS/Meses/'
+path_forward_keys = './data/FORWARDKEYS_RESERVAS/Meses/'
 
-# Lista de archivos nuevos para subir
-files_forward_keys = os.listdir(path_forward_keys)
+# Archivo que se sube a Snowflake
+files_forward_keys = ['forward_keys_reservas.csv']
 
 # Archivos a subir
 print(f"Los archivos a cargar son: {files_forward_keys}")
@@ -117,22 +126,31 @@ print(f"Los archivos a cargar son: {files_forward_keys}")
 rutas_archivos = [path_forward_keys + archivo for archivo in files_forward_keys]
 
 # Columna que debe ser numérica
-columnas_float64 = ['SEARCH_PAX']
+columnas_float64 = ['FLIGHT_LEG_LEAD_TIME', 'LOS_AT_DESTINATION_NIGHTS', 'PAX']
 
 # Diccionario con los nombres de datos y columnas esperados en la importación
-expected_schema = {'columns': ['SEARCH_DATE',
-                                'SEARCH_INTERNATIONAL',
-                                'SEARCH_ORIGIN_CITY',
-                                'SEARCH_ORIGIN_COUNTRY',
-                                'SEARCH_DESTINATION_CITY',
-                                'SEARCH_DESTINATION_COUNTRY',
-                                'SEGMENT_TYPE',
-                                'TRIP_TYPE',
-                                'SEARCH_DEPARTURE_DATE',
-                                'LOS_AT_DESTINATION_CAT',
-                                'SEARCH_PAX',
-                                'YEAR',
-                                'MONTH']}
+expected_schema = {'columns': ['FLIGHT_TICKET_ISSUE_DATE',
+    'FLIGHT_LEG_LEAD_TIME',
+    'TRIP_ORIGIN_CITY',
+    'TRIP_ORIGIN_COUNTRY',
+    'FLIGHT_LEG_ORIGIN_AIRPORT',
+    'FLIGHT_LEG_ORIGIN_CITY',
+    'FLIGHT_LEG_ORIGIN_COUNTRY',
+    'FLIGHT_LEG_DESTINATION_AIRPORT',
+    'FLIGHT_LEG_DESTINATION_CITY',
+    'FLIGHT_LEG_DESTINATION_COUNTRY',
+    'FLIGHT_LEG_DEPARTURE_DATE',
+    'FLIGHT_LEG_ARRIVAL_DATE',
+    'EXTRACTION_DATE',
+    'LOS_AT_DESTINATION_CAT',
+    'LOS_AT_DESTINATION_NIGHTS',
+    'TRIP_CABIN_CLASS',
+    'TRIP_INTERNATIONAL',
+    'TRIP_ORIGIN_AIRPORT',
+    'TRUE_ORIGIN_AIRPORT',
+    'TRUE_ORIGIN_CITY',
+    'PAX_PROFILE',
+    'PAX']}
 
 # Mensaje de inicio de proceso de importación
 print('Iniciando proceso de importación...')
@@ -206,7 +224,7 @@ if errores_criticos:
 
 # Drop tabla de búsquedas para volverla a cargar desde cero con información actualizada
 print("Eliminar la tabla anterior para cargar los datos desde cero con información actualizada")
-sesion_activa_procolombia.sql("DROP TABLE IF EXISTS REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS").collect()
+sesion_activa_procolombia.sql("DROP TABLE IF EXISTS REPOSITORIO_TURISMO.FORWARDKEYS.RESERVAS").collect()
 
 # Mensaje de inicio de proceso de cargue
 print('Iniciando proceso de cargue...')
@@ -225,12 +243,12 @@ for df, nombre_archivo in zip(dfs_fk, rutas_archivos):
 
     # Verificar que la tabla exista en Snowflake
     try:
-        tabla_existe = pd.DataFrame(sesion_activa_procolombia.sql("""SELECT 1 FROM REPOSITORIO_TURISMO.FORWARDKEYS.BUSQUEDAS LIMIT 1;""").collect())
+        tabla_existe = pd.DataFrame(sesion_activa_procolombia.sql("""SELECT 1 FROM REPOSITORIO_TURISMO.FORWARDKEYS.RESERVAS LIMIT 1;""").collect())
         print("La tabla existe. Se procede a cargar los datos.")
         create_table_param = False
         overwrite_param = False
     except Exception as e:
-        print(f"Advertencia: La tabla REPOSITORIO_TURISMO.OAG.BUSQUEDAS no existe. Detalles: {e}")
+        print(f"Advertencia: La tabla REPOSITORIO_TURISMO.OAG.RESERVAS no existe. Detalles: {e}")
         print("Se procede a crear la tabla para insertar los datos.")
         create_table_param = True
         overwrite_param = True
@@ -239,7 +257,7 @@ for df, nombre_archivo in zip(dfs_fk, rutas_archivos):
     mensajes = snowflake_analitica.upload_dataframe_to_snowflake(
         sesion_activa=sesion_activa_procolombia, 
         df=df, 
-        nombre_tabla='BUSQUEDAS', 
+        nombre_tabla='RESERVAS', 
         create_table=create_table_param, 
         overwrite=overwrite_param, 
         ram_gb=32
@@ -247,7 +265,7 @@ for df, nombre_archivo in zip(dfs_fk, rutas_archivos):
 
     # Almacenar el resultado en un diccionario
     resultado = {
-        'nombre_tabla': 'BUSQUEDAS',
+        'nombre_tabla': 'RESERVAS',
         'df': nombre_archivo,
         'mensajes': '\n'.join(mensajes),  # Unir los mensajes en un solo string para la tabla
     }
@@ -262,7 +280,7 @@ for df, nombre_archivo in zip(dfs_fk, rutas_archivos):
     resultado_str = '\n'.join(mensajes)
     snowflake_analitica.registrar_evento_auditoria(sesion_activa=sesion_activa_procolombia, 
                                                     nombre_esquema_destino='FORWARDKEYS', 
-                                                    nombre_tabla='BUSQUEDAS', 
+                                                    nombre_tabla='RESERVAS', 
                                                     ruta_archivo=nombre_archivo, 
                                                     numero_registros=obs, 
                                                     mensaje=resultado_str)
@@ -294,4 +312,3 @@ else:
 # ---------------------------
 sesion_activa_procolombia.close()
 sesion_activa_procolombia.close()
-

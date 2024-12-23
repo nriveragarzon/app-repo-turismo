@@ -449,6 +449,16 @@ if critical_differences:
 else:
     print("\nNo se encontraron diferencias críticas entre los esquemas.")
 
+# Filtrar filas donde la columna 'mensajes' contiene 'Error' o 'error'
+df_errores = df_resultados_carga[df_resultados_carga['mensajes'].str.contains('Error|error', case=False, na=False)]
+
+# Verificar si el DataFrame no está vacío
+if not df_errores.empty:
+    print("Errores encontrados:")
+    print(df_errores)
+else:
+    print("No se encontraron errores.")
+    
 # ---------------------------
 # 8. Cerrar sesión y conexión
 # ---------------------------
