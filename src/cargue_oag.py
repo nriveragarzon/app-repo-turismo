@@ -302,7 +302,7 @@ expected_sql_schema = {'CONECTIVIDAD_DIRECTA': {'columns': ['ARR_AIRPORT_CODE',
 # Obtener una tabla con los tipos de datos de la tabla subida
 df_real_schema = pd.DataFrame(sesion_activa.sql("""SELECT A.TABLE_NAME, A.COLUMN_NAME, A.DATA_TYPE
                                                         FROM REPOSITORIO_TURISMO.INFORMATION_SCHEMA.COLUMNS AS A
-                                                        WHERE A.TABLE_SCHEMA = 'OAG'
+                                                        WHERE A.TABLE_SCHEMA = 'OAG' AND A.TABLE_NAME = 'CONECTIVIDAD_DIRECTA'
                                                         ORDER BY A.TABLE_NAME, A.COLUMN_NAME ASC""").collect())
 # Convertir el esquema real en un diccionario para comparar 
 

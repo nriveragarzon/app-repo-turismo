@@ -334,7 +334,7 @@ expected_sql_schema = {'AGENCIAS': {'columns': ['TRAVEL_AGENCY_CITY',
 # Obtener una tabla con los tipos de datos de la tabla subida
 df_real_schema = pd.DataFrame(sesion_activa.sql("""SELECT A.TABLE_NAME, A.COLUMN_NAME, A.DATA_TYPE
                                                         FROM REPOSITORIO_TURISMO.INFORMATION_SCHEMA.COLUMNS AS A
-                                                        WHERE A.TABLE_SCHEMA = 'IATAGAP'
+                                                        WHERE A.TABLE_SCHEMA = 'IATAGAP' AND A.TABLE_NAME = 'AGENCIAS'
                                                         ORDER BY A.TABLE_NAME, A.COLUMN_NAME ASC""").collect())
 # Convertir el esquema real en un diccionario para comparar 
 

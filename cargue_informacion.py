@@ -197,6 +197,14 @@ btn_cargue_forward_keys_reservas = tk.Button(
 )
 btn_cargue_forward_keys_reservas.pack(fill='x', pady=5)
 
+# Botón para cargar datos de Credibanco - Gasto
+btn_cargue_credibanco_gasto = tk.Button(
+    buttons_frame,
+    text="7. Cargar Datos de Credibanco - Gasto",
+    command=lambda: run_script("src/cargue_credibanco_gasto.py", "Cargue de Credibanco - Gasto (cargar los últimos datos disponibles de la carpeta)")
+)
+btn_cargue_credibanco_gasto.pack(fill='x', pady=5)
+
 # -------------------------------
 # 6. Ejecutar el bucle principal
 # -------------------------------
