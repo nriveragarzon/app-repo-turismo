@@ -45,6 +45,7 @@ query_sql_esquemas = """
     CREATE OR REPLACE SCHEMA SEGUIMIENTO;
     CREATE OR REPLACE SCHEMA CORRELATIVAS;
     CREATE OR REPLACE SCHEMA AUDITORIA;
+    CREATE OR REPLACE SCHEMA VISTAS;
 """
 snowflake_analitica.ejecutar_script_sql_snowpark(sesion_activa, query_sql_esquemas)
 

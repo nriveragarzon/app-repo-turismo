@@ -52,11 +52,13 @@ divipola_file = 'DIVIPOLA.xlsx'
 df_departamentos_divipola = pd.read_excel(path_insumos + divipola_file, sheet_name="Departamento", dtype=str)
 df_municipio_divipola = pd.read_excel(path_insumos + divipola_file, sheet_name="Municipio", dtype=str)
 df_departamentos_municipio_divipola = pd.read_excel(path_insumos + divipola_file, sheet_name="Departamento - Municipio", dtype=str)
+df_aeropuertos = pd.read_excel(path_insumos + divipola_file, sheet_name="Aeropuertos", dtype=str)
 
 # Nombres de los archivos cargados
 df_departamentos_divipola_name = path_insumos + divipola_file + '/' + 'Departamento'
 df_municipio_divipola_name = path_insumos + divipola_file + '/' + 'Municipio'
 df_departamentos_municipio_divipola_name = path_insumos + divipola_file + '/' + 'Departamento - Municipio'
+df_aeropuertos_name = path_insumos + divipola_file + '/' + 'Aeropuertos'
 
 # Datos del modelos relacional de países
 correlativa_file = 'MODELO RELACIONAL PAISES.xlsx'
@@ -99,6 +101,7 @@ bases_de_datos = [
     'df_departamentos_divipola',
     'df_municipio_divipola',
     'df_departamentos_municipio_divipola',
+    'df_aeropuertos',
     # PAISES
     'df_continentes',
     'df_region',
@@ -117,6 +120,7 @@ nombres_tablas = [
     'DIVIPOLA_DEPARTAMENTOS',
     'DIVIPOLA_MUNICIPIOS',
     'DIVIPOLA_DEPARTAMENTOS_MUNICIPIOS',
+    'DIVIPOLA_AEROPUERTOS',
     # PAISES
     'CONTINENTES',
     'REGIONES',
@@ -135,6 +139,7 @@ nombres_archivos = [
     df_departamentos_divipola_name,
     df_municipio_divipola_name,
     df_departamentos_municipio_divipola_name,
+    df_aeropuertos_name,
     # PAISES
     df_continentes_name,
     df_region_name,
@@ -166,6 +171,16 @@ for df_name, nombre_tabla, nombre_archivo in zip(bases_de_datos, nombres_tablas,
 
     # Obtener el DataFrame a partir del nombre almacenado en la variable global
     df = globals()[df_name]
+
+    # Incluir Namibia en base de forward keys
+    if df_name == 'df_paises_forwardkeys':
+        # Verificar si las columnas necesarias existen en el DataFrame
+        if 'COUNTRYCODE' in df.columns and 'COUNTRYNAME' in df.columns:
+            # Aplicar la condición y asignar 'NA' a COUNTRYCODE cuando COUNTRYCODE está vacío y COUNTRYNAME es 'Namibia'
+            df.loc[
+                (df['COUNTRYCODE'].isna() | (df['COUNTRYCODE'] == '')) & (df['COUNTRYNAME'] == 'Namibia'),
+                'COUNTRYCODE'
+            ] = 'NA'
 
     # Obtener números de registros
     obs = len(df)

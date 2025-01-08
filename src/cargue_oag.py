@@ -90,7 +90,6 @@ if not files_oag:
 dfs_oag = []
 
 # Loop de los archivos válidos (1 o más archivos)
-
 for file_oag in files_oag:
     # Importar datos
     df_oag_insumo = pd.read_excel(path_oag + file_oag, sheet_name=sheet_oag)
@@ -107,11 +106,27 @@ for file_oag in files_oag:
     columnas_otros = [col for col in df_oag_insumo.columns if col not in columnas_float64]
     df_oag_insumo[columnas_otros] = df_oag_insumo[columnas_otros].astype(str)
 
+    # Verificar y actualizar los valores según las condiciones
+    # Condición 1: DEP_IATA_COUNTRY_CODE = 'nan' y DEP_IATA_COUNTRY_NAME = 'Namibia'
+    if 'DEP_IATA_COUNTRY_CODE' in df_oag_insumo.columns and 'DEP_IATA_COUNTRY_NAME' in df_oag_insumo.columns:
+        df_oag_insumo.loc[
+            (df_oag_insumo['DEP_IATA_COUNTRY_CODE'] == 'nan') & (df_oag_insumo['DEP_IATA_COUNTRY_NAME'] == 'Namibia'),
+            'DEP_IATA_COUNTRY_CODE'
+        ] = 'NA'
+
+    # Condición 2: ARR_IATA_COUNTRY_CODE = 'nan' y ARR_IATA_COUNTRY_NAME = 'Namibia'
+    if 'ARR_IATA_COUNTRY_CODE' in df_oag_insumo.columns and 'ARR_IATA_COUNTRY_NAME' in df_oag_insumo.columns:
+        df_oag_insumo.loc[
+            (df_oag_insumo['ARR_IATA_COUNTRY_CODE'] == 'nan') & (df_oag_insumo['ARR_IATA_COUNTRY_NAME'] == 'Namibia'),
+            'ARR_IATA_COUNTRY_CODE'
+        ] = 'NA'
+
     # Mostrar que se ha cargado y limpiado correctamente
     print(f"Archivo {file_oag} cargado, nombres de columnas limpiados, columnas especificadas convertidas a float64")
 
     # Agregar el DataFrame procesado a la lista
     dfs_oag.append(df_oag_insumo)
+
 
 # Concatenar todos los DataFrames en uno solo para validación
 df_oag_validacion = pd.concat(dfs_oag, ignore_index=True)
