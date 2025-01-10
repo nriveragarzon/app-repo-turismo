@@ -205,6 +205,14 @@ btn_cargue_credibanco_gasto = tk.Button(
 )
 btn_cargue_credibanco_gasto.pack(fill='x', pady=5)
 
+# Botón para crear vistas del aplicativo
+btn_creacion_vistas = tk.Button(
+    buttons_frame,
+    text="9. Creación y actualización de vistas del aplicativo",
+    command=lambda: run_script("src/creacion_vistas.py", "Creación y actualización de vistas el aplicativo (modifica las vistas materializadas del aplicativo con la información más reciente)")
+)
+btn_creacion_vistas.pack(fill='x', pady=5)
+
 # -------------------------------
 # 6. Ejecutar el bucle principal
 # -------------------------------

@@ -6,8 +6,24 @@ import snowflake_analitica as snowflake_analitica
 # Warnings
 import warnings
 
+# OS
+import os
+
+# Importar pandas
+import pandas as pd
+
+# Prettyprint
+import pprint
+
 # Suprimir todas las advertencias de tipo UserWarning
 warnings.filterwarnings("ignore", category=UserWarning)
+
+# Aumentar número de columnas que se pueden ver
+pd.options.display.max_columns = None
+# En los dataframes, mostrar los float con dos decimales
+pd.options.display.float_format = '{:,.10f}'.format
+# Cada columna será tan grande como sea necesario para mostrar todo su contenido
+pd.set_option('display.max_colwidth', 0)
 
 # ------------------------------------------------
 # 2. Definir archivo de configuración de Snowflake
