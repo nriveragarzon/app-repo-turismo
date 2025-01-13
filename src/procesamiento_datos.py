@@ -50,14 +50,16 @@ def obtener_datos_global_data(pais_seleccionado, session):
                 YEAR,
                 VIAJEROS
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_VIAJEROS_MUNDO
-            WHERE PAIS = '{pais_seleccionado}';
+            WHERE PAIS = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """,
         "noches_pernoctacion_promedio": f"""
             SELECT PAIS, 
                 YEAR,
                 NOCHES
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_NOCHES_PROMEDIO
-            WHERE PAIS = '{pais_seleccionado}';
+            WHERE PAIS = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """,
         "gasto_categorias": f"""
             SELECT PAIS,
@@ -65,7 +67,8 @@ def obtener_datos_global_data(pais_seleccionado, session):
                 CATEGORIA_GASTO,
                 GASTO
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_CATEGORIAS_GASTO
-            WHERE PAIS = '{pais_seleccionado}';
+            WHERE PAIS = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """,
         "rango_edad": f"""
             SELECT PAIS,
@@ -73,7 +76,8 @@ def obtener_datos_global_data(pais_seleccionado, session):
                 RANGO_EDAD,
                 VIAJEROS
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_RANGO_EDAD
-            WHERE PAIS = '{pais_seleccionado}';
+            WHERE PAIS = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """,
         "motivo_viaje": f"""
             SELECT PAIS,
@@ -81,7 +85,8 @@ def obtener_datos_global_data(pais_seleccionado, session):
                 MOTIVO_VIAJE,
                 VIAJEROS
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_MOTIVO_VIAJE
-            WHERE PAIS = '{pais_seleccionado}';
+            WHERE PAIS = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """,
         "forma_viaje": f"""
             SELECT PAIS,
@@ -89,7 +94,8 @@ def obtener_datos_global_data(pais_seleccionado, session):
                 FORMA_VIAJE,
                 VIAJEROS
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_FORMA_VIAJE
-            WHERE PAIS = '{pais_seleccionado}';
+            WHERE PAIS = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """,
         "destinos_internacionales": f"""
             SELECT PAIS_ORIGEN,
@@ -97,7 +103,8 @@ def obtener_datos_global_data(pais_seleccionado, session):
                 YEAR,
                 VIAJEROS
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_FLUJOS_VIAJEROS_REGION
-            WHERE PAIS_ORIGEN = '{pais_seleccionado}';
+            WHERE PAIS_ORIGEN = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """,
         "flujos_negocios": f"""
             SELECT PAIS,
@@ -105,7 +112,8 @@ def obtener_datos_global_data(pais_seleccionado, session):
                 MOTIVO_VIAJE,
                 VIAJEROS
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_MICE
-            WHERE PAIS = '{pais_seleccionado}';
+            WHERE PAIS = '{pais_seleccionado}'
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
         """
     }
 
@@ -152,6 +160,7 @@ def procesar_datos_global_data(dataframes):
             df_viajeros_medio = df_viajeros_hacia_el_mundo[['MEDIO', 'YEAR', 'VIAJEROS']]
             df_viajeros_medio['TOTAL_ANUAL'] = df_viajeros_medio.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_viajeros_medio['PARTICIPACION'] = (df_viajeros_medio['VIAJEROS'] / df_viajeros_medio['TOTAL_ANUAL']) * 100
+            df_viajeros_medio = df_viajeros_medio[['YEAR', 'MEDIO', 'VIAJEROS', 'PARTICIPACION']]
             df_viajeros_medio = df_viajeros_medio.sort_values(by=['YEAR', 'MEDIO'])
             resultados_procesados['viajeros_medio'] = df_viajeros_medio
         else:
@@ -169,7 +178,7 @@ def procesar_datos_global_data(dataframes):
         # Gasto por categorías
         df_categorias_gasto = dataframes.get('gasto_categorias', pd.DataFrame())
         if not df_categorias_gasto.empty:
-            # Serie de tiempo de gasto
+            # Serie de tiempo de gasto (se está sumando Average Expenditure per Outbound Tourist USD, suma de promedios)
             df_gasto_serie_tiempo = pd.DataFrame(df_categorias_gasto.groupby('YEAR')['GASTO'].sum()).reset_index()
             resultados_procesados['gasto_serie_tiempo'] = df_gasto_serie_tiempo
 
@@ -177,18 +186,20 @@ def procesar_datos_global_data(dataframes):
             df_gasto_categoria = df_categorias_gasto[['CATEGORIA_GASTO', 'YEAR', 'GASTO']]
             df_gasto_categoria['TOTAL_ANUAL'] = df_gasto_categoria.groupby('YEAR')['GASTO'].transform('sum')
             df_gasto_categoria['PARTICIPACION'] = (df_gasto_categoria['GASTO'] / df_gasto_categoria['TOTAL_ANUAL']) * 100
+            df_gasto_categoria = df_gasto_categoria[['YEAR', 'CATEGORIA_GASTO', 'GASTO', 'PARTICIPACION']]
             df_gasto_categoria = df_gasto_categoria.sort_values(by=['YEAR', 'CATEGORIA_GASTO'])
             resultados_procesados['gasto_categoria'] = df_gasto_categoria
         else:
             resultados_procesados['gasto_serie_tiempo'] = pd.DataFrame()
             resultados_procesados['gasto_categoria'] = pd.DataFrame()
 
-        # Rango de edad
+        # Rango de edad (está medido en Thousand)
         df_rango_edad = dataframes.get('rango_edad', pd.DataFrame())
         if not df_rango_edad.empty:
             # Procesar rango de edad
             df_rango_edad['TOTAL_ANUAL'] = df_rango_edad.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_rango_edad['PARTICIPACION'] = (df_rango_edad['VIAJEROS'] / df_rango_edad['TOTAL_ANUAL']) * 100
+            df_rango_edad = df_rango_edad[['YEAR', 'RANGO_EDAD', 'VIAJEROS', 'PARTICIPACION']]
             df_rango_edad = df_rango_edad.sort_values(by=['YEAR', 'RANGO_EDAD'])
             resultados_procesados['rango_edad'] = df_rango_edad
         else:
@@ -200,6 +211,7 @@ def procesar_datos_global_data(dataframes):
             # Procesar motivo de viaje
             df_motivo_viaje['TOTAL_ANUAL'] = df_motivo_viaje.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_motivo_viaje['PARTICIPACION'] = (df_motivo_viaje['VIAJEROS'] / df_motivo_viaje['TOTAL_ANUAL']) * 100
+            df_motivo_viaje = df_motivo_viaje[['YEAR', 'MOTIVO_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_motivo_viaje = df_motivo_viaje.sort_values(by=['YEAR', 'MOTIVO_VIAJE'])
             resultados_procesados['motivo_viaje'] = df_motivo_viaje
         else:
@@ -211,6 +223,7 @@ def procesar_datos_global_data(dataframes):
             # Procesar forma de viaje
             df_forma_viaje['TOTAL_ANUAL'] = df_forma_viaje.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_forma_viaje['PARTICIPACION'] = (df_forma_viaje['VIAJEROS'] / df_forma_viaje['TOTAL_ANUAL']) * 100
+            df_forma_viaje = df_forma_viaje[['YEAR', 'FORMA_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_forma_viaje = df_forma_viaje.sort_values(by=['YEAR', 'FORMA_VIAJE'])
             resultados_procesados['forma_viaje'] = df_forma_viaje
         else:
@@ -230,9 +243,10 @@ def procesar_datos_global_data(dataframes):
         # Flujos de negocios
         df_mice = dataframes.get('flujos_negocios', pd.DataFrame())
         if not df_mice.empty:
-            # Procesar flujos de negocios
+            # Procesar flujos de negocios (Outbound by MICE Penetration)
             df_mice['TOTAL_ANUAL'] = df_mice.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_mice['PARTICIPACION'] = (df_mice['VIAJEROS'] / df_mice['TOTAL_ANUAL']) * 100
+            df_mice = df_mice[['YEAR', 'MOTIVO_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_mice = df_mice.sort_values(by=['YEAR', 'MOTIVO_VIAJE'])
             resultados_procesados['flujos_negocios'] = df_mice
         else:
