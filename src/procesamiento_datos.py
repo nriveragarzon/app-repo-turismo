@@ -1,4 +1,5 @@
 # Procesamiento de datos
+
 # Este modulo contiene todas las funciones necesarios para obtener, procesar y limpiar los datos del repositorio de turismo
 
 # Importar módulos necesarios
@@ -101,10 +102,13 @@ def obtener_datos_global_data(pais_seleccionado, session):
             SELECT PAIS_ORIGEN,
                 PAIS_DESTINO,
                 YEAR,
-                VIAJEROS
+                SUM(VIAJEROS) AS VIAJEROS
             FROM REPOSITORIO_TURISMO.VISTAS.GLOBALDATA_FLUJOS_VIAJEROS_REGION
             WHERE PAIS_ORIGEN = '{pais_seleccionado}'
-            AND YEAR IN ('2022', '2023', '2024', '2025', '2026');
+            AND YEAR IN ('2022', '2023', '2024', '2025', '2026')
+            GROUP BY PAIS_ORIGEN,
+                PAIS_DESTINO,
+                YEAR;
         """,
         "flujos_negocios": f"""
             SELECT PAIS,
@@ -146,6 +150,46 @@ def procesar_datos_global_data(dataframes):
     Retorna:
     - dict: Diccionario con los DataFrames procesados y transformados.
     """
+
+    # Función para validar los valores únicos de TOTAL_ANUAL
+    def validar_total_anual(df, df_viajeros_serie_tiempo):
+        """
+        Valida que los valores de 'TOTAL_ANUAL' en un DataFrame coincidan con los valores 
+        de 'VIAJEROS' en otro DataFrame agrupado por 'YEAR', permitiendo una tolerancia en 
+        la diferencia para manejar redondeos.
+
+        Parámetros:
+        - df (DataFrame): DataFrame que contiene las columnas 'YEAR' y 'TOTAL_ANUAL'.
+        - df_viajeros_serie_tiempo (DataFrame): DataFrame que contiene las columnas 'YEAR' y 'VIAJEROS', 
+        representando la serie de tiempo de viajeros.
+
+        Lanza:
+        - ValueError: Si se encuentra una discrepancia mayor al umbral entre 'TOTAL_ANUAL' y 'VIAJEROS' en algún año.
+        """
+        
+        # Definir un umbral de tolerancia
+        tolerancia = 1
+
+        # Obtener valores únicos de 'YEAR' y 'TOTAL_ANUAL' para evitar duplicados
+        total_anual_unicos = df[['YEAR', 'TOTAL_ANUAL']].drop_duplicates()
+
+        # Iterar por cada fila única en los valores de 'YEAR' y 'TOTAL_ANUAL'
+        for _, row in total_anual_unicos.iterrows():
+            year = row['YEAR']  # Año actual
+            total_anual = row['TOTAL_ANUAL']  # Valor total anual para el año actual
+
+            # Obtener el valor correspondiente de 'VIAJEROS' en la serie de tiempo para el mismo año
+            viajeros_serie_tiempo = df_viajeros_serie_tiempo[df_viajeros_serie_tiempo['YEAR'] == year]['VIAJEROS'].values[0]
+
+            # Validar si 'TOTAL_ANUAL' coincide con 'VIAJEROS'
+            if abs(total_anual - viajeros_serie_tiempo) > tolerancia:
+                # Lanzar un error si hay una discrepancia
+                raise ValueError(
+                    f"Discrepancia en el año {year}: TOTAL_ANUAL {total_anual} no coincide con VIAJEROS {viajeros_serie_tiempo}"
+                )
+
+    # Iniciar procesamiento de los datos (se usa la subfunción que se creó en el paso anterior)
+          
     resultados_procesados = {}
 
     try:
@@ -160,6 +204,10 @@ def procesar_datos_global_data(dataframes):
             df_viajeros_medio = df_viajeros_hacia_el_mundo[['MEDIO', 'YEAR', 'VIAJEROS']]
             df_viajeros_medio['TOTAL_ANUAL'] = df_viajeros_medio.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_viajeros_medio['PARTICIPACION'] = (df_viajeros_medio['VIAJEROS'] / df_viajeros_medio['TOTAL_ANUAL']) * 100
+            # Comparar los totales
+            print("Validando viajeros por medio..")
+            validar_total_anual(df_viajeros_medio, df_viajeros_serie_tiempo)
+            # Filtrar columnas relevantes
             df_viajeros_medio = df_viajeros_medio[['YEAR', 'MEDIO', 'VIAJEROS', 'PARTICIPACION']]
             df_viajeros_medio = df_viajeros_medio.sort_values(by=['YEAR', 'MEDIO'])
             resultados_procesados['viajeros_medio'] = df_viajeros_medio
@@ -211,6 +259,10 @@ def procesar_datos_global_data(dataframes):
             # Procesar motivo de viaje
             df_motivo_viaje['TOTAL_ANUAL'] = df_motivo_viaje.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_motivo_viaje['PARTICIPACION'] = (df_motivo_viaje['VIAJEROS'] / df_motivo_viaje['TOTAL_ANUAL']) * 100
+            # Comparar los totales
+            print("Validando viajeros por motivo..")
+            validar_total_anual(df_motivo_viaje, df_viajeros_serie_tiempo)
+            # Filtrar columnas relevantes
             df_motivo_viaje = df_motivo_viaje[['YEAR', 'MOTIVO_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_motivo_viaje = df_motivo_viaje.sort_values(by=['YEAR', 'MOTIVO_VIAJE'])
             resultados_procesados['motivo_viaje'] = df_motivo_viaje
@@ -223,6 +275,10 @@ def procesar_datos_global_data(dataframes):
             # Procesar forma de viaje
             df_forma_viaje['TOTAL_ANUAL'] = df_forma_viaje.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_forma_viaje['PARTICIPACION'] = (df_forma_viaje['VIAJEROS'] / df_forma_viaje['TOTAL_ANUAL']) * 100
+            # Comparar los totales
+            print("Validando viajeros por forma..")
+            validar_total_anual(df_forma_viaje, df_viajeros_serie_tiempo)
+            # Filtrar columnas relevantes
             df_forma_viaje = df_forma_viaje[['YEAR', 'FORMA_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_forma_viaje = df_forma_viaje.sort_values(by=['YEAR', 'FORMA_VIAJE'])
             resultados_procesados['forma_viaje'] = df_forma_viaje
@@ -235,10 +291,41 @@ def procesar_datos_global_data(dataframes):
             # Procesar destinos internacionales
             df_destinos['TOTAL_ANUAL'] = df_destinos.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_destinos['PARTICIPACION'] = (df_destinos['VIAJEROS'] / df_destinos['TOTAL_ANUAL']) * 100
+            # Filtrar columnas relevantes
+            df_destinos = df_destinos[['YEAR', 'PAIS_DESTINO', 'VIAJEROS', 'PARTICIPACION']]
             df_destinos = df_destinos.sort_values(by=['YEAR', 'PAIS_DESTINO'])
             resultados_procesados['destinos_internacionales'] = df_destinos
+            
+            # Crear agrupación de Top 5 para gráficar
+            # Sumar VIAJEROS por país para el periodo total
+            suma_viajeros_por_pais = df_destinos.groupby('PAIS_DESTINO')['VIAJEROS'].sum().reset_index()
+
+            # Obtener el top 5 de países con más viajeros
+            top5_paises = suma_viajeros_por_pais.nlargest(5, 'VIAJEROS')['PAIS_DESTINO']
+
+            # Obtener número de países
+            num_paises = len(suma_viajeros_por_pais['PAIS_DESTINO'].unique())
+
+            # Crear el nuevo DataFrame con top 5 y agrupar los demás bajo "Otros"
+            if num_paises <= 5:
+                # Si hay 5 países o menos, devolver el DataFrame original sin cambios
+                df_destinos_top5 = df_destinos.copy()
+            else:
+                # Filtrar por los países en el top 5 y los demás como "Otros"
+                df_destinos['PAIS_DESTINO'] = df_destinos['PAIS_DESTINO'].apply(
+                    lambda x: x if x in top5_paises.values else 'Otros'
+                )
+
+                # Agrupar por país y año, sumando VIAJEROS y PARTICIPACION
+                df_destinos_top5 = df_destinos.groupby(['YEAR', 'PAIS_DESTINO'], as_index=False).agg({
+                    'VIAJEROS': 'sum',
+                    'PARTICIPACION': 'sum'
+                })
+            # Agregar top5 a los resultados
+            resultados_procesados['destinos_internacionales_top5'] = df_destinos_top5
         else:
             resultados_procesados['destinos_internacionales'] = pd.DataFrame()
+            resultados_procesados['destinos_internacionales_top5'] = pd.DataFrame()
 
         # Flujos de negocios
         df_mice = dataframes.get('flujos_negocios', pd.DataFrame())
@@ -246,6 +333,7 @@ def procesar_datos_global_data(dataframes):
             # Procesar flujos de negocios (Outbound by MICE Penetration)
             df_mice['TOTAL_ANUAL'] = df_mice.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_mice['PARTICIPACION'] = (df_mice['VIAJEROS'] / df_mice['TOTAL_ANUAL']) * 100
+            # Filtrar columnas relevantes
             df_mice = df_mice[['YEAR', 'MOTIVO_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_mice = df_mice.sort_values(by=['YEAR', 'MOTIVO_VIAJE'])
             resultados_procesados['flujos_negocios'] = df_mice
@@ -341,22 +429,124 @@ def procesar_datos_oag(dataframes):
             resultados_procesados['conectividad_mundo_serie_tiempo'] = df_conectividad_mundo_serie_tiempo
 
             # Procesar conectividad por destino
-            df_conectividad_mundo_destino = df_conectividad_mundo[['PAIS_ARRIVAL', 'YEAR', 'FRECUENCIAS', 'SILLAS']]
-            # Calcular participaciones porcentuales
-            df_conectividad_mundo_destino['TOTAL_ANUAL_FRECUENCIAS'] = df_conectividad_mundo_destino.groupby('YEAR')['FRECUENCIAS'].transform('sum')
-            df_conectividad_mundo_destino['PARTICIPACION_FRECUENCIAS'] = (
-                df_conectividad_mundo_destino['FRECUENCIAS'] / df_conectividad_mundo_destino['TOTAL_ANUAL_FRECUENCIAS']
-            ) * 100
-            df_conectividad_mundo_destino['TOTAL_ANUAL_SILLAS'] = df_conectividad_mundo_destino.groupby('YEAR')['SILLAS'].transform('sum')
-            df_conectividad_mundo_destino['PARTICIPACION_SILLAS'] = (
-                df_conectividad_mundo_destino['SILLAS'] / df_conectividad_mundo_destino['TOTAL_ANUAL_SILLAS']
-            ) * 100
-            # Ordenar por año y destino
-            df_conectividad_mundo_destino = df_conectividad_mundo_destino.sort_values(by=['YEAR', 'PAIS_ARRIVAL'])
-            resultados_procesados['conectividad_mundo_destino'] = df_conectividad_mundo_destino
+            # Cerrado y acumulado por destino
+            df_conectividad_mundo_serie_tiempo_mensual = df_conectividad_mundo[['YEAR', 'PAIS_ARRIVAL', 'TIME_SERIES', 'FRECUENCIAS','SILLAS']]
+
+            ###############
+            # PASO 1: TOP 5
+            ###############
+
+            # Convertir TIME_SERIES a datetime para facilitar el manejo temporal
+            df_conectividad_mundo_serie_tiempo_mensual['TIME_SERIES'] = pd.to_datetime(df_conectividad_mundo_serie_tiempo_mensual['TIME_SERIES'], format='%Y-%m')
+
+            # Obtener el último año disponible
+            ultimo_anio = df_conectividad_mundo_serie_tiempo_mensual['TIME_SERIES'].dt.year.max()
+
+            # Filtrar datos solo del último año
+            df_cerrado = df_conectividad_mundo_serie_tiempo_mensual[df_conectividad_mundo_serie_tiempo_mensual['TIME_SERIES'].dt.year == ultimo_anio]
+
+            # Sumar FRECUENCIAS por país para el último año
+            frecuencias_por_pais = df_cerrado.groupby('PAIS_ARRIVAL')['FRECUENCIAS'].sum().reset_index()
+
+            # Seleccionar el top 5 de países con mayor FRECUENCIAS
+            top_5_paises = frecuencias_por_pais.nlargest(5, 'FRECUENCIAS')['PAIS_ARRIVAL']
+
+            # Obtener el número de países
+            num_paises = len(frecuencias_por_pais['PAIS_ARRIVAL'].unique())
+
+            # Crear el nuevo DataFrame con top 5 y agrupar los demás bajo "Otros"
+            if num_paises <= 5:
+                # Si hay 5 países o menos, no se agrupan bajo "Otros"
+                df_top_otros = df_conectividad_mundo_serie_tiempo_mensual.copy()
+            else:
+                # Si hay más de 5 países, agrupar los demás como "Otros"
+                df_top_otros = df_conectividad_mundo_serie_tiempo_mensual.copy()
+                df_top_otros['PAIS_ARRIVAL'] = df_top_otros['PAIS_ARRIVAL'].apply(
+                    lambda pais: pais if pais in top_5_paises.values else 'Otros'
+                )
+
+                # Agrupar por mes (TIME_SERIES) y país, sumando FRECUENCIAS y SILLAS
+                df_top_otros = df_top_otros.groupby(['TIME_SERIES', 'PAIS_ARRIVAL'], as_index=False).agg({
+                    'FRECUENCIAS': 'sum',
+                    'SILLAS': 'sum'
+                })
+            
+            #######################################
+            # PASO 2: PERIODO CERRADO (2022 - 2023)
+            #######################################
+
+            # Obtener columnas de fecha
+            df_top_otros['FECHA'] = df_top_otros['TIME_SERIES'].dt.year
+
+            # Filtrar años de interés
+            df_distribucion_cerrado = df_top_otros[df_top_otros['FECHA'].isin([2022, 2023])].copy()
+
+            # Crear agrupación de años cerrados
+            totales_cerrado = df_distribucion_cerrado.groupby(['FECHA', 'PAIS_ARRIVAL'])[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+
+            # Calcular el total de frecuencias y sillas por año
+            totales_anuales = totales_cerrado.groupby('FECHA')[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+            totales_anuales = totales_anuales.rename(columns={'FRECUENCIAS': 'TOTAL_FRECUENCIAS', 'SILLAS': 'TOTAL_SILLAS'})
+
+            # Unir los totales anuales con el dataframe original
+            totales_cerrado = totales_cerrado.merge(totales_anuales, on='FECHA')
+
+            # Calcular la participación porcentual por país por año
+            totales_cerrado['PARTICIPACION_FRECUENCIAS'] = totales_cerrado['FRECUENCIAS'] / totales_cerrado['TOTAL_FRECUENCIAS'] * 100
+            totales_cerrado['PARTICIPACION_SILLAS'] = totales_cerrado['SILLAS'] / totales_cerrado['TOTAL_SILLAS'] * 100
+
+            # Elegir columnas de interés
+            totales_cerrado = totales_cerrado[['FECHA', 'PAIS_ARRIVAL', 'FRECUENCIAS', 'SILLAS', 'PARTICIPACION_FRECUENCIAS', 'PARTICIPACION_SILLAS']]
+
+            #######################################
+            # PASO 3: PERIODO CORRIDO (2023 - 2024)
+            #######################################
+
+            # Obtener columnas de fecha
+            df_top_otros['MES'] = df_top_otros['TIME_SERIES'].dt.month
+
+            # Obtener nombre de mes
+            df_top_otros['MES_NAME'] = df_top_otros['TIME_SERIES'].dt.month_name(locale='es_ES.UTF-8')
+
+            # Filtrar años de interés
+            df_distribucion_corrido = df_top_otros[df_top_otros['FECHA'].isin([2023, 2024])].copy()
+
+            # Obtener mes máximo disponible en 2024
+            mes_maximo = df_distribucion_corrido[df_distribucion_corrido['FECHA']==2024]['MES'].max()
+
+            # Obtener nombre del mes máximo
+            mes_maximo_nombre = df_distribucion_corrido[df_distribucion_corrido['MES'] == mes_maximo]['MES_NAME'].unique()[0]
+
+            # Filtrar los meses
+            df_distribucion_corrido = df_distribucion_corrido[df_distribucion_corrido['MES'] <= mes_maximo]
+
+            # Crear columna de fecha corrida
+            df_distribucion_corrido['FECHA_CORRIDA'] = 'Enero - ' + mes_maximo_nombre + ' ' + df_distribucion_corrido['FECHA'].astype(str)
+
+            # Crear agrupación de años cerrados
+            totales_corrido = df_distribucion_corrido.groupby(['FECHA_CORRIDA', 'PAIS_ARRIVAL'])[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+
+            # Calcular el total de frecuencias y sillas por año corrido
+            totales_anuales = totales_corrido.groupby('FECHA_CORRIDA')[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+            totales_anuales = totales_anuales.rename(columns={'FRECUENCIAS': 'TOTAL_FRECUENCIAS', 'SILLAS': 'TOTAL_SILLAS'})
+
+            # Unir los totales anuales con el dataframe original
+            totales_corrido = totales_corrido.merge(totales_anuales, on='FECHA_CORRIDA')
+
+            # Calcular la participación porcentual por país por año corrido
+            totales_corrido['PARTICIPACION_FRECUENCIAS'] = totales_corrido['FRECUENCIAS'] / totales_corrido['TOTAL_FRECUENCIAS'] * 100
+            totales_corrido['PARTICIPACION_SILLAS'] = totales_corrido['SILLAS'] / totales_corrido['TOTAL_SILLAS'] * 100
+
+            # Elegir columnas de interés
+            totales_corrido = totales_corrido[['FECHA_CORRIDA', 'PAIS_ARRIVAL', 'FRECUENCIAS', 'SILLAS', 'PARTICIPACION_FRECUENCIAS', 'PARTICIPACION_SILLAS']]
+            
+            # Agregar dfs al resultado
+            resultados_procesados['conectividad_mundo_destino_cerrado'] = totales_cerrado
+            resultados_procesados['conectividad_mundo_destino_corrido'] = totales_corrido
         else:
             resultados_procesados['conectividad_mundo_serie_tiempo'] = pd.DataFrame()
-            resultados_procesados['conectividad_mundo_destino'] = pd.DataFrame()
+            resultados_procesados['conectividad_mundo_destino_cerrado'] = pd.DataFrame()
+            resultados_procesados['conectividad_mundo_destino_corrido'] = pd.DataFrame()
 
         # Conectividad del país hacia Colombia
         df_conectividad_colombia = dataframes.get('conectividad_hacia_colombia', pd.DataFrame())
@@ -368,22 +558,125 @@ def procesar_datos_oag(dataframes):
             resultados_procesados['conectividad_colombia_serie_tiempo'] = df_conectividad_colombia_serie_tiempo
 
             # Procesar conectividad por municipio
-            df_conectividad_colombia_municipio = df_conectividad_colombia[['MUNICIPIO_DANE', 'YEAR', 'FRECUENCIAS', 'SILLAS']]
-            # Calcular participaciones porcentuales
-            df_conectividad_colombia_municipio['TOTAL_ANUAL_FRECUENCIAS'] = df_conectividad_colombia_municipio.groupby('YEAR')['FRECUENCIAS'].transform('sum')
-            df_conectividad_colombia_municipio['PARTICIPACION_FRECUENCIAS'] = (
-                df_conectividad_colombia_municipio['FRECUENCIAS'] / df_conectividad_colombia_municipio['TOTAL_ANUAL_FRECUENCIAS']
-            ) * 100
-            df_conectividad_colombia_municipio['TOTAL_ANUAL_SILLAS'] = df_conectividad_colombia_municipio.groupby('YEAR')['SILLAS'].transform('sum')
-            df_conectividad_colombia_municipio['PARTICIPACION_SILLAS'] = (
-                df_conectividad_colombia_municipio['SILLAS'] / df_conectividad_colombia_municipio['TOTAL_ANUAL_SILLAS']
-            ) * 100
-            # Ordenar por año y municipio
-            df_conectividad_colombia_municipio = df_conectividad_colombia_municipio.sort_values(by=['YEAR', 'MUNICIPIO_DANE'])
-            resultados_procesados['conectividad_colombia_municipio'] = df_conectividad_colombia_municipio
+            # Cerrado y acumulado por destino
+            df_conectividad_municipio_serie_tiempo_mensual = df_conectividad_colombia[['YEAR', 'MUNICIPIO_DANE', 'TIME_SERIES', 'FRECUENCIAS','SILLAS']]            
+
+            ###############
+            # PASO 1: TOP 5
+            ###############
+
+            # Convertir TIME_SERIES a datetime para facilitar el manejo temporal
+            df_conectividad_municipio_serie_tiempo_mensual['TIME_SERIES'] = pd.to_datetime(df_conectividad_municipio_serie_tiempo_mensual['TIME_SERIES'], format='%Y-%m')
+
+            # Obtener el último año disponible
+            ultimo_anio = df_conectividad_municipio_serie_tiempo_mensual['TIME_SERIES'].dt.year.max()
+
+            # Filtrar datos solo del último año
+            df_cerrado = df_conectividad_municipio_serie_tiempo_mensual[df_conectividad_municipio_serie_tiempo_mensual['TIME_SERIES'].dt.year == ultimo_anio]
+
+            # Sumar FRECUENCIAS por municipio para el último año
+            frecuencias_por_municipio = df_cerrado.groupby('MUNICIPIO_DANE')['FRECUENCIAS'].sum().reset_index()
+
+            # Seleccionar el top 5 de municipios con mayor FRECUENCIAS
+            top_5_municipios = frecuencias_por_municipio.nlargest(5, 'FRECUENCIAS')['MUNICIPIO_DANE']
+
+            # Obtener el número de municipios
+            num_municipios = len(frecuencias_por_municipio['MUNICIPIO_DANE'].unique())
+
+            # Crear el nuevo DataFrame con top 5 y agrupar los demás bajo "Otros"
+            if num_municipios <= 5:
+                # Si hay 5 municipios o menos, no se agrupan bajo "Otros"
+                df_top_otros = df_conectividad_municipio_serie_tiempo_mensual.copy()
+            else:
+                # Si hay más de 5 municipios, agrupar los demás como "Otros"
+                df_top_otros = df_conectividad_municipio_serie_tiempo_mensual.copy()
+                df_top_otros['MUNICIPIO_DANE'] = df_top_otros['MUNICIPIO_DANE'].apply(
+                    lambda pais: pais if pais in top_5_municipios.values else 'Otros'
+                )
+
+                # Agrupar por mes (TIME_SERIES) y municipio, sumando FRECUENCIAS y SILLAS
+                df_top_otros = df_top_otros.groupby(['TIME_SERIES', 'MUNICIPIO_DANE'], as_index=False).agg({
+                    'FRECUENCIAS': 'sum',
+                    'SILLAS': 'sum'
+                })
+
+            #######################################
+            # PASO 2: PERIODO CERRADO (2022 - 2023)
+            #######################################
+
+            # Obtener columnas de fecha
+            df_top_otros['FECHA'] = df_top_otros['TIME_SERIES'].dt.year
+
+            # Filtrar años de interés
+            df_distribucion_cerrado = df_top_otros[df_top_otros['FECHA'].isin([2022, 2023])].copy()
+
+            # Crear agrupación de años cerrados
+            totales_cerrado = df_distribucion_cerrado.groupby(['FECHA', 'MUNICIPIO_DANE'])[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+
+            # Calcular el total de frecuencias y sillas por año
+            totales_anuales = totales_cerrado.groupby('FECHA')[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+            totales_anuales = totales_anuales.rename(columns={'FRECUENCIAS': 'TOTAL_FRECUENCIAS', 'SILLAS': 'TOTAL_SILLAS'})
+
+            # Unir los totales anuales con el dataframe original
+            totales_cerrado = totales_cerrado.merge(totales_anuales, on='FECHA')
+
+            # Calcular la participación porcentual por municipio por año
+            totales_cerrado['PARTICIPACION_FRECUENCIAS'] = totales_cerrado['FRECUENCIAS'] / totales_cerrado['TOTAL_FRECUENCIAS'] * 100
+            totales_cerrado['PARTICIPACION_SILLAS'] = totales_cerrado['SILLAS'] / totales_cerrado['TOTAL_SILLAS'] * 100
+
+            # Elegir columnas de interés
+            totales_cerrado = totales_cerrado[['FECHA', 'MUNICIPIO_DANE', 'FRECUENCIAS', 'SILLAS', 'PARTICIPACION_FRECUENCIAS', 'PARTICIPACION_SILLAS']]
+
+            #######################################
+            # PASO 3: PERIODO CORRIDO (2023 - 2024)
+            #######################################
+
+            # Obtener columnas de fecha
+            df_top_otros['MES'] = df_top_otros['TIME_SERIES'].dt.month
+
+            # Obtener nombre de mes
+            df_top_otros['MES_NAME'] = df_top_otros['TIME_SERIES'].dt.month_name(locale='es_ES.UTF-8')
+
+            # Filtrar años de interés
+            df_distribucion_corrido = df_top_otros[df_top_otros['FECHA'].isin([2023, 2024])].copy()
+
+            # Obtener mes máximo disponible en 2024
+            mes_maximo = df_distribucion_corrido[df_distribucion_corrido['FECHA']==2024]['MES'].max()
+
+            # Obtener nombre del mes máximo
+            mes_maximo_nombre = df_distribucion_corrido[df_distribucion_corrido['MES'] == mes_maximo]['MES_NAME'].unique()[0]
+
+            # Filtrar los meses
+            df_distribucion_corrido = df_distribucion_corrido[df_distribucion_corrido['MES'] <= mes_maximo]
+
+            # Crear columna de fecha corrida
+            df_distribucion_corrido['FECHA_CORRIDA'] = 'Enero - ' + mes_maximo_nombre + ' ' + df_distribucion_corrido['FECHA'].astype(str)
+
+            # Crear agrupación de años cerrados
+            totales_corrido = df_distribucion_corrido.groupby(['FECHA_CORRIDA', 'MUNICIPIO_DANE'])[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+
+            # Calcular el total de frecuencias y sillas por año corrido
+            totales_anuales = totales_corrido.groupby('FECHA_CORRIDA')[['FRECUENCIAS', 'SILLAS']].sum().reset_index()
+            totales_anuales = totales_anuales.rename(columns={'FRECUENCIAS': 'TOTAL_FRECUENCIAS', 'SILLAS': 'TOTAL_SILLAS'})
+
+            # Unir los totales anuales con el dataframe original
+            totales_corrido = totales_corrido.merge(totales_anuales, on='FECHA_CORRIDA')
+
+            # Calcular la participación porcentual por municipio por año corrido
+            totales_corrido['PARTICIPACION_FRECUENCIAS'] = totales_corrido['FRECUENCIAS'] / totales_corrido['TOTAL_FRECUENCIAS'] * 100
+            totales_corrido['PARTICIPACION_SILLAS'] = totales_corrido['SILLAS'] / totales_corrido['TOTAL_SILLAS'] * 100
+
+            # Elegir columnas de interés
+            totales_corrido = totales_corrido[['FECHA_CORRIDA', 'MUNICIPIO_DANE', 'FRECUENCIAS', 'SILLAS', 'PARTICIPACION_FRECUENCIAS', 'PARTICIPACION_SILLAS']]
+
+            # Agregar dfs al resultado
+            resultados_procesados['conectividad_colombia_municipio_cerrado'] = totales_cerrado
+            resultados_procesados['conectividad_colombia_municipio_corrido'] = totales_corrido
         else:
             resultados_procesados['conectividad_colombia_serie_tiempo'] = pd.DataFrame()
             resultados_procesados['conectividad_colombia_municipio'] = pd.DataFrame()
+            resultados_procesados['conectividad_colombia_municipio_cerrado'] = pd.DataFrame()
+            resultados_procesados['conectividad_colombia_municipio_corrido'] = pd.DataFrame()
 
     except Exception as e:
         # Manejo de errores durante el procesamiento
@@ -508,6 +801,11 @@ def procesar_datos_forward_keys(dataframes):
                 df_reservas_serie_tiempo['PAIS_ARRIVAL'] == 'Colombia'
             ]
 
+            # Filtrar reservas para los países diferentes a Colombia
+            df_reservas_serie_tiempo = df_reservas_serie_tiempo[
+                df_reservas_serie_tiempo['PAIS_ARRIVAL'] != 'Colombia'
+            ]
+
             resultados_procesados['reservas_serie_tiempo'] = df_reservas_serie_tiempo
             resultados_procesados['reservas_serie_tiempo_colombia'] = df_reservas_serie_tiempo_colombia
         else:
@@ -528,6 +826,11 @@ def procesar_datos_forward_keys(dataframes):
                 df_busquedas_serie_tiempo['PAIS_ARRIVAL'] == 'Colombia'
             ]
 
+            # Filtrar búsquedas para los países diferentes a Colombia
+            df_busquedas_serie_tiempo = df_busquedas_serie_tiempo[
+                df_busquedas_serie_tiempo['PAIS_ARRIVAL'] != 'Colombia'
+            ]
+
             resultados_procesados['busquedas_serie_tiempo'] = df_busquedas_serie_tiempo
             resultados_procesados['busquedas_serie_tiempo_colombia'] = df_busquedas_serie_tiempo_colombia
         else:
@@ -537,7 +840,7 @@ def procesar_datos_forward_keys(dataframes):
 
     except Exception as e:
         # Manejo de errores durante el procesamiento
-        print(f"Error durante el procesamiento de los datos de Forward Keys: {str(e)}")
+        print(f"Error durante el procesamiento de los datos: {str(e)}")
 
     # Devolver los resultados procesados
     return resultados_procesados
@@ -624,16 +927,93 @@ def procesar_datos_credibanco(dataframes):
             resultados_procesados['gasto_categoria'] = df_gasto_categoria
 
             # Gasto por producto
-            df_gasto_producto = pd.DataFrame(df_gasto.groupby(['YEAR', 'CATEGORIA'])[['FACTURACION_USD']].sum()).reset_index()
-            df_gasto_producto['TOTAL_ANUAL'] = df_gasto_producto.groupby('YEAR')['FACTURACION_USD'].transform('sum')
-            df_gasto_producto['PARTICIPACION'] = (df_gasto_producto['FACTURACION_USD'] / df_gasto_producto['TOTAL_ANUAL']) * 100
-            df_gasto_producto = df_gasto_producto.sort_values(by=['YEAR', 'CATEGORIA'])
-            resultados_procesados['gasto_producto'] = df_gasto_producto
+            
+            #########
+            # Directo
+            #########
+
+            # Obtener insumo para gastos directos
+            df_categoria_insumo = df_gasto[df_gasto['CLASIFICACION_CATEGORIA_FORMATADA']=='Directo']
+            df_gasto_producto = pd.DataFrame(df_categoria_insumo.groupby(['YEAR', 'CATEGORIA'])[['FACTURACION_USD']].sum()).reset_index()
+
+            # Distribución agregada de productos
+            df_gasto_total = pd.DataFrame(df_gasto_producto.groupby('CATEGORIA')[['FACTURACION_USD']].sum()).reset_index()
+
+            # Seleccionar el top 5 de productos con mayor valor USD
+            top_5_productos = df_gasto_total.nlargest(5, 'FACTURACION_USD')['CATEGORIA']
+
+            # Obtener el número de productos
+            num_productos = len(df_gasto_total['CATEGORIA'].unique())
+
+            # Crear el nuevo DataFrame con top 5 y agrupar los demás bajo "Otros"
+            if num_productos <= 5:
+                # Si hay 5 productos o menos, no se agrupan bajo "Otros"
+                df_top_otros = df_gasto_producto.copy()
+            else:
+                # Si hay más de 5 productos, agrupar los demás como "Otros"
+                df_top_otros = df_gasto_producto.copy()
+                df_top_otros['CATEGORIA'] = df_top_otros['CATEGORIA'].apply(
+                    lambda producto: producto if producto in top_5_productos.values else 'Otros'
+                )
+
+                # Agrupar por año y productos, sumando USD
+                df_top_otros = df_top_otros.groupby(['YEAR', 'CATEGORIA'], as_index=False).agg({
+                    'FACTURACION_USD': 'sum'
+                })
+
+            # Participación
+            df_top_otros['TOTAL_ANUAL'] = df_top_otros.groupby('YEAR')['FACTURACION_USD'].transform('sum')
+            df_top_otros['PARTICIPACION'] = (df_top_otros['FACTURACION_USD'] / df_top_otros['TOTAL_ANUAL']) * 100
+            
+            # Agregar el df        
+            resultados_procesados['gasto_producto_directo'] = df_top_otros
+
+            ###########
+            # Indirecto
+            ###########
+
+            # Obtener insumo para gastos indirectos
+            df_categoria_insumo = df_gasto[df_gasto['CLASIFICACION_CATEGORIA_FORMATADA']=='Indirecto']
+            df_gasto_producto = pd.DataFrame(df_categoria_insumo.groupby(['YEAR', 'CATEGORIA'])[['FACTURACION_USD']].sum()).reset_index()
+
+            # Distribución agregada de productos
+            df_gasto_total = pd.DataFrame(df_gasto_producto.groupby('CATEGORIA')[['FACTURACION_USD']].sum()).reset_index()
+
+            # Seleccionar el top 5 de productos con mayor valor USD
+            top_5_productos = df_gasto_total.nlargest(5, 'FACTURACION_USD')['CATEGORIA']
+
+            # Obtener el número de productos
+            num_productos = len(df_gasto_total['CATEGORIA'].unique())
+
+            # Crear el nuevo DataFrame con top 5 y agrupar los demás bajo "Otros"
+            if num_productos <= 5:
+                # Si hay 5 productos o menos, no se agrupan bajo "Otros"
+                df_top_otros = df_gasto_producto.copy()
+            else:
+                # Si hay más de 5 productos, agrupar los demás como "Otros"
+                df_top_otros = df_gasto_producto.copy()
+                df_top_otros['CATEGORIA'] = df_top_otros['CATEGORIA'].apply(
+                    lambda producto: producto if producto in top_5_productos.values else 'Otros'
+                )
+
+                # Agrupar por año y productos, sumando USD
+                df_top_otros = df_top_otros.groupby(['YEAR', 'CATEGORIA'], as_index=False).agg({
+                    'FACTURACION_USD': 'sum'
+                })
+
+            # Participación
+            df_top_otros['TOTAL_ANUAL'] = df_top_otros.groupby('YEAR')['FACTURACION_USD'].transform('sum')
+            df_top_otros['PARTICIPACION'] = (df_top_otros['FACTURACION_USD'] / df_top_otros['TOTAL_ANUAL']) * 100
+            
+            # Agregar el df        
+            resultados_procesados['gasto_producto_indirecto'] = df_top_otros
+
         else:
             # Devolver DataFrames vacíos si no hay datos
             resultados_procesados['gasto_promedio'] = pd.DataFrame()
             resultados_procesados['gasto_categoria'] = pd.DataFrame()
-            resultados_procesados['gasto_producto'] = pd.DataFrame()
+            resultados_procesados['gasto_producto_directo'] = pd.DataFrame()
+            resultados_procesados['gasto_producto_indirecto'] = pd.DataFrame()
 
     except Exception as e:
         # Manejo de errores durante el procesamiento
@@ -663,19 +1043,19 @@ def obtener_datos_iata_gap(pais_seleccionado, session):
     consultas = {
         "indicadores_agencias": f"""
             SELECT PAIS_AGENCIA,
-                PAIS_DEPARTURE,
                 YY AS YEAR,
-                AGENCIAS
+                COUNT(DISTINCT AGENCIAS) AS AGENCIAS 
             FROM REPOSITORIO_TURISMO.VISTAS.IATAGAP_AGENCIAS
-            WHERE PAIS_AGENCIA = '{pais_seleccionado}';
+            WHERE PAIS_AGENCIA = '{pais_seleccionado}'
+            GROUP BY PAIS_AGENCIA, YY;
         """,
-        "viajeros_agencias": f"""
-            SELECT PAIS_AGENCIA,
-                PAIS_DEPARTURE,
+        "ciudades_agencias": f"""
+            SELECT INITCAP(TRAVEL_AGENCY_CITY) AS TRAVEL_AGENCY_CITY,
                 YY AS YEAR,
-                VIAJEROS_AGENCIAS
-            FROM REPOSITORIO_TURISMO.VISTAS.IATAGAP_AGENCIAS_VIAJEROS
-            WHERE PAIS_AGENCIA = '{pais_seleccionado}';
+                COUNT(DISTINCT AGENCIAS) AS AGENCIAS
+            FROM REPOSITORIO_TURISMO.VISTAS.IATAGAP_AGENCIAS
+            WHERE PAIS_AGENCIA = '{pais_seleccionado}'
+            GROUP BY TRAVEL_AGENCY_CITY, YY;
         """
     }
 
@@ -699,4 +1079,73 @@ def obtener_datos_iata_gap(pais_seleccionado, session):
     return resultados
 
 
+def procesar_datos_iata_gap(dataframes):
+    """
+    Procesa los datos obtenidos de IATA GAP.
 
+    Parámetros:
+    - dataframes (dict): Diccionario de DataFrames obtenidos de consultas a IATA GAP.
+
+    Retorna:
+    - dict: Diccionario con los DataFrames procesados y transformados.
+    """
+    resultados_procesados = {}
+
+    try:
+        # Procesar indicadores de agencia
+        df_agencias = dataframes.get('indicadores_agencias', pd.DataFrame())
+        if not df_agencias.empty:
+            # Serie de tiempo de agencias por año
+            df_agencias_serie_tiempo = pd.DataFrame(df_agencias[['YEAR', 'AGENCIAS']])
+            resultados_procesados['agencias_serie_tiempo'] = df_agencias_serie_tiempo
+        else:
+            # Devolver DataFrame vacío para las claves si no hay datos
+            resultados_procesados['agencias_serie_tiempo'] = pd.DataFrame()
+    
+
+        # Procesar ciudades
+        df_ciudades = dataframes.get('ciudades_agencias', pd.DataFrame())
+        if not df_ciudades.empty:
+
+            # Obtener el top 10 de ciudades con más agencias
+            
+            # Distribución agregada de agencias por ciudad
+            df_agencias_total = pd.DataFrame(df_ciudades.groupby('TRAVEL_AGENCY_CITY')[['AGENCIAS']].sum()).reset_index()
+
+            # Seleccionar el top 5 de agencias por ciudad
+            top_5_agencias = df_agencias_total.nlargest(10, 'AGENCIAS')['TRAVEL_AGENCY_CITY']
+
+            # Obtener el número de ciudades
+            num_ciudades = len(df_agencias_total['TRAVEL_AGENCY_CITY'].unique())
+
+            # Crear el nuevo DataFrame con top 10 y agrupar los demás bajo "Otros"
+            if num_ciudades <= 10:
+                # Si hay 10 ciudades o menos, no se agrupan bajo "Otros"
+                df_top_otros = df_ciudades.copy()
+            else:
+                # Si hay más de 10 ciudades, agrupar los demás como "Otros"
+                df_top_otros = df_ciudades.copy()
+                df_top_otros['TRAVEL_AGENCY_CITY'] = df_top_otros['TRAVEL_AGENCY_CITY'].apply(
+                    lambda ciudad: ciudad if ciudad in top_5_agencias.values else 'Otros'
+                )
+
+                # Agrupar por año y ciudad, sumando USD
+                df_top_otros = df_top_otros.groupby(['YEAR', 'TRAVEL_AGENCY_CITY'], as_index=False).agg({
+                    'AGENCIAS': 'sum'
+                })
+            
+            # Participación
+            df_top_otros['TOTAL_ANUAL'] = df_top_otros.groupby('YEAR')['AGENCIAS'].transform('sum')
+            df_top_otros['PARTICIPACION'] = (df_top_otros['AGENCIAS'] / df_top_otros['TOTAL_ANUAL']) * 100
+            
+            resultados_procesados['agencias_ciudades'] = df_top_otros
+        else:
+            # Devolver DataFrame vacío para las claves si no hay datos
+            resultados_procesados['agencias_ciudades'] = pd.DataFrame()
+
+    except Exception as e:
+        # Manejo de errores durante el procesamiento
+        print(f"Error durante el procesamiento de los datos de IATA GAP: {str(e)}")
+
+    # Devolver los resultados procesados
+    return resultados_procesados
