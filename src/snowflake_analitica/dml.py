@@ -285,6 +285,48 @@ def obtener_paises_por_region(region_seleccionada, session):
         # Manejo de errores con mensaje detallado
         raise Exception(f"Error al ejecutar la consulta o procesar resultados: {str(e)}")
     
+
+def obtener_iso_code(pais_seleccionado, session):
+    """
+    Ejecuta una consulta SQL para obtener el iso code 2 del país seleccionado por el usuario
+    y devuelve una lista con el iso code.
+
+    Parámetros:
+    - pais_seleccionado (str): Nombre del país seleccionado por el usuario.
+    - session: Objeto de conexión activo a Snowflake.
+
+    Retorna:
+    - iso_code (list): Lista de países iso code 2 del país seleccionado por el usuario.
+
+    Excepciones:
+    - ValueError: Si la región seleccionada es nula o vacía.
+    - Exception: Si ocurre un error al ejecutar la consulta.
+    """
+    try:
+        # Verificar que el parámetro no esté vacío o nulo
+        if not pais_seleccionado:
+            raise ValueError("Debe proporcionar un país válido para realizar el filtro.")
+
+        # Definir la consulta con el filtro dinámico
+        query = f"""
+        SELECT DISTINCT LOWER(ISO_ALPHA2_CODE) ISO_ALPHA2_CODE
+        FROM REPOSITORIO_TURISMO.VISTAS.GEOGRAFIA
+        WHERE COUNTRY_OR_AREA = '{pais_seleccionado}'
+        """
+
+        # Ejecutar la consulta SQL y recoger resultados
+        resultados = session.sql(query).collect()
+
+        # Extraer los iso code y ordenarlos
+        iso_code = sorted({row['ISO_ALPHA2_CODE'] for row in resultados})
+
+        return iso_code
+    except Exception as e:
+        # Manejo de errores con mensaje detallado
+        raise Exception(f"Error al ejecutar la consulta o procesar resultados: {str(e)}")   
+
+
+    
 def ejecutar_consulta_segura(query, session):
     """
     Ejecuta una consulta SQL sobre una tabla específica y devuelve los resultados como un DataFrame.

@@ -151,44 +151,7 @@ def procesar_datos_global_data(dataframes):
     - dict: Diccionario con los DataFrames procesados y transformados.
     """
 
-    # Función para validar los valores únicos de TOTAL_ANUAL
-    def validar_total_anual(df, df_viajeros_serie_tiempo):
-        """
-        Valida que los valores de 'TOTAL_ANUAL' en un DataFrame coincidan con los valores 
-        de 'VIAJEROS' en otro DataFrame agrupado por 'YEAR', permitiendo una tolerancia en 
-        la diferencia para manejar redondeos.
-
-        Parámetros:
-        - df (DataFrame): DataFrame que contiene las columnas 'YEAR' y 'TOTAL_ANUAL'.
-        - df_viajeros_serie_tiempo (DataFrame): DataFrame que contiene las columnas 'YEAR' y 'VIAJEROS', 
-        representando la serie de tiempo de viajeros.
-
-        Lanza:
-        - ValueError: Si se encuentra una discrepancia mayor al umbral entre 'TOTAL_ANUAL' y 'VIAJEROS' en algún año.
-        """
-        
-        # Definir un umbral de tolerancia
-        tolerancia = 1
-
-        # Obtener valores únicos de 'YEAR' y 'TOTAL_ANUAL' para evitar duplicados
-        total_anual_unicos = df[['YEAR', 'TOTAL_ANUAL']].drop_duplicates()
-
-        # Iterar por cada fila única en los valores de 'YEAR' y 'TOTAL_ANUAL'
-        for _, row in total_anual_unicos.iterrows():
-            year = row['YEAR']  # Año actual
-            total_anual = row['TOTAL_ANUAL']  # Valor total anual para el año actual
-
-            # Obtener el valor correspondiente de 'VIAJEROS' en la serie de tiempo para el mismo año
-            viajeros_serie_tiempo = df_viajeros_serie_tiempo[df_viajeros_serie_tiempo['YEAR'] == year]['VIAJEROS'].values[0]
-
-            # Validar si 'TOTAL_ANUAL' coincide con 'VIAJEROS'
-            if abs(total_anual - viajeros_serie_tiempo) > tolerancia:
-                # Lanzar un error si hay una discrepancia
-                raise ValueError(
-                    f"Discrepancia en el año {year}: TOTAL_ANUAL {total_anual} no coincide con VIAJEROS {viajeros_serie_tiempo}"
-                )
-
-    # Iniciar procesamiento de los datos (se usa la subfunción que se creó en el paso anterior)
+   # Iniciar procesamiento de los datos (se usa la subfunción que se creó en el paso anterior)
           
     resultados_procesados = {}
 
@@ -204,9 +167,6 @@ def procesar_datos_global_data(dataframes):
             df_viajeros_medio = df_viajeros_hacia_el_mundo[['MEDIO', 'YEAR', 'VIAJEROS']]
             df_viajeros_medio['TOTAL_ANUAL'] = df_viajeros_medio.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_viajeros_medio['PARTICIPACION'] = (df_viajeros_medio['VIAJEROS'] / df_viajeros_medio['TOTAL_ANUAL']) * 100
-            # Comparar los totales
-            print("Validando viajeros por medio..")
-            validar_total_anual(df_viajeros_medio, df_viajeros_serie_tiempo)
             # Filtrar columnas relevantes
             df_viajeros_medio = df_viajeros_medio[['YEAR', 'MEDIO', 'VIAJEROS', 'PARTICIPACION']]
             df_viajeros_medio = df_viajeros_medio.sort_values(by=['YEAR', 'MEDIO'])
@@ -259,9 +219,6 @@ def procesar_datos_global_data(dataframes):
             # Procesar motivo de viaje
             df_motivo_viaje['TOTAL_ANUAL'] = df_motivo_viaje.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_motivo_viaje['PARTICIPACION'] = (df_motivo_viaje['VIAJEROS'] / df_motivo_viaje['TOTAL_ANUAL']) * 100
-            # Comparar los totales
-            print("Validando viajeros por motivo..")
-            validar_total_anual(df_motivo_viaje, df_viajeros_serie_tiempo)
             # Filtrar columnas relevantes
             df_motivo_viaje = df_motivo_viaje[['YEAR', 'MOTIVO_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_motivo_viaje = df_motivo_viaje.sort_values(by=['YEAR', 'MOTIVO_VIAJE'])
@@ -275,9 +232,6 @@ def procesar_datos_global_data(dataframes):
             # Procesar forma de viaje
             df_forma_viaje['TOTAL_ANUAL'] = df_forma_viaje.groupby('YEAR')['VIAJEROS'].transform('sum')
             df_forma_viaje['PARTICIPACION'] = (df_forma_viaje['VIAJEROS'] / df_forma_viaje['TOTAL_ANUAL']) * 100
-            # Comparar los totales
-            print("Validando viajeros por forma..")
-            validar_total_anual(df_forma_viaje, df_viajeros_serie_tiempo)
             # Filtrar columnas relevantes
             df_forma_viaje = df_forma_viaje[['YEAR', 'FORMA_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_forma_viaje = df_forma_viaje.sort_values(by=['YEAR', 'FORMA_VIAJE'])
@@ -294,7 +248,6 @@ def procesar_datos_global_data(dataframes):
             # Filtrar columnas relevantes
             df_destinos = df_destinos[['YEAR', 'PAIS_DESTINO', 'VIAJEROS', 'PARTICIPACION']]
             df_destinos = df_destinos.sort_values(by=['YEAR', 'PAIS_DESTINO'])
-            resultados_procesados['destinos_internacionales'] = df_destinos
             
             # Crear agrupación de Top 5 para gráficar
             # Sumar VIAJEROS por país para el periodo total
@@ -324,7 +277,6 @@ def procesar_datos_global_data(dataframes):
             # Agregar top5 a los resultados
             resultados_procesados['destinos_internacionales_top5'] = df_destinos_top5
         else:
-            resultados_procesados['destinos_internacionales'] = pd.DataFrame()
             resultados_procesados['destinos_internacionales_top5'] = pd.DataFrame()
 
         # Flujos de negocios
@@ -346,6 +298,54 @@ def procesar_datos_global_data(dataframes):
 
     # Devolver los resultados procesados
     return resultados_procesados
+
+
+def datos_global_data(pais_seleccionado, sesion_activa):
+    """
+    Obtiene y procesa los datos de Global Data para un país seleccionado.
+
+    Esta función combina la obtención y el procesamiento de los datos de Global Data 
+    para un país específico utilizando las funciones `obtener_datos_global_data` y 
+    `procesar_datos_global_data`.
+
+    Parámetros:
+    - pais_seleccionado (str): Nombre del país para el cual se desean obtener los datos.
+    - sesion_activa: Objeto de conexión activo a Snowflake.
+
+    Retorna:
+    - dict: Diccionario con los DataFrames procesados y transformados por categoría.
+
+    Manejo de errores:
+    - Si ocurre un error durante la obtención o procesamiento de los datos, se imprimirá 
+      un mensaje de error y se retornará un diccionario vacío.
+    """
+
+    try:
+        # Obtener los datos de Global Data
+        print(f"Iniciando la obtención de datos para {pais_seleccionado}...")
+        datos = obtener_datos_global_data(pais_seleccionado, sesion_activa)
+
+        # Validar si se obtuvieron datos
+        if not datos:
+            print(f"No se obtuvieron datos para el país seleccionado: {pais_seleccionado}")
+            return {}
+
+        # Procesar los datos obtenidos
+        print("Procesando los datos obtenidos...")
+        datos_procesados = procesar_datos_global_data(datos)
+
+        # Validar si el procesamiento fue exitoso
+        if not datos_procesados:
+            print(f"El procesamiento de datos falló para el país: {pais_seleccionado}")
+            return {}
+
+        print("Obtención y procesamiento de datos completados exitosamente.")
+        return datos_procesados
+
+    except Exception as e:
+        # Manejo de errores generales
+        print(f"Error durante la ejecución de 'datos_global_data': {str(e)}")
+        return {}
 
 ###############
 # Funciones OAG
@@ -372,7 +372,8 @@ def obtener_datos_oag(pais_seleccionado, session):
                 FRECUENCIAS,
                 SILLAS
             FROM REPOSITORIO_TURISMO.VISTAS.OAG_CONECTIVIDAD_MUNDO
-            WHERE PAIS_DEPARTURE = '{pais_seleccionado}';
+            WHERE PAIS_DEPARTURE = '{pais_seleccionado}'
+                AND PAIS_ARRIVAL <> '{pais_seleccionado}';
         """,
         "conectividad_hacia_colombia": f"""
             SELECT PAIS_DEPARTURE,
@@ -383,7 +384,8 @@ def obtener_datos_oag(pais_seleccionado, session):
                 FRECUENCIAS,
                 SILLAS
             FROM REPOSITORIO_TURISMO.VISTAS.OAG_CONECTIVIDAD_COLOMBIA
-            WHERE PAIS_DEPARTURE = '{pais_seleccionado}';
+            WHERE PAIS_DEPARTURE = '{pais_seleccionado}'
+                AND PAIS_ARRIVAL <> '{pais_seleccionado}';
         """
     }
 
@@ -491,6 +493,9 @@ def procesar_datos_oag(dataframes):
             # Unir los totales anuales con el dataframe original
             totales_cerrado = totales_cerrado.merge(totales_anuales, on='FECHA')
 
+            # Transformar en str
+            totales_cerrado['FECHA'] = totales_cerrado['FECHA'].astype(str)
+
             # Calcular la participación porcentual por país por año
             totales_cerrado['PARTICIPACION_FRECUENCIAS'] = totales_cerrado['FRECUENCIAS'] / totales_cerrado['TOTAL_FRECUENCIAS'] * 100
             totales_cerrado['PARTICIPACION_SILLAS'] = totales_cerrado['SILLAS'] / totales_cerrado['TOTAL_SILLAS'] * 100
@@ -539,6 +544,10 @@ def procesar_datos_oag(dataframes):
 
             # Elegir columnas de interés
             totales_corrido = totales_corrido[['FECHA_CORRIDA', 'PAIS_ARRIVAL', 'FRECUENCIAS', 'SILLAS', 'PARTICIPACION_FRECUENCIAS', 'PARTICIPACION_SILLAS']]
+
+            # Ordenar 
+            totales_cerrado = totales_cerrado.sort_values(by=['FECHA', 'PAIS_ARRIVAL'])
+            totales_corrido = totales_corrido.sort_values(by=['FECHA_CORRIDA', 'PAIS_ARRIVAL'])
             
             # Agregar dfs al resultado
             resultados_procesados['conectividad_mundo_destino_cerrado'] = totales_cerrado
@@ -624,6 +633,12 @@ def procesar_datos_oag(dataframes):
             totales_cerrado['PARTICIPACION_FRECUENCIAS'] = totales_cerrado['FRECUENCIAS'] / totales_cerrado['TOTAL_FRECUENCIAS'] * 100
             totales_cerrado['PARTICIPACION_SILLAS'] = totales_cerrado['SILLAS'] / totales_cerrado['TOTAL_SILLAS'] * 100
 
+            # Unir los totales anuales con el dataframe original
+            totales_cerrado = totales_cerrado.merge(totales_anuales, on='FECHA')
+
+            # Transformar en str
+            totales_cerrado['FECHA'] = totales_cerrado['FECHA'].astype(str)
+
             # Elegir columnas de interés
             totales_cerrado = totales_cerrado[['FECHA', 'MUNICIPIO_DANE', 'FRECUENCIAS', 'SILLAS', 'PARTICIPACION_FRECUENCIAS', 'PARTICIPACION_SILLAS']]
 
@@ -669,6 +684,10 @@ def procesar_datos_oag(dataframes):
             # Elegir columnas de interés
             totales_corrido = totales_corrido[['FECHA_CORRIDA', 'MUNICIPIO_DANE', 'FRECUENCIAS', 'SILLAS', 'PARTICIPACION_FRECUENCIAS', 'PARTICIPACION_SILLAS']]
 
+            # Ordenar 
+            totales_cerrado = totales_cerrado.sort_values(by=['FECHA', 'MUNICIPIO_DANE'])
+            totales_corrido = totales_corrido.sort_values(by=['FECHA_CORRIDA', 'MUNICIPIO_DANE'])
+
             # Agregar dfs al resultado
             resultados_procesados['conectividad_colombia_municipio_cerrado'] = totales_cerrado
             resultados_procesados['conectividad_colombia_municipio_corrido'] = totales_corrido
@@ -684,6 +703,48 @@ def procesar_datos_oag(dataframes):
 
     # Devolver los resultados procesados
     return resultados_procesados
+
+def datos_oag(pais_seleccionado, sesion_activa):
+    """
+    Obtiene y procesa datos relacionados con OAG para un país seleccionado.
+
+    Parámetros:
+    - pais_seleccionado (str): Nombre del país seleccionado.
+    - sesion_activa: Objeto de conexión activo a Snowflake.
+
+    Retorna:
+    - dict: Diccionario donde las claves son los nombres descriptivos de los DataFrames procesados y los valores son los DataFrames resultantes.
+
+    Manejo de errores:
+    - Si ocurre un error en cualquiera de las funciones llamadas, se registra y se retorna un diccionario vacío.
+    """
+    try:
+        # Obtener datos sin procesar
+        print(f"Obteniendo datos de OAG para el país: {pais_seleccionado}...")
+        datos_sin_procesar = obtener_datos_oag(pais_seleccionado, sesion_activa)
+
+        # Validar que se hayan obtenido datos
+        if not datos_sin_procesar:
+            print(f"No se obtuvieron datos de OAG para el país: {pais_seleccionado}.")
+            return {}
+
+        # Procesar los datos
+        print(f"Procesando datos de OAG para el país: {pais_seleccionado}...")
+        datos_procesados = procesar_datos_oag(datos_sin_procesar)
+
+        # Validar que el procesamiento haya sido exitoso
+        if not datos_procesados:
+            print(f"El procesamiento de datos falló para el país: {pais_seleccionado}.")
+            return {}
+
+        print(f"Datos procesados exitosamente para el país: {pais_seleccionado}.")
+        return datos_procesados
+
+    except Exception as e:
+        # Manejo de errores durante la ejecución
+        print(f"Error al obtener y procesar datos de OAG para el país: {pais_seleccionado}. Detalles: {str(e)}")
+        return {}
+
 
 ########################
 # Funciones Forward Keys
@@ -709,50 +770,27 @@ def obtener_datos_forward_keys(pais_seleccionado, session):
                 PAIS_DEPARTURE, 
                 PAIS_ARRIVAL,
                 FLIGHT_LEG_ARRIVAL_DATE,
-                CASE 
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '01' THEN 'ene'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '02' THEN 'feb'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '03' THEN 'mar'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '04' THEN 'abr'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '05' THEN 'may'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '06' THEN 'jun'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '07' THEN 'jul'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '08' THEN 'ago'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '09' THEN 'sep'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '10' THEN 'oct'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '11' THEN 'nov'
-                    WHEN TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'MM') = '12' THEN 'dic'
-                END || '-' || TO_CHAR(TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD'), 'YY') AS FLIGHT_LEG_ARRIVAL_MONTH_YEAR,
+                DATE_TRUNC('MONTH', TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD')) AS FECHA_USABLE,
                 LOS_AT_DESTINATION_NIGHTS,
                 CLASE_CABINA,
                 PERFIL_PASAJERO,
                 RESERVAS
             FROM REPOSITORIO_TURISMO.VISTAS.FORWARDKEYS_RESERVAS_PAISES
-            WHERE PAIS_DEPARTURE = '{pais_seleccionado}';
+            WHERE PAIS_DEPARTURE = '{pais_seleccionado}'
+            ORDER BY TO_DATE(FLIGHT_LEG_ARRIVAL_DATE, 'YYYY-MM-DD') ASC
+            ;
         """,
         "busquedas_aereas": f"""
             SELECT 
                 PAIS_DEPARTURE,
                 PAIS_ARRIVAL,
                 SEARCH_DATE,
-                CASE 
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '01' THEN 'ene'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '02' THEN 'feb'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '03' THEN 'mar'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '04' THEN 'abr'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '05' THEN 'may'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '06' THEN 'jun'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '07' THEN 'jul'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '08' THEN 'ago'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '09' THEN 'sep'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '10' THEN 'oct'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '11' THEN 'nov'
-                    WHEN TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'MM') = '12' THEN 'dic'
-                END || '-' || TO_CHAR(TO_DATE(SEARCH_DATE, 'YYYY-MM-DD'), 'YY') AS SEARCH_DATE_MONTH_YEAR,
+                DATE_TRUNC('MONTH', TO_DATE(SEARCH_DATE, 'YYYY-MM-DD')) AS FECHA_USABLE,
                 BUSQUEDAS
             FROM REPOSITORIO_TURISMO.VISTAS.FORWARDKEYS_BUSQUEDAS_PAISES
             WHERE TO_DATE(SEARCH_DATE, 'YYYY-MM-DD') BETWEEN DATEADD(MONTH, -6, CURRENT_DATE()) AND CURRENT_DATE()
-            AND PAIS_DEPARTURE = '{pais_seleccionado}';
+            AND PAIS_DEPARTURE = '{pais_seleccionado}'
+            ORDER BY TO_DATE(SEARCH_DATE, 'YYYY-MM-DD') ASC;
         """
     }
 
@@ -791,19 +829,32 @@ def procesar_datos_forward_keys(dataframes):
         # Procesar reservas aéreas
         df_reservas = dataframes.get('reservas_aereas', pd.DataFrame())
         if not df_reservas.empty:
-            # Serie de tiempo de reservas por país
-            df_reservas_serie_tiempo = pd.DataFrame(
-                df_reservas.groupby(['FLIGHT_LEG_ARRIVAL_MONTH_YEAR', 'PAIS_ARRIVAL'])['RESERVAS'].sum()
-            ).reset_index()
+
+            # Crear una fecha con formato date
+            df_reservas["FECHA_USABLE"] = pd.to_datetime(df_reservas["FECHA_USABLE"])
+
+            # Cambiar nombre de la columna
+            df_reservas = df_reservas.rename(columns={'FECHA_USABLE' : 'MES_ANIO'})
+
+            # Agrupar por PAIS_ARRIVAL + columnas de orden y despliegue, y sumar RESERVAS
+            df_agrupado = (
+                df_reservas
+                .groupby(["PAIS_ARRIVAL", "MES_ANIO"], as_index=False)
+                ["RESERVAS"]
+                .sum()
+            )
+
+            # Cambiar nombre
+            df_agrupado = df_agrupado.rename(columns={'MES_ANIO' : 'FLIGHT_LEG_ARRIVAL_MONTH_YEAR'})
 
             # Filtrar reservas hacia Colombia
-            df_reservas_serie_tiempo_colombia = df_reservas_serie_tiempo[
-                df_reservas_serie_tiempo['PAIS_ARRIVAL'] == 'Colombia'
+            df_reservas_serie_tiempo_colombia = df_agrupado[
+                df_agrupado['PAIS_ARRIVAL'] == 'Colombia'
             ]
 
             # Filtrar reservas para los países diferentes a Colombia
-            df_reservas_serie_tiempo = df_reservas_serie_tiempo[
-                df_reservas_serie_tiempo['PAIS_ARRIVAL'] != 'Colombia'
+            df_reservas_serie_tiempo = df_agrupado[
+                df_agrupado['PAIS_ARRIVAL'] != 'Colombia'
             ]
 
             resultados_procesados['reservas_serie_tiempo'] = df_reservas_serie_tiempo
@@ -816,19 +867,32 @@ def procesar_datos_forward_keys(dataframes):
         # Procesar búsquedas aéreas
         df_busquedas = dataframes.get('busquedas_aereas', pd.DataFrame())
         if not df_busquedas.empty:
-            # Serie de tiempo de búsquedas por país
-            df_busquedas_serie_tiempo = pd.DataFrame(
-                df_busquedas.groupby(['SEARCH_DATE_MONTH_YEAR', 'PAIS_ARRIVAL'])['BUSQUEDAS'].sum()
-            ).reset_index()
+
+            # Crear una fecha con formato date
+            df_busquedas["FECHA_USABLE"] = pd.to_datetime(df_busquedas["FECHA_USABLE"])
+
+            # Cambiar nombre de la columna
+            df_busquedas = df_busquedas.rename(columns={'FECHA_USABLE' : 'MES_ANIO'})
+            
+            # Agrupar por PAIS_ARRIVAL + columnas de orden y despliegue, y sumar busquedas
+            df_agrupado = (
+                df_busquedas
+                .groupby(["PAIS_ARRIVAL", "MES_ANIO"], as_index=False)
+                ["BUSQUEDAS"]
+                .sum()
+            )
+
+            # Cambiar nombre
+            df_agrupado = df_agrupado.rename(columns={'MES_ANIO' : 'SEARCH_DATE_MONTH_YEAR'})
 
            # Filtrar búsquedas hacia Colombia
-            df_busquedas_serie_tiempo_colombia = df_busquedas_serie_tiempo[
-                df_busquedas_serie_tiempo['PAIS_ARRIVAL'] == 'Colombia'
+            df_busquedas_serie_tiempo_colombia = df_agrupado[
+                df_agrupado['PAIS_ARRIVAL'] == 'Colombia'
             ]
 
             # Filtrar búsquedas para los países diferentes a Colombia
-            df_busquedas_serie_tiempo = df_busquedas_serie_tiempo[
-                df_busquedas_serie_tiempo['PAIS_ARRIVAL'] != 'Colombia'
+            df_busquedas_serie_tiempo = df_agrupado[
+                df_agrupado['PAIS_ARRIVAL'] != 'Colombia'
             ]
 
             resultados_procesados['busquedas_serie_tiempo'] = df_busquedas_serie_tiempo
@@ -844,6 +908,45 @@ def procesar_datos_forward_keys(dataframes):
 
     # Devolver los resultados procesados
     return resultados_procesados
+
+def datos_forward_keys(pais_seleccionado, sesion_activa):
+    """
+    Obtiene y procesa datos relacionados con Forward Keys para un país seleccionado.
+
+    Parámetros:
+    - pais_seleccionado (str): Nombre del país seleccionado.
+    - sesion_activa: Objeto de conexión activo a Snowflake.
+
+    Retorna:
+    - dict: Diccionario con los DataFrames procesados y transformados.
+    """
+    try:
+        # Obtener datos de Forward Keys
+        print(f"Obteniendo datos de Forward Keys para el país: {pais_seleccionado}...")
+        datos_obtenidos = obtener_datos_forward_keys(pais_seleccionado, sesion_activa)
+
+        # Verificar si se obtuvieron datos
+        if not datos_obtenidos:
+            print(f"No se encontraron datos para el país: {pais_seleccionado}.")
+            return {}
+
+        # Procesar los datos obtenidos
+        print(f"Procesando datos de Forward Keys para el país: {pais_seleccionado}...")
+        datos_procesados = procesar_datos_forward_keys(datos_obtenidos)
+
+        # Verificar si el procesamiento fue exitoso
+        if not datos_procesados:
+            print(f"No se pudieron procesar los datos para el país: {pais_seleccionado}.")
+            return {}
+
+        print(f"Datos de Forward Keys procesados correctamente para el país: {pais_seleccionado}.")
+        return datos_procesados
+
+    except Exception as e:
+        # Manejo de errores
+        print(f"Error al obtener o procesar datos de Forward Keys para el país {pais_seleccionado}: {str(e)}")
+        return {}
+
 
 ######################
 # Funciones Credibanco
@@ -1022,6 +1125,45 @@ def procesar_datos_credibanco(dataframes):
     # Devolver los resultados procesados
     return resultados_procesados
 
+def datos_credibanco(pais_seleccionado, sesion_activa):
+    """
+    Obtiene y procesa datos relacionados con Credibanco para un país seleccionado.
+
+    Parámetros:
+    - pais_seleccionado (str): Nombre del país seleccionado.
+    - sesion_activa: Objeto de conexión activo a Snowflake.
+
+    Retorna:
+    - dict: Diccionario con los DataFrames procesados y transformados.
+    """
+    try:
+        # Obtener los datos
+        print(f"Obteniendo datos de Credibanco para el país: {pais_seleccionado}...")
+        datos_obtenidos = obtener_datos_credibanco(pais_seleccionado, sesion_activa)
+
+        # Verificar si se obtuvieron datos
+        if not datos_obtenidos:
+            print(f"No se encontraron datos en Credibanco para el país: {pais_seleccionado}.")
+            return {}
+
+        # Procesar los datos
+        print(f"Procesando datos de Credibanco para el país: {pais_seleccionado}...")
+        datos_procesados = procesar_datos_credibanco(datos_obtenidos)
+
+        # Verificar si el procesamiento fue exitoso
+        if not datos_procesados:
+            print(f"No se pudieron procesar los datos de Credibanco para el país: {pais_seleccionado}.")
+            return {}
+
+        print(f"Datos de Credibanco procesados correctamente para el país: {pais_seleccionado}.")
+        return datos_procesados
+
+    except Exception as e:
+        # Manejo de errores
+        print(f"Error al obtener o procesar datos de Credibanco para el país {pais_seleccionado}: {str(e)}")
+        return {}
+
+
 ###################
 # Funciones IATAGAP
 ###################
@@ -1043,19 +1185,19 @@ def obtener_datos_iata_gap(pais_seleccionado, session):
     consultas = {
         "indicadores_agencias": f"""
             SELECT PAIS_AGENCIA,
-                YY AS YEAR,
+                YEAR AS YEAR,
                 COUNT(DISTINCT AGENCIAS) AS AGENCIAS 
             FROM REPOSITORIO_TURISMO.VISTAS.IATAGAP_AGENCIAS
             WHERE PAIS_AGENCIA = '{pais_seleccionado}'
-            GROUP BY PAIS_AGENCIA, YY;
+            GROUP BY PAIS_AGENCIA, YEAR;
         """,
         "ciudades_agencias": f"""
             SELECT INITCAP(TRAVEL_AGENCY_CITY) AS TRAVEL_AGENCY_CITY,
-                YY AS YEAR,
+                YEAR AS YEAR,
                 COUNT(DISTINCT AGENCIAS) AS AGENCIAS
             FROM REPOSITORIO_TURISMO.VISTAS.IATAGAP_AGENCIAS
             WHERE PAIS_AGENCIA = '{pais_seleccionado}'
-            GROUP BY TRAVEL_AGENCY_CITY, YY;
+            GROUP BY TRAVEL_AGENCY_CITY, YEAR;
         """
     }
 
@@ -1097,6 +1239,7 @@ def procesar_datos_iata_gap(dataframes):
         if not df_agencias.empty:
             # Serie de tiempo de agencias por año
             df_agencias_serie_tiempo = pd.DataFrame(df_agencias[['YEAR', 'AGENCIAS']])
+            df_agencias_serie_tiempo = df_agencias_serie_tiempo.sort_values(by=['YEAR'])
             resultados_procesados['agencias_serie_tiempo'] = df_agencias_serie_tiempo
         else:
             # Devolver DataFrame vacío para las claves si no hay datos
@@ -1113,7 +1256,7 @@ def procesar_datos_iata_gap(dataframes):
             df_agencias_total = pd.DataFrame(df_ciudades.groupby('TRAVEL_AGENCY_CITY')[['AGENCIAS']].sum()).reset_index()
 
             # Seleccionar el top 5 de agencias por ciudad
-            top_5_agencias = df_agencias_total.nlargest(10, 'AGENCIAS')['TRAVEL_AGENCY_CITY']
+            top_5_agencias = df_agencias_total.nlargest(15, 'AGENCIAS')['TRAVEL_AGENCY_CITY']
 
             # Obtener el número de ciudades
             num_ciudades = len(df_agencias_total['TRAVEL_AGENCY_CITY'].unique())
@@ -1137,7 +1280,8 @@ def procesar_datos_iata_gap(dataframes):
             # Participación
             df_top_otros['TOTAL_ANUAL'] = df_top_otros.groupby('YEAR')['AGENCIAS'].transform('sum')
             df_top_otros['PARTICIPACION'] = (df_top_otros['AGENCIAS'] / df_top_otros['TOTAL_ANUAL']) * 100
-            
+            df_top_otros = df_top_otros.sort_values(by=['YEAR'])
+
             resultados_procesados['agencias_ciudades'] = df_top_otros
         else:
             # Devolver DataFrame vacío para las claves si no hay datos
@@ -1149,3 +1293,41 @@ def procesar_datos_iata_gap(dataframes):
 
     # Devolver los resultados procesados
     return resultados_procesados
+
+def datos_iata_gap(pais_seleccionado, sesion_activa):
+    """
+    Obtiene y procesa datos relacionados con IATA GAP para un país seleccionado.
+
+    Parámetros:
+    - pais_seleccionado (str): Nombre del país seleccionado.
+    - sesion_activa: Objeto de conexión activo a Snowflake.
+
+    Retorna:
+    - dict: Diccionario con los DataFrames procesados y transformados.
+    """
+    try:
+        # Paso 1: Obtener los datos
+        print(f"Obteniendo datos de IATA GAP para el país: {pais_seleccionado}...")
+        datos_obtenidos = obtener_datos_iata_gap(pais_seleccionado, sesion_activa)
+
+        # Verificar si se obtuvieron datos
+        if not datos_obtenidos:
+            print(f"No se encontraron datos en IATA GAP para el país: {pais_seleccionado}.")
+            return {}
+
+        # Paso 2: Procesar los datos
+        print(f"Procesando datos de IATA GAP para el país: {pais_seleccionado}...")
+        datos_procesados = procesar_datos_iata_gap(datos_obtenidos)
+
+        # Verificar si el procesamiento fue exitoso
+        if not datos_procesados:
+            print(f"No se pudieron procesar los datos de IATA GAP para el país: {pais_seleccionado}.")
+            return {}
+
+        print(f"Datos de IATA GAP procesados correctamente para el país: {pais_seleccionado}.")
+        return datos_procesados
+
+    except Exception as e:
+        # Manejo de errores
+        print(f"Error al obtener o procesar datos de IATA GAP para el país {pais_seleccionado}: {str(e)}")
+        return {}
