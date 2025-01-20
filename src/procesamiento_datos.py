@@ -4,7 +4,7 @@
 
 # Importar módulos necesarios
 
-import snowflake_analitica as snowflake_analitica
+import src.snowflake_analitica as snowflake_analitica
 
 # Warnings
 import warnings

@@ -3,3 +3,4 @@ from .config import create_session_from_json, create_session_from_toml
 from .helpers import get_session_info, update_session_params, clean_column_name, ejecutar_script_sql_snowpark
 from .ddl import generate_create_table_script, upload_dataframe_to_snowflake
 from .dml import registrar_evento_auditoria, validador_cargue, validador_cargue_path, obtener_selector, obtener_regiones_disponibles, obtener_paises_por_region, ejecutar_consulta_segura, ejecutar_multiples_consultas, obtener_iso_code
+from .streamlit_snowflake import create_session, check_session, update_last_activity, flujo_snowflake

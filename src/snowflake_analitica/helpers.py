@@ -2,8 +2,6 @@
 from snowflake.snowpark import Session
 import re
 import unicodedata
-import hashlib
-import os
 
 def get_session_info(sesion_activa):
     """
