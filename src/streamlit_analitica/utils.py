@@ -6,6 +6,8 @@ import pydeck as pdk
 import requests
 import plotly.graph_objects as go
 from io import BytesIO
+import src.snowflake_analitica as snowflake_analitica
+import src.procesamiento_datos as procesamiento_datos
 
 # Geolocalización
 def mostrar_mapa(pais):
@@ -218,7 +220,7 @@ def excel_download_buttons(df: pd.DataFrame, file_name: str = "export.xlsx") -> 
 
 
 
-def mostrar_resultado_en_streamlit(resultado, fuente, df=None):
+def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df=None):
     """
     Función que muestra en Streamlit un resultado según su tipo:
     
@@ -230,6 +232,8 @@ def mostrar_resultado_en_streamlit(resultado, fuente, df=None):
       - También se muestra un texto de fuente.
     - En caso contrario, se muestra un mensaje indicando que el tipo no está soportado.
 
+    La función también registra el evento de descarga en caso de que el usuario descargue el archivo Excel.
+
     Parámetros:
     -----------
     resultado : object
@@ -238,6 +242,10 @@ def mostrar_resultado_en_streamlit(resultado, fuente, df=None):
     fuente : str
         Texto que describe la fuente o referencia del resultado mostrado (por ejemplo, 
         "Fuente: Ministerio de Turismo").
+    detalle_evento : str
+        Texto que describe el detalle del evento que se registra en Snowflake.
+    unidad : str
+        Se refiere al país de la descarga.
     df : pd.DataFrame, opcional
         DataFrame con datos que se pueden descargar en Excel. 
         Si es None o está vacío, no se mostrará el botón de descarga.
@@ -264,7 +272,10 @@ def mostrar_resultado_en_streamlit(resultado, fuente, df=None):
                 data=excel_download_buttons(df),
                 file_name="resultado_exportado.xlsx",
                 mime="application/vnd.ms-excel",
-                use_container_width=True
+                use_container_width=True,
+                on_click=snowflake_analitica.registrar_evento,
+                args=(st.session_state.session, 'Descarga archivo Excel', detalle_evento, unidad),
+                key=id(resultado)
             )
 
     # Caso 2: Cadena de texto
@@ -275,4 +286,55 @@ def mostrar_resultado_en_streamlit(resultado, fuente, df=None):
     # Caso 3: Tipo no soportado
     else:
         st.warning(f"Tipo de resultado no reconocido o no soportado: {type(resultado)}")
+
+# Función para obtener los datos con cache
+@st.cache_data(show_spinner=False)
+def obtener_datos_con_cache(_pais_elegido):
+    """
+    Función que obtiene y retorna varios DataFrames basados en 'pais_elegido',
+    mostrando un spinner y una barra de progreso mientras se cargan los datos.
+
+    Parámetros:
+    -----------
+    pais_elegido : str
+        Identificador del país para filtrar o procesar los datos en cada función.
+
+    Retorna:
+    --------
+    df_global_data, df_oag, df_fk, df_credibanco, df_iata : pd.DataFrame
+        DataFrames obtenidos de las funciones de procesamiento_datos, 
+        retornados de forma individual (como valores separados).
+
+    Notas:
+    ------
+    - Se usa 'show_spinner=False' en @st.cache_data para poder controlar 
+      manualmente el spinner con 'st.spinner("...")'.
+    - Cada DataFrame se calcula en pasos separados, incrementando la barra 
+      de progreso para informar al usuario sobre la fase de carga.
+    """
+
+    progress_bar = st.progress(0)
+    
+    with st.spinner("Cargando datos..."):
+        # Paso 1: df_global_data
+        df_global_data = procesamiento_datos.datos_global_data(_pais_elegido, st.session_state.session)
+        progress_bar.progress(20)
+
+        # Paso 2: df_oag
+        df_oag = procesamiento_datos.datos_oag(_pais_elegido, st.session_state.session)
+        progress_bar.progress(40)
+
+        # Paso 3: df_fk
+        df_fk = procesamiento_datos.datos_forward_keys(_pais_elegido, st.session_state.session)
+        progress_bar.progress(60)
+
+        # Paso 4: df_credibanco
+        df_credibanco = procesamiento_datos.datos_credibanco(_pais_elegido, st.session_state.session)
+        progress_bar.progress(80)
+
+        # Paso 5: df_iata
+        df_iata = procesamiento_datos.datos_iata_gap(_pais_elegido, st.session_state.session)
+        progress_bar.progress(100)
+
+    return df_global_data, df_oag, df_fk, df_credibanco, df_iata
 

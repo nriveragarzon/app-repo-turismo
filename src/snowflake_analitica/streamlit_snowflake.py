@@ -87,3 +87,34 @@ def flujo_snowflake():
     # Verifica si hay una sesión activa. Si ha expirado o no existe, 
     # intenta crear una nueva sesión de Snowflake.
     get_session()
+
+# Función para insertar datos en la tabla de seguimiento
+def registrar_evento(sesion_activa, tipo_evento, detalle_evento, unidad):
+    """
+    Registra un evento en la base de datos Snowflake.
+
+    Args:
+    - sesion_activa: Sesión activa de conexión a la base de datos.
+    - tipo_evento (str): Tipo de evento ('selección' o 'descarga').
+    - detalle_evento (str): Detalle de evento ('selección continente', 'selección país', etc)
+    - unidad (str): Unidad específica del evento (e.g., 'América', 'Colombia').
+    """
+    # Crear objeto de conexión
+    conn = sesion_activa.connection
+    try:
+        # Crear consulta para el insert
+        query_insert = f"""
+        INSERT INTO REPOSITORIO_TURISMO.SEGUIMIENTO.SEGUIMIENTO_EVENTOS (TIPO_EVENTO, DETALLE_EVENTO, UNIDAD, FECHA_HORA) 
+        VALUES ('{tipo_evento}', '{detalle_evento}', '{unidad}', CONVERT_TIMEZONE('America/Los_Angeles', 'America/Bogota', CURRENT_TIMESTAMP));
+        """
+        # Crear un cursor para ejecutar la consulta
+        cur = conn.cursor()
+        try:
+            # Ejecutar la consulta SQL con los valores
+            cur.execute(query_insert)
+        finally:
+            # Cerrar el cursor
+            cur.close()
+    # Error
+    except Exception as e:
+        st.write(f"Error al registrar evento: {e}")
