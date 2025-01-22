@@ -1,5 +1,5 @@
 # Configurar Python
-FROM python:3.11.9  
+FROM python:3.11.0  
 
 # Establecer un directorio de trabajo dentro del contenedor
 WORKDIR /app  
