@@ -8,6 +8,10 @@ from datetime import datetime, timedelta
 import src.streamlit_analitica as streamlit_analitica
 import src.snowflake_analitica as snowflake_analitica
 
+# Locale
+import locale
+locale.setlocale(locale.LC_ALL, "es_ES.UTF-8")
+
 # Ignorar warnings
 warnings.filterwarnings("ignore", message="Bad owner or permissions on")
 
