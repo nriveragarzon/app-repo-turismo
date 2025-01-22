@@ -275,7 +275,7 @@ def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df
                 use_container_width=True,
                 on_click=snowflake_analitica.registrar_evento,
                 args=(st.session_state.session, 'Descarga archivo Excel', detalle_evento, unidad),
-                key=id(resultado)
+                key=detalle_evento
             )
 
     # Caso 2: Cadena de texto

@@ -176,27 +176,35 @@ def home_page():
     # Diccionario con las diferentes secciones (título y contenido)
     card_content = {
         "Descripción&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;": 
-        ("Descripción general", "[PLACEHOLDER]"),
+        ("Descripción general", "El Centro de Inteligencia de Turismo (CIT) es una plataforma interactiva que permite a los usuarios analizar y explorar datos relacionados con el turismo, como la cantidad de turistas por país de origen, el gasto promedio, la estacionalidad y otros indicadores clave. A través de gráficos dinámicos y tablas personalizables, facilita la comprensión de tendencias turísticas y el análisis de flujos de turistas a lo largo del tiempo, facilitando la toma de decisiones en el sector público y privado."),
 
         "Beneficios&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;":
         ("Beneficios", """
+        <p>El beneficio principal es facilitar la toma de decisiones estratégicas al proporcionar un acceso rápido, claro y detallado a datos clave sobre el comportamiento turístico. Algunos beneficios específicos incluyen:</p> 
         <ul style="margin-top: 0px;">
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
+            <li style="font-size: 15px;">Mejora en la toma de decisiones: Permite a gobiernos, empresas y organismos turísticos identificar patrones de demanda, ajustar estrategias de marketing, y planificar infraestructuras y servicios de manera más eficiente.</li>
+            <li style="font-size: 15px;">Optimización de recursos: Ayuda a asignar recursos de manera más efectiva, al conocer las preferencias y los flujos turísticos, lo que facilita la segmentación de mercados y la focalización de esfuerzos en destinos o segmentos específicos.</li>
+            <li style="font-size: 15px;">Análisis de tendencias y estacionalidad: Facilita la identificación de períodos de alta y baja demanda, permitiendo planificar promociones o eventos que aumenten la afluencia de turistas en temporadas bajas.</li>
+            <li style="font-size: 15px;">Monitoreo en tiempo real: Proporciona datos actualizados que permiten una respuesta ágil ante cambios repentinos en los flujos turísticos, como crisis económicas, desastres naturales o eventos internacionales.</li>
+            <li style="font-size: 15px;">Mejor comprensión del mercado: Ofrece una visión detallada de los turistas (por país de origen, preferencias de gasto, etc.), lo que ayuda a personalizar la oferta turística y mejorar la experiencia del visitante.</li>
         </ul>
         """),
 
         "Alcance y límites&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;":
         ("Alcance y límites", """
+        <p> Alcances:</p>
         <ul style="margin-top: 0px;">
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
-            <li style="font-size: 15px;">[PLACEHOLDER]</li>
+            <li style="font-size: 15px;">Análisis exhaustivo de flujos turísticos globales y locales.</li>
+            <li style="font-size: 15px;">Herramientas de visualización interactivas.</li>
+            <li style="font-size: 15px;">Predicción y análisis de estacionalidad.</li>
+        </ul>
+        <p> Límites:</p>
+        <ul style="margin-top: 0px;">
+            <li style="font-size: 15px;">Dependencia de la calidad y disponibilidad de los datos.</li>
+            <li style="font-size: 15px;">Posible desactualización de datos en tiempo real.</li>
+            <li style="font-size: 15px;">Cobertura geográfica limitada.</li>
+            <li style="font-size: 15px;">Falta de datos cualitativos sobre la experiencia del turista.</li>
+            <li style="font-size: 15px;">Necesidad de habilidades técnicas para un análisis profundo.</li>
         </ul>
         """),
     }

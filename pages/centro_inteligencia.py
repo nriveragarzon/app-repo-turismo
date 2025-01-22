@@ -438,10 +438,79 @@ if region_elegida:
         # Gasto con tarjeta de crédito en Colombia
         st.markdown("<a id='gasto-con-tarjeta-de-credito-en-colombia'></a>", unsafe_allow_html=True)
         st.subheader("Gasto con tarjeta de crédito en Colombia")
+        
+        # Fuente
+        credibanco_fuente = 'Credibanco'
+
+        # Gasto promedio
+        fig_side_by_side_bar_gasto_promedio =  plotly_analitica.plot_side_by_side_bars(df=df_credibanco['gasto_promedio'], date_col='YEAR', var1_col='GASTO_PROMEDIO_TARJETA', var2_col='GASTO_PROMEDIO_TRANSACCION', title='Gasto promedio', x_label="Año", y_label="Gasto", y_units='USD', show_labels=True, decimal_places=0, legend_title=' ', legend_labels={'GASTO_PROMEDIO_TARJETA' : 'Gasto promedio por tarjeta', 'GASTO_PROMEDIO_TRANSACCION' : 'Gasto promedio por transacción'})
+
+        # Gasto por categoria
+        fig_stacked_h_gasto_categoria_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_categoria'], date_col='YEAR', group_col='CLASIFICACION_CATEGORIA_FORMATADA', share_col='PARTICIPACION', decimal_places=1, title='Gasto por categoria', y_label='Año', legend_title=" ")
+        fig_stacked_h_gasto_categoria_credibanco = fig_stacked_h_gasto_categoria_credibanco.update_layout(barmode = 'stack', yaxis = {'autorange' : 'reversed'})
+
+        # Gasto por categoria
+        fig_treemap_gasto_categoria_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_categoria'], date_col="YEAR", value_col="FACTURACION_USD", group_col="CLASIFICACION_CATEGORIA_FORMATADA", share_col="PARTICIPACION", decimal_places=1, title="Gasto por categoria", group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
+
+        # Gasto por productos directo
+        fig_stacked_h_gasto_categoria_directo_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_producto_directo'], date_col='YEAR', group_col='CATEGORIA', share_col='PARTICIPACION', decimal_places=1, title='Gasto por producto directo', y_label='Año', legend_title=" ")
+        fig_stacked_h_gasto_categoria_directo_credibanco = fig_stacked_h_gasto_categoria_directo_credibanco.update_layout(barmode = 'stack', yaxis = {'autorange' : 'reversed'})
+
+        # Gasto por producto directo
+        fig_treemap_gasto_categoria_directo_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_producto_directo'], date_col="YEAR", value_col="FACTURACION_USD", group_col="CATEGORIA", share_col="PARTICIPACION", decimal_places=1, title="Gasto por producto directo", group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
+
+        # Gasto por productos indirecto
+        fig_stacked_h_gasto_categoria_indirecto_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_producto_indirecto'], date_col='YEAR', group_col='CATEGORIA', share_col='PARTICIPACION', decimal_places=1, title='Gasto por producto indirecto', y_label='Año', legend_title=" ")
+        fig_stacked_h_gasto_categoria_indirecto_credibanco = fig_stacked_h_gasto_categoria_indirecto_credibanco.update_layout(barmode = 'stack', yaxis = {'autorange' : 'reversed'})
+
+        # Gasto por producto indirecto
+        fig_treemap_gasto_categoria_indirecto_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_producto_indirecto'], date_col="YEAR", value_col="FACTURACION_USD", group_col="CATEGORIA", share_col="PARTICIPACION", decimal_places=1, title="Gasto por producto indirecto", group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
 
         # Expander
         with st.expander("Datos"):
-            st.write("Contenido")
+            
+            # GRÁFICO ÚNICO EN EL CENTRO
+            with st.container():
+                # Gasto promedio
+                streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_side_by_side_bar_gasto_promedio, fuente=credibanco_fuente, detalle_evento='Descarga Excel Credibanco - Gasto promedio', unidad=pais_elegido, df=df_credibanco['gasto_promedio'])
+
+            # GRÁFICO ÚNICO A LA IZQUIERDA Y ÚNICO A LA DERECHA
+            with st.container():
+                # Creación de tablas
+                col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="center")
+                # Columna 1 Gasto por categoria
+                with col1:
+                    streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_credibanco, fuente=credibanco_fuente, detalle_evento='Descarga Excel Credibanco - StackedH - Gasto por categoria', unidad=pais_elegido, df=df_credibanco['gasto_categoria'])
+                
+                # Columna 2 Gasto por categoria
+                with col2:
+                    streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_gasto_categoria_credibanco, fuente=credibanco_fuente, detalle_evento='Descarga Excel Credibanco - Treemap - Gasto por categoria', unidad=pais_elegido, df=df_credibanco['gasto_categoria'])
+
+            # GRÁFICO ÚNICO A LA IZQUIERDA Y ÚNICO A LA DERECHA
+            with st.container():
+                # Creación de tablas
+                col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="center")
+                # Columna 1 Gasto por productos directo
+                with col1:
+                    streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_directo_credibanco, fuente=credibanco_fuente, detalle_evento='Descarga Excel Credibanco - StackedH - Gasto por productos directo', unidad=pais_elegido, df=df_credibanco['gasto_producto_directo'])
+                
+                # Columna 2 Gasto por productos directo
+                with col2:
+                    streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_directo_credibanco, fuente=credibanco_fuente, detalle_evento='Descarga Excel Credibanco - Treemap - Gasto por productos directo', unidad=pais_elegido, df=df_credibanco['gasto_producto_directo'])
+
+                    
+            # GRÁFICO ÚNICO A LA IZQUIERDA Y ÚNICO A LA DERECHA
+            with st.container():
+                # Creación de tablas
+                col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="center")
+                # Columna 1 Gasto por productos indirecto
+                with col1:
+                    streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_indirecto_credibanco, fuente=credibanco_fuente, detalle_evento='Descarga Excel Credibanco - StackedH - Gasto por productos indirecto', unidad=pais_elegido, df=df_credibanco['gasto_producto_indirecto'])
+                 
+                # Columna 2 Gasto por productos indirecto
+                with col2:
+                    streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_gasto_categoria_indirecto_credibanco, fuente=credibanco_fuente, detalle_evento='Descarga Excel Credibanco - Treemap - Gasto por productos indirecto', unidad=pais_elegido, df=df_credibanco['gasto_producto_indirecto'])          
+
 
         # Reservas y Búsquedas hacia Colombia
         st.markdown("<a id='reservas-y-busquedas-hacia-colombia'></a>", unsafe_allow_html=True)
