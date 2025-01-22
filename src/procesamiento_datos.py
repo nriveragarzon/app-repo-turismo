@@ -18,6 +18,9 @@ import pandas as pd
 # Prettyprint
 import pprint
 
+# Locale
+import locale
+
 # Suprimir todas las advertencias de tipo UserWarning
 warnings.filterwarnings("ignore", category=UserWarning)
 
