@@ -1,7 +1,6 @@
 # Librerías
 
 import pandas as pd
-import plotly
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -57,7 +56,6 @@ def plot_single_time_series(df, date_col, value_col, title=None,
             df, 
             x=date_col, 
             y=value_col, 
-            title=title if title else None, 
             labels={
                 date_col: x_label_text if x_label_text else None,
                 value_col: y_label_text if y_label_text else None
@@ -67,7 +65,7 @@ def plot_single_time_series(df, date_col, value_col, title=None,
 
         # Configurar el diseño del gráfico
         fig.update_layout(
-            title=dict(text=title, x=0.5),  # Centrar el título
+            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label_text if x_label_text else None,
             yaxis_title=y_label_text if y_label_text else None,
             template="plotly_white"  # Estilo limpio
@@ -173,7 +171,7 @@ def plot_multiple_time_series(df, date_col, value_col, group_col,
         # Formatear el eje X directamente en el gráfico con el formato de mes en español
         fig.update_layout(
             template="plotly_white",
-            title=dict(text=title, x=0.5),
+            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label_text,
             yaxis_title=y_label_text,
             xaxis=dict(
@@ -290,7 +288,6 @@ def plot_stacked_bar_chart_h(df, date_col, group_col, share_col,
             color=group_col,
             orientation='h',
             text="Valor",  # Usamos la columna con formato español
-            title=title if title else "Gráfico de barras apiladas horizontales",
             labels={
                 share_col: "Participación (%)",
                 date_col: y_label_text,
@@ -308,9 +305,12 @@ def plot_stacked_bar_chart_h(df, date_col, group_col, share_col,
             xaxis=dict(title="Participación (%)"),
             yaxis=dict(title=y_label_text, categoryorder='category ascending'),
             legend_title=legend_title if legend_title else "Categoría""Categorías",
-            title=dict(font_size=16, x=0.5),
+            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
         )
+
+        # Hacer cambio de orden en el eje Y
+        fig.update_layout(barmode = 'stack', yaxis = {'autorange' : 'reversed'})
 
         return fig
 
@@ -378,7 +378,6 @@ def plot_stacked_bar_chart_v(df, date_col, group_col, share_col,
             y=share_col,
             color=group_col,
             text="Valor",  # Usamos la columna con formato español
-            title=title if title else "Gráfico de barras apiladas verticales",
             labels={
                 share_col: "Participación (%)",
                 date_col: y_label_text,
@@ -396,7 +395,7 @@ def plot_stacked_bar_chart_v(df, date_col, group_col, share_col,
             xaxis=dict(title="Año", categoryorder='category ascending'),
             yaxis=dict(title="Participación (%)"),
             legend_title=legend_title if legend_title else "Categoría",
-            title=dict(font_size=16, x=0.5),
+            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
         )
  
@@ -445,7 +444,6 @@ def plot_single_bar_chart(df, date_col, value_col,
             df,
             x=date_col,
             y=value_col,
-            title=title,
             labels={
                 date_col: x_label_text,
                 value_col: y_label_text
@@ -455,7 +453,7 @@ def plot_single_bar_chart(df, date_col, value_col,
 
         # Ajustar el diseño del gráfico
         fig.update_layout(
-            title=dict(text=title, x=0.5),
+            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label_text,
             yaxis_title=y_label_text,
             template="plotly_white"
@@ -531,7 +529,6 @@ def plot_side_by_side_bars(df,date_col, var1_col, var2_col, title=None, x_label=
             df_pivoted,
             x=date_col,
             y=[var1_col, var2_col],  # Dos columnas => barras agrupadas
-            title=title,
             labels={
                 date_col: x_label, 
                 "value": y_label_text  # Plotly usa "value" como etiqueta para wide form
@@ -541,7 +538,7 @@ def plot_side_by_side_bars(df,date_col, var1_col, var2_col, title=None, x_label=
 
         # Ajustar layout básico
         fig.update_layout(
-            title=dict(text=title, x=0.5),
+            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label,
             yaxis_title=y_label_text,
             template="plotly_white",
@@ -722,12 +719,7 @@ def plot_treemap(df, date_col, value_col, group_col, share_col,
         fig.update_layout(
             updatemenus=updatemenus,
             margin=dict(t=50, l=25, r=25, b=25),
-            # Título centrado y con fontsize=16
-            title=dict(
-                text=title if title else "",
-                x=0.5,
-                font=dict(size=16)
-            )
+            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5}
         )
 
         return fig
