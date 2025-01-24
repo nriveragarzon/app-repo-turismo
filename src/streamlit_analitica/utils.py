@@ -235,7 +235,7 @@ def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df
         st.warning(f"Tipo de resultado no reconocido o no soportado: {type(resultado)}")
 
 # Función para obtener los datos
-@st.cache_data(show_spinner=True)
+#@st.cache_data(show_spinner=True)
 def obtener_datos(_pais_elegido):
     """
     1. Verifica si ya están los datos en 'st.session_state' para el país elegido.
