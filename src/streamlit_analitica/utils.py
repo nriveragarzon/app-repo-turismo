@@ -397,22 +397,22 @@ def obtener_graficos_global_data(df_global_data, _pais_elegido):
 
             # Return de los gráficos 
             return (   
-                    fig_time_series_viajeros,
-                    fig_stacked_h_medio_viajeros,
-                    fig_treemap_medio_viajeros,
-                    fig_time_series_noches_percnotacion,
-                    fig_time_series_gasto,
-                    fig_stacked_h_categoria_gasto,
-                    fig_treemap_categoria_gasto,
-                    fig_stacked_h_edad_viajeros,
-                    fig_treemap_edad_viajeros,
-                    fig_stacked_h_motivo_viajeros,
-                    fig_treemap_motivo_viajeros,
-                    fig_stacked_h_forma_viajeros,
-                    fig_treemap_forma_viajeros,
-                    fig_stacked_h_destinos_viajeros,
-                    fig_treemap_destinos_viajeros,
-                    fig_time_series_mice                                           
+                    st.session_state['graficos_global_data']['fig_time_series_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_medio_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_medio_viajeros'],
+                    st.session_state['graficos_global_data']['fig_time_series_noches_percnotacion'],
+                    st.session_state['graficos_global_data']['fig_time_series_gasto'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_categoria_gasto'],
+                    st.session_state['graficos_global_data']['fig_treemap_categoria_gasto'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_edad_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_edad_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_motivo_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_motivo_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_forma_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_forma_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_destinos_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_destinos_viajeros'],
+                    st.session_state['graficos_global_data']['fig_time_series_mice']                                           
                 )
     else:
          # Si ya están cargados, se devuelven directamente
@@ -478,10 +478,10 @@ def obtener_graficos_oag_mundo(df_oag, _pais_elegido):
 
             # Return de los gráficos 
             return (
-                    fig_single_barchart_conectividad_mundo_sillas,
-                    fig_single_barchart_conectividad_mundo_frecuencias,
-                    fig_stacked_h_conectividad_frecuencias_destinos_cerrado,
-                    fig_stacked_h_conectividad_frecuencias_destinos_corrido
+                    st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_sillas'],
+                    st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_frecuencias'],
+                    st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_cerrado'],
+                    st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_corrido']
                 )
     else:
          # Si ya están cargados, se devuelven directamente
@@ -528,8 +528,8 @@ def obtener_graficos_fk_mundo(df_fk, _pais_elegido):
 
             # Return de los gráficos
             return (
-                    fig_multiple_time_series_reservas_mundo,
-                    fig_multiple_time_series_busquedas_mundo
+                    st.session_state['graficos_fk_mundo']['fig_multiple_time_series_reservas_mundo'],
+                    st.session_state['graficos_fk_mundo']['fig_multiple_time_series_busquedas_mundo']
                 )
     else:
          # Si ya están cargados, se devuelven directamente
@@ -582,10 +582,10 @@ def obtener_graficos_oag_colombia(df_oag, _pais_elegido):
     
             # Return de los gráficos en un diccionario
             return (
-                    fig_single_barchart_conectividad_colombia_sillas,
-                    fig_single_barchart_conectividad_colombia_frecuencias,
-                    fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado,
-                    fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido
+                    st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_sillas'],
+                    st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_frecuencias'],
+                    st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado'],
+                    st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido']
                 )
     else:
          # Si ya están cargados, se devuelven directamente
@@ -652,13 +652,13 @@ def obtener_graficos_credibanco(df_credibanco, _pais_elegido):
 
             # Return de los gráficos en un diccionario
             return (
-                    fig_side_by_side_bar_gasto_promedio,
-                    fig_stacked_h_gasto_categoria_credibanco,
-                    fig_treemap_gasto_categoria_credibanco,
-                    fig_stacked_h_gasto_categoria_directo_credibanco,
-                    fig_treemap_gasto_categoria_directo_credibanco,
-                    fig_stacked_h_gasto_categoria_indirecto_credibanco,
-                    fig_treemap_gasto_categoria_indirecto_credibanco
+                    st.session_state['graficos_credibanco']['fig_side_by_side_bar_gasto_promedio'],
+                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_directo_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_directo_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_indirecto_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_indirecto_credibanco']
                 )
     else:
          # Si ya están cargados, se devuelven directamente
@@ -708,8 +708,8 @@ def obtener_graficos_fk_colombia(df_fk, _pais_elegido):
 
             # Return de los gráficos en un diccionario
             return (
-                    fig_single_time_series_reservas_colombia,
-                    fig_single_time_series_busquedas_colombia
+                    st.session_state['graficos_fk_colombia']['fig_single_time_series_reservas_colombia'],
+                    st.session_state['graficos_fk_colombia']['fig_single_time_series_busquedas_colombia']
                 )
     else:
          # Si ya están cargados, se devuelven directamente
@@ -754,8 +754,8 @@ def obtener_graficos_iata_colombia(df_iata, _pais_elegido):
 
             # Return de los gráficos en un diccionario
             return (
-                    fig_single_time_series_agencias_colombia, 
-                    fig_stacked_h_agencias_ciudades
+                    st.session_state['graficos_iata_colombia']['fig_single_time_series_agencias_colombia'],
+                    st.session_state['graficos_iata_colombia']['fig_stacked_h_agencias_ciudades']
                 )
     else:
          # Si ya están cargados, se devuelven directamente

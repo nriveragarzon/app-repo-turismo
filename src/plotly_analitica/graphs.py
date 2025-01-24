@@ -1,5 +1,4 @@
 # Librerías
-
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -408,8 +407,7 @@ def plot_stacked_bar_chart_v(df, date_col, group_col, share_col,
 # Single bar chart
 def plot_single_bar_chart(df, date_col, value_col, 
                           title=None, x_label="", y_label="", y_units=None,
-                          show_labels=False, decimal_places=0
-):
+                          show_labels=False, decimal_places=0):
     """
     Genera un gráfico de barras (bar chart) de una sola serie usando Plotly Express,
     aplicando convenciones de formato en español para las etiquetas (punto para miles y coma

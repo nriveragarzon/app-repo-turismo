@@ -1,5 +1,4 @@
 # Librerías
-
 import streamlit as st
 import time
 from datetime import datetime, timedelta
@@ -99,22 +98,14 @@ def registrar_evento(sesion_activa, tipo_evento, detalle_evento, unidad):
     - detalle_evento (str): Detalle de evento ('selección continente', 'selección país', etc)
     - unidad (str): Unidad específica del evento (e.g., 'América', 'Colombia').
     """
-    # Crear objeto de conexión
-    conn = sesion_activa.connection
     try:
         # Crear consulta para el insert
         query_insert = f"""
         INSERT INTO REPOSITORIO_TURISMO.SEGUIMIENTO.SEGUIMIENTO_EVENTOS (TIPO_EVENTO, DETALLE_EVENTO, UNIDAD, FECHA_HORA) 
         VALUES ('{tipo_evento}', '{detalle_evento}', '{unidad}', CONVERT_TIMEZONE('America/Los_Angeles', 'America/Bogota', CURRENT_TIMESTAMP));
         """
-        # Crear un cursor para ejecutar la consulta
-        cur = conn.cursor()
-        try:
-            # Ejecutar la consulta SQL con los valores
-            cur.execute(query_insert)
-        finally:
-            # Cerrar el cursor
-            cur.close()
+        # Ejecutar la consulta SQL con los valores
+        sesion_activa.sql(query_insert).collect()      
     # Error
     except Exception as e:
         st.write(f"Error al registrar evento: {e}")
