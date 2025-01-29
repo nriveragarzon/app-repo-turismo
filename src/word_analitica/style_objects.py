@@ -67,7 +67,7 @@ def estilos(doc: Document):
     # Ajustar las márgenes del documento 
     # Márgenes Papeleria Modelo Procolombia
     for section in doc.sections:
-        section.top_margin = Cm(2.57)  # Margen superior
+        section.top_margin = Cm(3.58)  # Margen superior
         section.bottom_margin = Cm(0.51)  # Margen inferior
         section.left_margin = Cm(2.54)  # Margen izquierdo
         section.right_margin = Cm(2.54)  # Margen derecho

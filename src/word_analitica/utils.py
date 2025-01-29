@@ -26,78 +26,53 @@ def add_header_footer(doc: Document, header_image_left: str, footer_image: str, 
     """
     # Obtener la primera sección del documento
     section = doc.sections[0]
+    # Ajustar la distancia del encabezado y el pie de página
+    section.header_distance = Cm(2.57)
+    section.footer_distance = Cm(0.51)
 
-    # --------------------------------------------------------------------------
-    # 1. ENCABEZADO
-    # --------------------------------------------------------------------------
+ # Encabezado
     header = section.header
+    #header_table = header.add_table(rows=1, cols=2, width=doc.sections[0].page_width)
+    #header_table.autofit = True
 
-    # Crear una tabla para alojar el contenido del encabezado
-    header_table = header.add_table(rows=1, cols=2, width=section.page_width)
-    header_table.autofit = True
-
-    # Celda izquierda del encabezado: Imagen
-    # Conversión de cm a pulgadas: 1 pulgada = 2.54 cm
-    HEADER_IMG_WIDTH = Cm(7.66 / 2.54)   # 7.66 cm de ancho
-    HEADER_IMG_HEIGHT = Cm(3.4 / 2.54)   # 3.4 cm de alto
-
-    header_cell_left = header_table.cell(0, 0)
-    header_paragraph_left = header_cell_left.paragraphs[0]
-    header_paragraph_left.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
-
+    # Imagen izquierda en el encabezado
+    #header_cell_left = header_table.cell(0, 0)
+    header_paragraph_left = header.paragraphs[0]
     header_run_left = header_paragraph_left.add_run()
-    header_run_left.add_picture(header_image_left, width=HEADER_IMG_WIDTH, height=HEADER_IMG_HEIGHT)
+    header_run_left.add_picture(header_image_left, width=Inches(2.5))
 
-    # --------------------------------------------------------------------------
-    # 2. PIE DE PÁGINA
-    # --------------------------------------------------------------------------
+    # Pie de página
     footer = section.footer
-
-    # Crear una tabla para alojar el contenido del pie de página
-    footer_table = footer.add_table(rows=1, cols=3, width=section.page_width)
+    footer_table = footer.add_table(rows=1, cols=3, width=doc.sections[0].page_width)
     footer_table.autofit = True
 
-    # ----------------
-    # 2.1 Celda izquierda: Texto
+    # Texto izquierda en el pie de página
     footer_cell_left = footer_table.cell(0, 0)
     footer_paragraph_left = footer_cell_left.paragraphs[0]
     footer_paragraph_left.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+    footer_run_left = footer_paragraph_left.add_run("Calle 30 # 13ª - 15, Edificio CCI Pisos 35 - 36 | Bogotá, Colombia T: +57 (1) 560 0100 | info@procolombia.co | www.procolombia.co")
+    footer_run_left.font.size = Pt(8)
 
-    footer_run_left = footer_paragraph_left.add_run(footer_text)
-    footer_run_left.font.size = Pt(8)  # Ajustar el tamaño de la fuente a 8 puntos
-
-    # ----------------
-    # 2.2 Celda central: Número de página
+    # Número de página en el centro del pie de página
     footer_cell_center = footer_table.cell(0, 1)
     footer_paragraph_center = footer_cell_center.paragraphs[0]
     footer_paragraph_center.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
     footer_run_center = footer_paragraph_center.add_run()
-
-    # Insertar el campo PAGE
-    fldChar_begin = OxmlElement('w:fldChar')
-    fldChar_begin.set(qn('w:fldCharType'), 'begin')
-    footer_run_center._r.append(fldChar_begin)
-
+    fldChar1 = OxmlElement('w:fldChar')
+    fldChar1.set(qn('w:fldCharType'), 'begin')
+    footer_run_center._r.append(fldChar1)
     instrText = OxmlElement('w:instrText')
     instrText.text = 'PAGE'
     footer_run_center._r.append(instrText)
-
-    fldChar_end = OxmlElement('w:fldChar')
-    fldChar_end.set(qn('w:fldCharType'), 'end')
-    footer_run_center._r.append(fldChar_end)
-
-    # Ajustar el tamaño de la fuente del número de página
+    fldChar2 = OxmlElement('w:fldChar')
+    fldChar2.set(qn('w:fldCharType'), 'end')
+    footer_run_center._r.append(fldChar2)
+    # Establecer el tamaño de la fuente del número de página
     footer_run_center.font.size = Pt(8)
 
-    # ----------------
-    # 2.3 Celda derecha: Imagen
-    FOOTER_IMG_WIDTH = Inches(5.99 / 2.54)   # 5.99 cm de ancho
-    FOOTER_IMG_HEIGHT = Inches(1.27 / 2.54)  # 1.27 cm de alto
-
+    # Imagen derecha en el pie de página
     footer_cell_right = footer_table.cell(0, 2)
     footer_paragraph_right = footer_cell_right.paragraphs[0]
     footer_paragraph_right.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
-
     footer_run_right = footer_paragraph_right.add_run()
-    footer_run_right.add_picture(footer_image, width=FOOTER_IMG_WIDTH, height=FOOTER_IMG_HEIGHT)
+    footer_run_right.add_picture(footer_image, width=Inches(2.0))
