@@ -10,23 +10,14 @@ import src.snowflake_analitica as snowflake_analitica
 import src.plotly_analitica as plotly_analitica
 import src.procesamiento_datos as procesamiento_datos
 
-# Ignorar warnings
-warnings.filterwarnings("ignore", message="Bad owner or permissions on")
-
 # Configuración página web - tipo wide sin sidebar activa
-st.set_page_config(page_title="CIT", page_icon = ':beach_with_umbrella:', layout="wide",  initial_sidebar_state="collapsed")
-
-# Leer archivo de estilos
-css = streamlit_analitica.load_css("static/style.css")
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+st.set_page_config(page_title="Dashboard", 
+                   page_icon = ':beach_with_umbrella:', 
+                   layout="wide",  
+                   initial_sidebar_state="collapsed")
 
 # Inclusión de la hoja de estilos de Bootstrap para mejorar la apariencia.
 st.markdown("""
-    <style>
-        [data-testid="stColumn"] {
-            padding: 20px 20px 20px 20px;
-        }     
-    </style> 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 """, unsafe_allow_html=True)
 
@@ -64,6 +55,7 @@ SESSION_TIMEOUT = timedelta(minutes=15)
 ###########
 
 st.title("Centro de Inteligencia de Turismo (CIT)")
+
 st.divider()
 
 # Actualizar flujo de Snowflake
@@ -167,8 +159,9 @@ if region_elegida:
         ###################################
         # Flujos de viajeros hacia el mundo
         ###################################
-        st.divider()
+
         st.markdown("<a id='flujos-de-viajeros-hacia-el-mundo'></a>", unsafe_allow_html=True)
+        st.divider()
         st.subheader("Flujos de viajeros hacia el mundo")
 
         # Fuente
@@ -202,9 +195,10 @@ if region_elegida:
             df_mice = pd.DataFrame()
 
         # Expander
-        with st.expander("Datos"):
-
+        with st.expander("Explora todos los indicadores"):
+            
             # GRÁFICO ÚNICO A LA IZQUIERDA Y BOTONES DE CAMBIO A LA DERECHA
+            
             with st.container():
                 # Creación de tablas
                 col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="center")
@@ -313,7 +307,7 @@ if region_elegida:
         ) = streamlit_analitica.obtener_graficos_oag_mundo(df_oag, pais_elegido)
         
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
 
             # GRÁFICO ÚNICO EN EL CENTRO
             with st.container():
@@ -353,7 +347,7 @@ if region_elegida:
         ) = streamlit_analitica.obtener_graficos_fk_mundo(df_fk, pais_elegido)
 
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
             
             # GRÁFICO ÚNICO EN EL CENTRO
             with st.container():
@@ -379,7 +373,7 @@ if region_elegida:
         st.subheader("Flujos de viajeros hacia Colombia")
 
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
             st.write("Contenido")
 
         # Conectividad con Colombia
@@ -395,7 +389,7 @@ if region_elegida:
         ) = streamlit_analitica.obtener_graficos_oag_colombia(df_oag, pais_elegido)
 
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
 
             # GRÁFICO ÚNICO EN EL CENTRO
             with st.container():
@@ -440,7 +434,7 @@ if region_elegida:
         ) = streamlit_analitica.obtener_graficos_credibanco(df_credibanco, pais_elegido)
 
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
             
             # GRÁFICO ÚNICO EN EL CENTRO
             with st.container():
@@ -498,7 +492,7 @@ if region_elegida:
         ) = streamlit_analitica.obtener_graficos_fk_colombia(df_fk, pais_elegido)
 
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
             
             # GRÁFICO ÚNICO EN EL CENTRO
             with st.container():
@@ -528,7 +522,7 @@ if region_elegida:
         ) = streamlit_analitica.obtener_graficos_iata_colombia(df_iata, pais_elegido)
 
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
             
             # GRÁFICO ÚNICO EN EL CENTRO
             with st.container():
@@ -549,9 +543,8 @@ if region_elegida:
         st.subheader("Salida de colombianos hacia el mercado")
 
         # Expander
-        with st.expander("Datos"):
+        with st.expander("Explora todos los indicadores"):
             st.write("Contenido")
-
 
 
 

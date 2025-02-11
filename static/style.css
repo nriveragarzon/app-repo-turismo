@@ -1,88 +1,68 @@
-@import url("https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400&display=swap");
-
-[data-testid="metric-container"] {
-  width: fit-content;
-  margin: auto;
-}
-
-[data-testid="metric-container"] > div {
-  width: fit-content;
-  margin: auto;
-}
-
-[data-testid="metric-container"] label {
-  width: fit-content;
-  margin: auto;
-}
-
-/* [data-testid="stMetric"] {
-  width: fit-content;
-  margin: auto;
-}
-
-[data-testid="stMetric"] label {
-  width: fit-content;
-  margin: auto;
-}
-
-[data-testid="stMetric"] > div {
-  width: fit-content;
-  margin: auto;
-}
+/* style.css
+   ------------------------------------------------------------
+   Este archivo define la apariencia general de la aplicación,
+   así como la estructura para fijar el footer en la parte baja.
+   ------------------------------------------------------------
 */
-[data-testid="stMetric"] > div > div {
-  font-size: 1.8rem;
+
+/* Estructura general de la página para que el footer se ubique realmente al final */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-div[data-testid="stSliderTickBarMin"],
-div[data-testid="stSliderTickBarMax"] {
-  display: none;
+#page-container {
+  display: flex;
+  flex-direction: column; /* Apila contenido en columna */
+  min-height: 100vh;      /* Al menos todo el alto de la ventana */
 }
 
-.stButton [data-testid="stBaseButton-secondary"] {
-  background-color: #5A5E63 !important;
-  border: none;
-  border-radius: 16px;
-  color: white;
-  padding: 5px 30px; 
+/* Contenedor principal para el contenido */
+#content-wrap {
+  flex: 1;   /* Hace que el contenido crezca y empuje el footer hacia abajo */
+}
+
+/* Ocultar el footer por defecto que inyecta Streamlit */
+footer {
+  visibility: hidden;
+}
+
+/* Estilos personalizados para tu footer */
+.footer {
+  flex-shrink: 0;         /* Evita que el footer se reduzca */
+  width: 100%;            /* Toma todo el ancho */
+  background-color: #646464;
+  padding: 12px 380px;
+  color: #808080;
+  text-align: left;
+}
+
+.footer h5 {
+  color: white; 
+  font-size: 12px; 
   font-weight: bold;
 }
 
-.stButton [data-testid="stBaseButton-secondary"]:focus, 
-.stButton [data-testid="stBaseButton-secondary"]:active {
-  color: white !important; 
-  outline: none; 
-  box-shadow: none; 
+.footer ul {
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
 }
 
+.footer li {
+  font-size: 12px;
+  color: white; 
+  line-height: 1.3; 
+  padding-left: 0; 
+  margin-left: 0;
+}
 
-.stButton [data-testid="stBaseButton-primary"] {
-  background-color: #5A5E63 !important;
-  border: none;
-  border-radius: 16px;
+.footer a {
   color: white;
-  padding: 5px 30px; 
-  font-weight: bold;
+  text-decoration: none;
 }
 
-.stSlider [data-testid="stTickBar"] {
-  display: none;
-}
-
-.stSlider label {
-  display: block;
-  text-align: center;
-}
-
-.subtitle {
-  text-align: center;
-}
-
-.code-container {
-  max-height: 200px;
-  overflow-y: scroll;
-  border: 1px solid #ddd;
-  padding: 10px;
-  background-color: #f7f7f7;
-  border-radius: 5px;
+.footer a:hover {
+  text-decoration: underline;
 }

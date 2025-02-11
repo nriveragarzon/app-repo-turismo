@@ -51,52 +51,61 @@ def navbar():
     house = get_icon("static/images/house-solid.svg")
     location = get_icon("static/images/location-dot-solid.svg")
     sources = get_icon("static/images/check-to-slot-solid.svg")
+    top = get_icon("static/images/top-dot-solid.svg")
 
     st.markdown(f"""
-    <!-- Hoja de estilos de Bootstrap (CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
-          rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
-          crossorigin="anonymous">
-    
-    <nav class="navbar fixed-top navbar-expand-lg" style="margin-top: 60px; background-color: #646464;">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <img src="data:image/png;base64,{logo}" width="280" height="25">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item" id="nav-item-inicio">
-                        <a class="nav-link text-white" href="?page=1" target="_self">
-                            <img src="data:image/svg+xml;base64,{house}" width="20" height="20">
-                            <span style="padding-left: 2px; font-size: 14px;">Inicio</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" id="nav-item-centro-de-inteligencia">
-                        <a class="nav-link text-white" href="?page=2" target="_self">
-                            <img src="data:image/svg+xml;base64,{location}" width="20" height="20">
-                            <span style="padding-left: 1px; font-size: 14px;">Centro de Inteligencia</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" id="nav-item-Fuentes">
-                        <a class="nav-link text-white" href="?page=3" target="_self">
-                            <img src="data:image/svg+xml;base64,{sources}" width="20" height="20">
-                            <span style="padding-left: 2px; font-size: 14px;">Fuentes</span>
-                        </a>
-                    </li>
-                </ul>
+        <!-- Hoja de estilos de Bootstrap (CDN) -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
+            crossorigin="anonymous">
+        
+        <nav class="navbar fixed-top navbar-expand-lg" style="margin-top: 60px; background-color: #646464;">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <img src="data:image/png;base64,{logo}" width="280" height="25">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item" id="nav-item-inicio">
+                            <a class="nav-link text-white" href="?page=1" target="_self">
+                                <img src="data:image/svg+xml;base64,{house}" width="20" height="20">
+                                <span style="padding-left: 2px; font-size: 14px;">Inicio</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" id="nav-item-centro-de-inteligencia">
+                            <a class="nav-link text-white" href="?page=2" target="_self">
+                                <img src="data:image/svg+xml;base64,{location}" width="20" height="20">
+                                <span style="padding-left: 1px; font-size: 14px;">Centro de Inteligencia</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" id="nav-item-Fuentes">
+                            <a class="nav-link text-white" href="?page=3" target="_self">
+                                <img src="data:image/svg+xml;base64,{sources}" width="20" height="20">
+                                <span style="padding-left: 2px; font-size: 14px;">Fuentes</span>
+                            </a>
+                        </li>
+                    </ul>
+                     <!-- Botón "Volver arriba" a la derecha -->
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item" id="nav-item-Top">
+                            <a class="nav-link text-white" href="#top" target="_self">
+                                <img src="data:image/svg+xml;base64,{top}" width="20" height="20">
+                                <span style="padding-left: 2px; font-size: 14px;">Volver arriba</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    """, unsafe_allow_html=True)
-
+        </nav>
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        """, unsafe_allow_html=True)
 
 def home_page():  
 
@@ -256,3 +265,109 @@ def home_page():
                 </div>
             </div>
         ''', unsafe_allow_html=True)    
+
+def footer():
+    ft = """
+    <style>
+    [data-testid="stMainBlockContainer"] {
+        padding: 100px 0px 0px 0px;
+    }
+    
+    a:link , a:visited{
+    color: #BFBFBF;  
+    background-color: transparent;
+    text-decoration: none;
+    }
+
+    a:hover,  a:active {
+    color: #0283C3; 
+    background-color: transparent;
+    text-decoration: underline;
+    }
+
+    #page-container {
+    position: relative;
+    min-height: 10vh;
+    }
+
+    footer{
+        visibility:hidden;
+    }
+
+    .footer {
+    position: relative;
+    left: 0;
+    top:100px;
+    bottom: 0;
+    width: 100%;
+    background-color: #646464;
+    padding: 12px 380px;
+    color: #808080; 
+    text-align: left; 
+    }
+    
+    .footer h5 {
+        color: white; 
+        font-size: 12px; 
+        font-weight: bold;
+    }
+    
+    .footer ul {
+        list-style: none; 
+        padding: 0; 
+        margin: 0; 
+    }
+    
+    .footer li {
+        font-size: 12px;
+        color: white; 
+        line-height: 1.3; 
+        padding-left: 0; 
+        margin-left: 0;
+    }
+    
+    .footer a   {
+        color:white;
+    }
+    
+    </style>
+
+    <div id="page-container">
+
+    <div class="footer">
+        <div class="row" style="margin-left: 60px;">
+                <div class="col-md-4">
+                    <h5 style="margin-bottom: 3px;" >LÍNEAS DE ATENCIÓN</h5>
+                    <ul>
+                        <li>Calle 28 No 13A - 15 Piso 35-36</li>
+                        <li>Bogotá - Colombia</li>
+                        <li>+57 601 5600100</li>
+                        <li>Fax: +57 601 5600104</li>
+                        <li>Lun - Vi 8:30 A.M. - 5:30 P.M</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5 style="margin-bottom: 3px;">NUESTROS EJES</h5>
+                    <ul>
+                        <li><a href="https://procolombia.co/" target="_blank">Procolombia</a></li>
+                        <li><a href="https://investincolombia.com.co/es" target="_blank">Inversión</a></li>
+                        <li><a href="https://procolombia.co/colombiatrade" target="_blank">Exportaciones</a></li>
+                        <li><a href="https://colombia.travel/es" target="_blank">Turismo</a></li>
+                        <li><a href="https://colombia.co/" target="_blank">Marca País</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 style="margin-bottom: 3px;">ENLACES DE INTERÉS</h5>
+                    <ul>
+                        <li><a href="https://procolombia.co/transparencia/glosario" target="_blank">Servicios al ciudadano</a></li>
+                        <li><a href="https://procolombia.co/sostenibilidad" target="_blank">Informe de sostenibilidad</a></li>
+                        <li><a href="https://procolombia.co/transparencia/preguntas-frecuentes" target="_blank">Preguntas frecuentes</a></li>
+                        <li><a href="https://procolombia.co/transparencia/pqrfs" target="_blank">PQRFS</a></li>
+                        <li><a href="https://procolombia.co/contacto" target="_blank">Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    """
+    return st.write(ft, unsafe_allow_html=True)

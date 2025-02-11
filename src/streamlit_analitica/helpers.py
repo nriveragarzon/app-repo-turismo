@@ -59,44 +59,6 @@ def get_icon(image_path):
     # Se codifica la cadena SVG en formato base64
     return base64.b64encode(svg_data.encode("utf-8")).decode("utf-8")
 
-
-def load_css(file_name):
-    """
-    Función que carga el contenido de un archivo CSS y retorna su contenido como una cadena.
-
-    Parámetros:
-    -----------
-    file_name : str
-        Ruta absoluta o relativa del archivo CSS que se desea leer.
-
-    Retorna:
-    --------
-    str
-        Cadena de texto con el contenido completo del archivo CSS.
-
-    Uso:
-    ----
-    - Permite inyectar estilos CSS personalizados en una aplicación Streamlit.
-      Por ejemplo, usando:
-        
-        st.markdown(
-            f"<style>{load_css('ruta/estilos.css')}</style>",
-            unsafe_allow_html=True
-        )
-      
-    - También se puede emplear en otros contextos donde se necesite acceder
-      al contenido puro de un archivo CSS.
-
-    Nota de robustez:
-    ----------------
-    - Se asume que el archivo CSS existe y es accesible. En caso contrario,
-      Python lanzará un error (FileNotFoundError). Si se desea manejar
-      excepciones, se puede envolver la lectura en un bloque try-except.
-    """
-    with open(file_name) as f:
-        return f.read()
-
-
 def limpiar_cache():
     """
     Función que limpia el caché de datos de Streamlit.

@@ -9,6 +9,7 @@ from io import BytesIO
 import src.snowflake_analitica as snowflake_analitica
 import src.procesamiento_datos as procesamiento_datos
 import src.plotly_analitica as plotly_analitica
+from openpyxl.utils import get_column_letter
 
 # Geolocalización
 def mostrar_mapa(pais):
@@ -106,7 +107,7 @@ def mostrar_mapa(pais):
     except Exception as e:
         st.error(f"Ha ocurrido un error inesperado al generar el mapa de '{pais}': {e}")
 
-def excel_download_buttons(df: pd.DataFrame, file_name: str = "export.xlsx") -> BytesIO:
+def excel_download_buttons(df: pd.DataFrame, fuente: str = 'CITI') -> BytesIO:
     """
     Genera un archivo Excel en memoria a partir de un DataFrame y retorna un buffer en formato BytesIO.
 
@@ -114,7 +115,7 @@ def excel_download_buttons(df: pd.DataFrame, file_name: str = "export.xlsx") -> 
     ------------
     - Crea un objeto BytesIO y lo asocia con un ExcelWriter de pandas utilizando 'xlsxwriter' como motor.
     - Inicialmente, se escribe un DataFrame vacío en la hoja "Sheet1" para asegurar la creación de la hoja.
-    - Se obtiene el objeto 'worksheet' de la hoja activa "Sheet1" y se escribe el texto "Centro de Inteligencia de Turismo (CIT)"" en la celda A1.
+    - Se obtiene el objeto 'worksheet' de la hoja activa "Sheet1" y se escribe el texto "Centro de Inteligencia de Turismo Internacional (CITI)"" en la celda A1.
     - A continuación, se vuelca el DataFrame 'df' a partir de la fila 3 (startrow=3), incluyendo el encabezado (header=True).
     - El objeto 'writer' se cierra automáticamente al salir del bloque 'with'.
     - Finalmente, la función retorna el buffer con el contenido del Excel en memoria.
@@ -123,9 +124,8 @@ def excel_download_buttons(df: pd.DataFrame, file_name: str = "export.xlsx") -> 
     -----------
     df : pd.DataFrame
         DataFrame que se desea exportar al archivo Excel.
-    file_name : str, opcional (por defecto "export.xlsx")
-        Nombre sugerido para el archivo Excel. Aunque no se usa directamente en la función,
-        se recomienda mantenerlo para mantener consistencia si se utiliza con st.download_button().
+    fuente: str
+        String con la fuente a Descargar.
 
     Retorna:
     --------
@@ -144,28 +144,65 @@ def excel_download_buttons(df: pd.DataFrame, file_name: str = "export.xlsx") -> 
             file_name="datos_exportados.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
-    Consideraciones:
-    ---------------
-    - 'procolombia' se escribe en la primera celda (A1) a modo de encabezado o sello identificativo.
     """
 
     buffer = BytesIO()
     with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-        # Se crea la hoja "Sheet1" escribiendo un DataFrame vacío
+        
+        # Crear la hoja "Sheet1" (escribiendo un DataFrame vacío)
         pd.DataFrame().to_excel(writer, sheet_name="Sheet1", index=False, header=False)
-        
-        # Se obtiene la hoja activa
+
+        # Obtener workbook
+        workbook = writer.book
+
+        # Obtener pestaña
         worksheet = writer.sheets["Sheet1"]
-        
-        # Se escribe "Centro de Inteligencia de Turismo (CIT)"" en A1
-        worksheet.write("A1", "Centro de Inteligencia de Turismo (CIT)")
 
-        # Se vuelca el DataFrame a partir de la fila 3
-        df.to_excel(writer, index=False, header=True, startrow=3)
+        # Crear el formato en negrilla
+        bold_format = workbook.add_format({'bold': True})
 
-        # Al cerrar el bloque 'with', se finaliza la escritura en 'buffer'
-        return buffer
+        # Escribir los títulos en negrilla
+        worksheet.write("A1", "Centro de Inteligencia de Turismo Internacional (CIT)", bold_format)
+        worksheet.write("A2", f"Fuente: {fuente}", bold_format)
+
+        # Escribir el DataFrame a partir de la fila 4 (startrow=3)
+        df.to_excel(writer, sheet_name="Sheet1", index=False, header=True, startrow=3)
+
+        # Definir formatos
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#D3D3D3',  # Gris claro
+            'border': 1
+        })
+        data_format = workbook.add_format({
+            'border': 1
+        })
+
+        n_rows, n_cols = df.shape
+
+        # Ajustar el ancho de las columnas y re-escribir el encabezado con formato
+        for j, col in enumerate(df.columns):
+            header_text = str(col)
+            # Calcular el ancho máximo: comparar largo del encabezado y de cada celda
+            max_len = len(header_text)
+            if n_rows > 0:
+                # Convertir a cadena para calcular el largo de cada valor
+                col_data = df[col].astype(str)
+                max_len = max(max_len, col_data.map(len).max())
+            # Ajustar el ancho de la columna (agregamos un padding de 2)
+            worksheet.set_column(j, j, max_len + 2)
+            # Re-escribir el encabezado en la fila 4 (índice 3) con el formato definido
+            worksheet.write(3, j, header_text, header_format)
+
+        # Re-escribir cada celda del DataFrame (datos) para aplicarles el borde
+        # Los datos comienzan en la fila 5 (índice 4)
+        for i in range(n_rows):
+            for j, col in enumerate(df.columns):
+                cell_value = df.iloc[i, j]
+                worksheet.write(3 + 1 + i, j, cell_value, data_format)
+
+        writer.close()
+    return buffer
 
 @st.fragment
 def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df=None):
@@ -217,8 +254,9 @@ def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df
         if isinstance(df, pd.DataFrame) and not df.empty:
             st.download_button(
                 label="Descargar Excel",
-                data=excel_download_buttons(df),
-                file_name="resultado_exportado.xlsx",
+                data=excel_download_buttons(df = df,
+                                            fuente=fuente),
+                file_name=f"Datos CITI: {fuente} - {unidad}.xlsx",
                 mime="application/vnd.ms-excel",
                 use_container_width=True,
                 on_click=snowflake_analitica.registrar_evento,
@@ -234,7 +272,7 @@ def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df
     # Caso 3: Tipo no soportado
     else:
         st.warning(f"Tipo de resultado no reconocido o no soportado: {type(resultado)}")
-
+    
 # Función para obtener los datos
 def obtener_datos(_pais_elegido):
     """

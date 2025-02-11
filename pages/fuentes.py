@@ -8,23 +8,14 @@ from datetime import datetime, timedelta
 import src.streamlit_analitica as streamlit_analitica
 import src.snowflake_analitica as snowflake_analitica
 
-# Ignorar warnings
-warnings.filterwarnings("ignore", message="Bad owner or permissions on")
-
 # Configuración página web - tipo wide sin sidebar activa
-st.set_page_config(page_title="Fuentes", page_icon = ':ledger:', layout="wide",  initial_sidebar_state="collapsed")
-
-# Leer archivo de estilos
-css = streamlit_analitica.load_css("static/style.css")
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+st.set_page_config(page_title="Fuentes", 
+                   page_icon = ':book:', 
+                   layout="wide",  
+                   initial_sidebar_state="collapsed")
 
 # Inclusión de la hoja de estilos de Bootstrap para mejorar la apariencia.
 st.markdown("""
-    <style>
-        [data-testid="stColumn"] {
-            padding: 20px 20px 20px 20px;
-        }     
-    </style> 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 """, unsafe_allow_html=True)
 
@@ -46,4 +37,6 @@ if st.query_params.page == '2':
 ###########
 
 st.title("Fuentes")
-st.write("Detalle de las fuentes empleadas en el CIT.")
+
+# Marcador para volver al inicio
+st.markdown("<a id='top'></a>", unsafe_allow_html=True)
