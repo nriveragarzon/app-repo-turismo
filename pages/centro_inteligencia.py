@@ -56,6 +56,9 @@ SESSION_TIMEOUT = timedelta(minutes=15)
 
 st.title("Centro de Inteligencia de Turismo (CIT)")
 
+# Marcador para volver al inicio
+st.markdown("<a id='top'></a>", unsafe_allow_html=True)
+
 st.divider()
 
 # Actualizar flujo de Snowflake

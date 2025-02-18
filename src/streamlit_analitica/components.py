@@ -110,7 +110,7 @@ def navbar():
 def home_page():  
 
     """
-    Función que construye la página de inicio del Centro de Inteligencia de Turismo (CIT).
+    Función que construye la página de inicio del Centro de Inteligencia de Turismo Internacional (CITI).
 
     Descripción:
     ------------
@@ -170,7 +170,7 @@ def home_page():
                 }
             </style>    
             <br>
-            <h2 style="font-weight: bold; text-align: center; margin-top: 50px; margin-bottom:10px; margin-left: 60px;">Centro de Inteligencia de Turismo (CIT)</h2> 
+            <h2 style="font-weight: bold; text-align: center; margin-top: 50px; margin-bottom:10px; margin-left: 60px;">Centro de Inteligencia de Turismo Internacional (CITI)</h2> 
             <br>
         """, unsafe_allow_html=True)
     
