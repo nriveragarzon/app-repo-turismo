@@ -397,7 +397,7 @@ def plot_stacked_bar_chart_v(df, date_col, group_col, share_col,
             title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
         )
- 
+
         return fig
  
     except Exception as e:

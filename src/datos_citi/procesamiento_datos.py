@@ -164,6 +164,8 @@ def procesar_datos_global_data(dataframes):
         if not df_viajeros_hacia_el_mundo.empty:
             # Serie de tiempo de viajeros hacia el mundo
             df_viajeros_serie_tiempo = pd.DataFrame(df_viajeros_hacia_el_mundo.groupby('YEAR')['VIAJEROS'].sum()).reset_index()
+            # Cambiar nombres de columnas 
+            df_viajeros_serie_tiempo = df_viajeros_serie_tiempo.rename(columns={'YEAR' : 'Año', 'VIAJEROS' : 'Viajeros'})
             resultados_procesados['viajeros_serie_tiempo'] = df_viajeros_serie_tiempo
 
             # Procesar viajeros por medio
@@ -173,6 +175,8 @@ def procesar_datos_global_data(dataframes):
             # Filtrar columnas relevantes
             df_viajeros_medio = df_viajeros_medio[['YEAR', 'MEDIO', 'VIAJEROS', 'PARTICIPACION']]
             df_viajeros_medio = df_viajeros_medio.sort_values(by=['YEAR', 'MEDIO'])
+            # Cambiar nombres de columnas
+            df_viajeros_medio = df_viajeros_medio.rename(columns={'YEAR' : 'Año', 'MEDIO' : 'Medio de transporte', 'VIAJEROS' : 'Viajeros', 'PARTICIPACION' : 'Participación (%)'})
             resultados_procesados['viajeros_medio'] = df_viajeros_medio
         else:
             # Devolver DataFrame vacío para la llave si no hay datos
@@ -182,7 +186,9 @@ def procesar_datos_global_data(dataframes):
         # Noches de pernoctación
         df_noches_pernoctacion = dataframes.get('noches_pernoctacion_promedio', pd.DataFrame())
         if not df_noches_pernoctacion.empty:
-            resultados_procesados['noches_pernoctacion'] = df_noches_pernoctacion[['YEAR', 'NOCHES']]
+            # Cambiar nombres de columnas
+            df_noches_pernoctacion = df_noches_pernoctacion.rename(columns={'PAIS' : 'País', 'YEAR' : 'Año', 'NOCHES' : 'Noches de percnotación'})
+            resultados_procesados['noches_pernoctacion'] = df_noches_pernoctacion
         else:
             resultados_procesados['noches_pernoctacion'] = pd.DataFrame()
 
@@ -191,6 +197,8 @@ def procesar_datos_global_data(dataframes):
         if not df_categorias_gasto.empty:
             # Serie de tiempo de gasto (se está sumando Average Expenditure per Outbound Tourist USD, suma de promedios)
             df_gasto_serie_tiempo = pd.DataFrame(df_categorias_gasto.groupby('YEAR')['GASTO'].sum()).reset_index()
+            # Cambiar nombres de columnas
+            df_gasto_serie_tiempo = df_gasto_serie_tiempo.rename(columns={'YEAR' : 'Año', 'GASTO' : 'Gasto (USD)'})            
             resultados_procesados['gasto_serie_tiempo'] = df_gasto_serie_tiempo
 
             # Procesar gasto por categoría
@@ -199,6 +207,8 @@ def procesar_datos_global_data(dataframes):
             df_gasto_categoria['PARTICIPACION'] = (df_gasto_categoria['GASTO'] / df_gasto_categoria['TOTAL_ANUAL']) * 100
             df_gasto_categoria = df_gasto_categoria[['YEAR', 'CATEGORIA_GASTO', 'GASTO', 'PARTICIPACION']]
             df_gasto_categoria = df_gasto_categoria.sort_values(by=['YEAR', 'CATEGORIA_GASTO'])
+            # Cambiar nombres de columnas
+            df_gasto_categoria = df_gasto_categoria.rename(columns={'YEAR' : 'Año', 'CATEGORIA_GASTO' : 'Categoria de Gasto', 'GASTO' : 'Gasto (USD)', 'PARTICIPACION' : 'Participación (%)'})
             resultados_procesados['gasto_categoria'] = df_gasto_categoria
         else:
             resultados_procesados['gasto_serie_tiempo'] = pd.DataFrame()
@@ -212,6 +222,8 @@ def procesar_datos_global_data(dataframes):
             df_rango_edad['PARTICIPACION'] = (df_rango_edad['VIAJEROS'] / df_rango_edad['TOTAL_ANUAL']) * 100
             df_rango_edad = df_rango_edad[['YEAR', 'RANGO_EDAD', 'VIAJEROS', 'PARTICIPACION']]
             df_rango_edad = df_rango_edad.sort_values(by=['YEAR', 'RANGO_EDAD'])
+            # Cambiar nombres de columnas
+            df_rango_edad = df_rango_edad.rename(columns = {'YEAR' : 'Año', 'RANGO_EDAD' : 'Rango de Edad', 'VIAJEROS' : 'Viajeros', 'PARTICIPACION' : 'Participación (%)'})
             resultados_procesados['rango_edad'] = df_rango_edad
         else:
             resultados_procesados['rango_edad'] = pd.DataFrame()
@@ -225,6 +237,8 @@ def procesar_datos_global_data(dataframes):
             # Filtrar columnas relevantes
             df_motivo_viaje = df_motivo_viaje[['YEAR', 'MOTIVO_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_motivo_viaje = df_motivo_viaje.sort_values(by=['YEAR', 'MOTIVO_VIAJE'])
+            # Cambiar nombres de columnas
+            df_motivo_viaje = df_motivo_viaje.rename(columns = {'YEAR' : 'Año', 'MOTIVO_VIAJE' : 'Motivo de Viaje', 'VIAJEROS' : 'Viajeros', 'PARTICIPACION' : 'Participación (%)'})
             resultados_procesados['motivo_viaje'] = df_motivo_viaje
         else:
             resultados_procesados['motivo_viaje'] = pd.DataFrame()
@@ -238,6 +252,8 @@ def procesar_datos_global_data(dataframes):
             # Filtrar columnas relevantes
             df_forma_viaje = df_forma_viaje[['YEAR', 'FORMA_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_forma_viaje = df_forma_viaje.sort_values(by=['YEAR', 'FORMA_VIAJE'])
+            # Cambiar nombres de columnas
+            df_forma_viaje = df_forma_viaje.rename(columns = {'YEAR' : 'Año', 'FORMA_VIAJE' : 'Forma de Viaje', 'VIAJEROS' : 'Viajeros', 'PARTICIPACION' : 'Participación (%)'})
             resultados_procesados['forma_viaje'] = df_forma_viaje
         else:
             resultados_procesados['forma_viaje'] = pd.DataFrame()
@@ -277,6 +293,8 @@ def procesar_datos_global_data(dataframes):
                     'VIAJEROS': 'sum',
                     'PARTICIPACION': 'sum'
                 })
+            # Cambiar nombres de columnas
+            df_destinos_top5 = df_destinos_top5.rename(columns = {'YEAR' : 'Año', 'PAIS_DESTINO' : 'País Destino', 'VIAJEROS' : 'Viajeros', 'PARTICIPACION' : 'Participación (%)'})
             # Agregar top5 a los resultados
             resultados_procesados['destinos_internacionales_top5'] = df_destinos_top5
         else:
@@ -291,6 +309,8 @@ def procesar_datos_global_data(dataframes):
             # Filtrar columnas relevantes
             df_mice = df_mice[['YEAR', 'MOTIVO_VIAJE', 'VIAJEROS', 'PARTICIPACION']]
             df_mice = df_mice.sort_values(by=['YEAR', 'MOTIVO_VIAJE'])
+            # Cambiar nombres de columnas
+            df_mice = df_mice.rename(columns={'YEAR' : 'Año', 'MOTIVO_VIAJE' : 'Motivo de viaje', 'VIAJEROS' : 'Viajeros', 'PARTICIPACION' : 'Participación (%)'})
             resultados_procesados['flujos_negocios'] = df_mice
         else:
             resultados_procesados['flujos_negocios'] = pd.DataFrame()
@@ -431,6 +451,8 @@ def procesar_datos_oag(dataframes):
             df_conectividad_mundo_serie_tiempo = pd.DataFrame(
                 df_conectividad_mundo.groupby('YEAR')[['FRECUENCIAS', 'SILLAS']].sum()
             ).reset_index()
+            # Cambiar nombres de columnas
+            df_conectividad_mundo_serie_tiempo = df_conectividad_mundo_serie_tiempo.rename(columns={'YEAR': 'Año', 'FRECUENCIAS' : 'Frecuencias', 'SILLAS' : 'Sillas'})
             resultados_procesados['conectividad_mundo_serie_tiempo'] = df_conectividad_mundo_serie_tiempo
 
             # Procesar conectividad por destino
@@ -551,6 +573,10 @@ def procesar_datos_oag(dataframes):
             # Ordenar 
             totales_cerrado = totales_cerrado.sort_values(by=['FECHA', 'PAIS_ARRIVAL'])
             totales_corrido = totales_corrido.sort_values(by=['FECHA_CORRIDA', 'PAIS_ARRIVAL'])
+
+            # Cambiar nombres de columnas
+            totales_cerrado = totales_cerrado.rename(columns = {'FECHA': 'Año', 'PAIS_ARRIVAL': 'País Destino', 'FRECUENCIAS' : 'Frecuencias', 'SILLAS' : 'Sillas', 'PARTICIPACION_FRECUENCIAS' : 'Participación Frecuencias (%)', 'PARTICIPACION_SILLAS' : 'Participación Sillas (%)'})
+            totales_corrido = totales_corrido.rename(columns = {'FECHA_CORRIDA': 'Periodo', 'PAIS_ARRIVAL': 'País Destino', 'FRECUENCIAS' : 'Frecuencias', 'SILLAS' : 'Sillas', 'PARTICIPACION_FRECUENCIAS' : 'Participación Frecuencias (%)', 'PARTICIPACION_SILLAS' : 'Participación Sillas (%)'})
             
             # Agregar dfs al resultado
             resultados_procesados['conectividad_mundo_destino_cerrado'] = totales_cerrado
@@ -567,8 +593,12 @@ def procesar_datos_oag(dataframes):
             df_conectividad_colombia_serie_tiempo = pd.DataFrame(
                 df_conectividad_colombia.groupby('YEAR')[['FRECUENCIAS', 'SILLAS']].sum()
             ).reset_index()
-            resultados_procesados['conectividad_colombia_serie_tiempo'] = df_conectividad_colombia_serie_tiempo
 
+            # Cambiar nombres de columnas
+            df_conectividad_colombia_serie_tiempo = df_conectividad_colombia_serie_tiempo.rename(columns={'YEAR': 'Año', 'FRECUENCIAS' : 'Frecuencias', 'SILLAS' : 'Sillas'})
+
+            resultados_procesados['conectividad_colombia_serie_tiempo'] = df_conectividad_colombia_serie_tiempo
+            
             # Procesar conectividad por municipio
             # Cerrado y acumulado por destino
             df_conectividad_municipio_serie_tiempo_mensual = df_conectividad_colombia[['YEAR', 'MUNICIPIO_DANE', 'TIME_SERIES', 'FRECUENCIAS','SILLAS']]            
@@ -690,6 +720,10 @@ def procesar_datos_oag(dataframes):
             # Ordenar 
             totales_cerrado = totales_cerrado.sort_values(by=['FECHA', 'MUNICIPIO_DANE'])
             totales_corrido = totales_corrido.sort_values(by=['FECHA_CORRIDA', 'MUNICIPIO_DANE'])
+
+            # Cambiar nombres de columnas
+            totales_cerrado = totales_cerrado.rename(columns = {'FECHA': 'Año', 'MUNICIPIO_DANE': 'Municipio Destino', 'FRECUENCIAS' : 'Frecuencias', 'SILLAS' : 'Sillas', 'PARTICIPACION_FRECUENCIAS' : 'Participación Frecuencias (%)', 'PARTICIPACION_SILLAS' : 'Participación Sillas (%)'})
+            totales_corrido = totales_corrido.rename(columns = {'FECHA_CORRIDA': 'Periodo', 'MUNICIPIO_DANE': 'Municipio Destino', 'FRECUENCIAS' : 'Frecuencias', 'SILLAS' : 'Sillas', 'PARTICIPACION_FRECUENCIAS' : 'Participación Frecuencias (%)', 'PARTICIPACION_SILLAS' : 'Participación Sillas (%)'})
 
             # Agregar dfs al resultado
             resultados_procesados['conectividad_colombia_municipio_cerrado'] = totales_cerrado
@@ -860,6 +894,10 @@ def procesar_datos_forward_keys(dataframes):
                 df_agrupado['PAIS_ARRIVAL'] != 'Colombia'
             ]
 
+            # Cambiar nombres de columnas
+            df_reservas_serie_tiempo = df_reservas_serie_tiempo.rename(columns = {'PAIS_ARRIVAL': 'País', 'FLIGHT_LEG_ARRIVAL_MONTH_YEAR' : 'Fecha', 'RESERVAS': 'Reservas'})
+            df_reservas_serie_tiempo_colombia = df_reservas_serie_tiempo_colombia.rename(columns = {'PAIS_ARRIVAL': 'País', 'FLIGHT_LEG_ARRIVAL_MONTH_YEAR' : 'Fecha', 'RESERVAS': 'Reservas'})
+
             resultados_procesados['reservas_serie_tiempo'] = df_reservas_serie_tiempo
             resultados_procesados['reservas_serie_tiempo_colombia'] = df_reservas_serie_tiempo_colombia
         else:
@@ -897,6 +935,10 @@ def procesar_datos_forward_keys(dataframes):
             df_busquedas_serie_tiempo = df_agrupado[
                 df_agrupado['PAIS_ARRIVAL'] != 'Colombia'
             ]
+
+            # Cambiar nombres de columnas
+            df_busquedas_serie_tiempo = df_busquedas_serie_tiempo.rename(columns = {'PAIS_ARRIVAL': 'País', 'SEARCH_DATE_MONTH_YEAR' : 'Fecha', 'BUSQUEDAS': 'Búsquedas'})
+            df_busquedas_serie_tiempo_colombia = df_busquedas_serie_tiempo_colombia.rename(columns = {'PAIS_ARRIVAL': 'País', 'SEARCH_DATE_MONTH_YEAR' : 'Fecha', 'BUSQUEDAS': 'Búsquedas'})
 
             resultados_procesados['busquedas_serie_tiempo'] = df_busquedas_serie_tiempo
             resultados_procesados['busquedas_serie_tiempo_colombia'] = df_busquedas_serie_tiempo_colombia
@@ -1023,6 +1065,8 @@ def procesar_datos_credibanco(dataframes):
             df_gasto_promedio = pd.DataFrame(df_gasto.groupby(['YEAR'])[['FACTURACION_USD', 'TURISTAS', 'TRANSACCIONES']].sum()).reset_index()
             df_gasto_promedio['GASTO_PROMEDIO_TARJETA'] = df_gasto_promedio['FACTURACION_USD'] / df_gasto_promedio['TURISTAS']
             df_gasto_promedio['GASTO_PROMEDIO_TRANSACCION'] = df_gasto_promedio['FACTURACION_USD'] / df_gasto_promedio['TRANSACCIONES']
+            # Cambiar nombres de columnas
+            df_gasto_promedio = df_gasto_promedio.rename(columns = {'YEAR' : 'Año', 'FACTURACION_USD' : 'Facturación (USD)', 'TURISTAS' : 'Turistas', 'TRANSACCIONES' : 'Transacciones', 'GASTO_PROMEDIO_TARJETA' : 'Gasto promedio tarjeta (USD)', 'GASTO_PROMEDIO_TRANSACCION' : 'Gasto promedio transacción (USD)'})
             resultados_procesados['gasto_promedio'] = df_gasto_promedio
 
             # Gasto por categoría
@@ -1030,6 +1074,8 @@ def procesar_datos_credibanco(dataframes):
             df_gasto_categoria['TOTAL_ANUAL'] = df_gasto_categoria.groupby('YEAR')['FACTURACION_USD'].transform('sum')
             df_gasto_categoria['PARTICIPACION'] = (df_gasto_categoria['FACTURACION_USD'] / df_gasto_categoria['TOTAL_ANUAL']) * 100
             df_gasto_categoria = df_gasto_categoria.sort_values(by=['YEAR', 'CLASIFICACION_CATEGORIA_FORMATADA'])
+            # Cambiar nombres de columnas
+            df_gasto_categoria = df_gasto_categoria.rename(columns = {'YEAR' : 'Año', 'CLASIFICACION_CATEGORIA_FORMATADA' : 'Clasificación', 'FACTURACION_USD' : 'Facturación (USD)', 'TOTAL_ANUAL' : 'Total Anual (USD)', 'PARTICIPACION' : 'Participación (%)'})
             resultados_procesados['gasto_categoria'] = df_gasto_categoria
 
             # Gasto por producto
@@ -1071,6 +1117,9 @@ def procesar_datos_credibanco(dataframes):
             df_top_otros['TOTAL_ANUAL'] = df_top_otros.groupby('YEAR')['FACTURACION_USD'].transform('sum')
             df_top_otros['PARTICIPACION'] = (df_top_otros['FACTURACION_USD'] / df_top_otros['TOTAL_ANUAL']) * 100
             
+            # Cambiar nombres de columnas
+            df_top_otros = df_top_otros.rename(columns={'YEAR' : 'Año', 'CATEGORIA' : 'Categoria', 'FACTURACION_USD' : 'Facturación (USD)', 'TOTAL_ANUAL' : 'Total Anual (USD)', 'PARTICIPACION' : 'Participación (%)'})
+            
             # Agregar el df        
             resultados_procesados['gasto_producto_directo'] = df_top_otros
 
@@ -1110,6 +1159,9 @@ def procesar_datos_credibanco(dataframes):
             # Participación
             df_top_otros['TOTAL_ANUAL'] = df_top_otros.groupby('YEAR')['FACTURACION_USD'].transform('sum')
             df_top_otros['PARTICIPACION'] = (df_top_otros['FACTURACION_USD'] / df_top_otros['TOTAL_ANUAL']) * 100
+
+            # Cambiar nombres de columnas
+            df_top_otros = df_top_otros.rename(columns={'YEAR' : 'Año', 'CATEGORIA' : 'Categoria', 'FACTURACION_USD' : 'Facturación (USD)', 'TOTAL_ANUAL' : 'Total Anual (USD)', 'PARTICIPACION' : 'Participación (%)'})
             
             # Agregar el df        
             resultados_procesados['gasto_producto_indirecto'] = df_top_otros
@@ -1243,6 +1295,8 @@ def procesar_datos_iata_gap(dataframes):
             # Serie de tiempo de agencias por año
             df_agencias_serie_tiempo = pd.DataFrame(df_agencias[['YEAR', 'AGENCIAS']])
             df_agencias_serie_tiempo = df_agencias_serie_tiempo.sort_values(by=['YEAR'])
+            # Cambiar nombres de columnas
+            df_agencias_serie_tiempo = df_agencias_serie_tiempo.rename(columns = {'YEAR' : 'Año', 'AGENCIAS' : 'Número de Agencias'})
             resultados_procesados['agencias_serie_tiempo'] = df_agencias_serie_tiempo
         else:
             # Devolver DataFrame vacío para las claves si no hay datos
@@ -1284,6 +1338,9 @@ def procesar_datos_iata_gap(dataframes):
             df_top_otros['TOTAL_ANUAL'] = df_top_otros.groupby('YEAR')['AGENCIAS'].transform('sum')
             df_top_otros['PARTICIPACION'] = (df_top_otros['AGENCIAS'] / df_top_otros['TOTAL_ANUAL']) * 100
             df_top_otros = df_top_otros.sort_values(by=['YEAR'])
+
+            # Cambiar nombres de columnas
+            df_top_otros = df_top_otros.rename(columns = {'YEAR' : 'Año', 'TRAVEL_AGENCY_CITY' : 'Ciudad de la Agencia', 'AGENCIAS' : 'Número de Agencias', 'TOTAL_ANUAL' : 'Total Anual', 'PARTICIPACION' : 'Participación (%)'})
 
             resultados_procesados['agencias_ciudades'] = df_top_otros
         else:
