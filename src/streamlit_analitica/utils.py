@@ -245,9 +245,12 @@ def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df
         mostrar_resultado_en_streamlit(figura_de_plotly, "Fuente: Datos oficiales", df_data)
     """
 
+    row1 = st.columns(1)
+    row2 = st.columns(1)
+
     # Caso 1: Gráfico de Plotly
     if isinstance(resultado, go.Figure):
-        st.plotly_chart(resultado)
+        st.plotly_chart(resultado, use_container_width=True)
         st.caption(f'Fuente: {fuente}')
 
         # Verificar si el DataFrame no es None y no está vacío

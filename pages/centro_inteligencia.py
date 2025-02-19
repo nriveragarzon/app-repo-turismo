@@ -201,8 +201,8 @@ if region_elegida:
         with st.expander("Explora todos los indicadores"):
 
              # GRÁFICO ÚNICO A LA IZQUIERDA Y BOTONES DE CAMBIO A LA DERECHA
-            
-            with st.container():
+
+            with st.container(border=True):
                 # Creación de tablas
                 col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="center")
                 # Columna 1: Serie de tiempo de viajeros
