@@ -78,10 +78,10 @@ def navbar():
                                 <span style="padding-left: 2px; font-size: 14px;">Inicio</span>
                             </a>
                         </li>
-                        <li class="nav-item" id="nav-item-centro-de-inteligencia">
+                        <li class="nav-item" id="nav-item-centro-de-inteligencia-turismo-internacional">
                             <a class="nav-link text-white" href="?page=2" target="_self">
                                 <img src="data:image/svg+xml;base64,{location}" width="20" height="20">
-                                <span style="padding-left: 1px; font-size: 14px;">Centro de Inteligencia</span>
+                                <span style="padding-left: 1px; font-size: 14px;">CITI</span>
                             </a>
                         </li>
                         <li class="nav-item" id="nav-item-Fuentes">
@@ -185,7 +185,7 @@ def home_page():
     # Diccionario con las diferentes secciones (título y contenido)
     card_content = {
         "Descripción&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;": 
-        ("Descripción general", "El Centro de Inteligencia de Turismo (CIT) es una plataforma interactiva que permite a los usuarios analizar y explorar datos relacionados con el turismo, como la cantidad de turistas por país de origen, el gasto promedio, la estacionalidad y otros indicadores clave. A través de gráficos dinámicos y tablas personalizables, facilita la comprensión de tendencias turísticas y el análisis de flujos de turistas a lo largo del tiempo, facilitando la toma de decisiones en el sector público y privado."),
+        ("Descripción general", "El Centro de Inteligencia de Turismo Internacional (CITI) es una plataforma interactiva que permite a los usuarios analizar y explorar datos relacionados con el turismo, como la cantidad de turistas por país de origen, el gasto promedio, la estacionalidad y otros indicadores clave. A través de gráficos dinámicos y tablas personalizables, facilita la comprensión de tendencias turísticas y el análisis de flujos de turistas a lo largo del tiempo, facilitando la toma de decisiones en el sector público y privado."),
 
         "Beneficios&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;":
         ("Beneficios", """
@@ -242,6 +242,7 @@ def home_page():
             button[data-testid="stBaseButton-primary"]:focus, , .stDownloadButton>button:focus {
                 outline: none; 
             }
+                
         </style>
     ''', unsafe_allow_html=True)
 
@@ -267,6 +268,45 @@ def home_page():
         ''', unsafe_allow_html=True)    
 
 def footer():
+    """
+    Agrega un pie de página personalizado en una aplicación de Streamlit.
+
+    Esta función define y renderiza un pie de página con información de contacto, 
+    enlaces de interés y secciones de los ejes estratégicos de ProColombia. Se 
+    aplica CSS personalizado para ocultar el pie de página predeterminado de Streamlit 
+    y agregar un nuevo diseño con una estructura más definida.
+
+    Características:
+    ----------------
+    - Modifica el padding del contenedor principal de Streamlit.
+    - Define estilos para enlaces con diferentes estados (normal, visitado, hover, activo).
+    - Oculta el pie de página predeterminado (`footer{visibility:hidden;}`).
+    - Crea un nuevo pie de página con:
+        - Información de contacto de ProColombia.
+        - Enlaces a los principales ejes estratégicos (Exportaciones, Inversión, Turismo, Marca País).
+        - Enlaces de interés (Servicios al ciudadano, Sostenibilidad, PQRFS, Contacto).
+    - Aplica estilos CSS para mejorar la presentación del contenido.
+
+    Retorna:
+    --------
+    - Renderiza el pie de página en la aplicación de Streamlit usando `st.write()` con `unsafe_allow_html=True`.
+
+    Ejemplo de uso:
+    ---------------
+    Llamar a la función `footer()` al final de la aplicación para que el pie de página se renderice correctamente.
+
+    ```python
+    import streamlit as st
+    
+    # Contenido de la app
+    st.title("Mi Aplicación en Streamlit")
+
+    # Renderizar el pie de página
+    footer()
+    ```
+
+    """
+        
     ft = """
     <style>
     [data-testid="stMainBlockContainer"] {
@@ -331,6 +371,10 @@ def footer():
     }
     
     </style>
+
+    <br><br><br>  <!-- Agregar espacio antes del pie de página -->
+    <br><br><br>  <!-- Agregar espacio antes del pie de página -->
+
 
     <div id="page-container">
 

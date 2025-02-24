@@ -11,6 +11,646 @@ import src.datos_citi as procesamiento_datos
 import src.plotly_analitica as plotly_analitica
 from openpyxl.utils import get_column_letter
 
+# Función para obtener los datos
+def obtener_datos(_pais_elegido):
+    """
+    1. Verifica si ya están los datos en 'st.session_state' para el país elegido.
+    2. Si no existen o son de un país distinto, ejecuta la operación costosa.
+    3. Guarda los resultados en st.session_state.
+    4. Devuelve los DataFrames directamente desde session_state.
+    """
+    
+    # Si aún no se ha cargado nada o se cambió de país
+    if 'datos_cargados' not in st.session_state or st.session_state['datos_cargados']['pais'] != _pais_elegido:
+
+        with st.spinner("Cargando datos..."):
+            # Barra de progreso y realiza la lógica pesada
+            progress_bar = st.progress(0)
+
+            # Llamadas a procesamiento_datos
+
+            # Global Data
+            df_global_data = procesamiento_datos.datos_global_data(_pais_elegido, st.session_state.session)
+            progress_bar.progress(20)
+
+            # OAG
+            df_oag = procesamiento_datos.datos_oag(_pais_elegido, st.session_state.session)
+            progress_bar.progress(40)
+
+            # Forward Keys
+            df_fk = procesamiento_datos.datos_forward_keys(_pais_elegido, st.session_state.session)
+            progress_bar.progress(60)
+
+            # Credibanco
+            df_credibanco = procesamiento_datos.datos_credibanco(_pais_elegido, st.session_state.session)
+            progress_bar.progress(80)
+
+            # IATA GAP
+            df_iata = procesamiento_datos.datos_iata_gap(_pais_elegido, st.session_state.session)
+            progress_bar.progress(100)
+
+            # Se guardan los datos y el país de referencia en session_state
+            st.session_state['datos_cargados'] = {
+                'pais': _pais_elegido,
+                'df_global_data': df_global_data,
+                'df_oag': df_oag,
+                'df_fk': df_fk,
+                'df_credibanco': df_credibanco,
+                'df_iata': df_iata
+            }
+
+            # Retorna los mismos DataFrames desde la sesión
+            return (
+                st.session_state['datos_cargados']['df_global_data'],
+                st.session_state['datos_cargados']['df_oag'],
+                st.session_state['datos_cargados']['df_fk'],
+                st.session_state['datos_cargados']['df_credibanco'],
+                st.session_state['datos_cargados']['df_iata']
+            )
+    
+    else:
+         # Si ya están cargados, se devuelven directamente
+        return (
+            st.session_state['datos_cargados']['df_global_data'],
+            st.session_state['datos_cargados']['df_oag'],
+            st.session_state['datos_cargados']['df_fk'],
+            st.session_state['datos_cargados']['df_credibanco'],
+            st.session_state['datos_cargados']['df_iata']
+        )
+
+# Función para obtener los gráficos de Global Data
+
+def obtener_graficos_global_data(df_global_data, _pais_elegido):
+      
+    """
+    Comprueba en 'st.session_state' si ya están almacenados los gráficos de GlobalData 
+    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
+    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
+
+    Parámetros:
+    -----------
+    df_global_data : dict de DataFrames
+        Estructura que contiene los DataFrames de GlobalData (p. ej. 'viajeros_medio', 'gasto_categoria', etc.).
+    _pais_elegido : str
+        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
+    """
+
+    # Verificar si ya existen gráficos en session_state y son del mismo país
+    if 'graficos_global_data' not in st.session_state \
+       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
+
+            # Serie de tiempo de viajeros
+            fig_time_series_viajeros = plotly_analitica.plot_single_time_series(df=df_global_data['viajeros_serie_tiempo'], date_col='Año', value_col='Viajeros', x_label="Año", y_label="Viajeros", y_units=None, show_labels=True, decimal_places=0)
+
+            # Viajeros por medio de transporte
+            # Stacked H
+            fig_stacked_h_medio_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['viajeros_medio'], date_col='Año', group_col='Medio de transporte', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+            # Treemap
+            fig_treemap_medio_viajeros = plotly_analitica.plot_treemap(df = df_global_data['viajeros_medio'], date_col="Año", value_col="Viajeros", group_col="Medio de transporte", share_col="Participación (%)",decimal_places=1, group_label="Medio", value_label="Viajeros", share_label="Participación (%)")
+
+            # Serie de tiempo noches de pernoctación
+            fig_time_series_noches_percnotacion = plotly_analitica.plot_single_time_series(df=df_global_data['noches_pernoctacion'], date_col='Año', value_col='Noches de percnotación', x_label="Año", y_label="Noches promedio", y_units=None, show_labels=True, decimal_places=0)
+
+            # Serie de tiempo gasto
+            fig_time_series_gasto = plotly_analitica.plot_single_time_series(df=df_global_data['gasto_serie_tiempo'], date_col='Año', value_col='Gasto (USD)', x_label="Año", y_label="Gasto", y_units='USD', show_labels=True, decimal_places=0)
+
+            # Gasto por categoria
+            # Stacked H
+            fig_stacked_h_categoria_gasto = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['gasto_categoria'], date_col='Año', group_col='Categoria de Gasto', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+            # Treemap
+            fig_treemap_categoria_gasto = plotly_analitica.plot_treemap(df = df_global_data['gasto_categoria'], date_col="Año", value_col="Gasto (USD)", group_col="Categoria de Gasto", share_col="Participación (%)", decimal_places=1, group_label="Categoria", value_label="Gasto", share_label="Participación (%)")
+
+            # Viajeros por edad
+            # Stacked H
+            fig_stacked_h_edad_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['rango_edad'], date_col='Año', group_col='Rango de Edad', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+            # Treemap
+            fig_treemap_edad_viajeros = plotly_analitica.plot_treemap(df = df_global_data['rango_edad'], date_col="Año", value_col="Viajeros", group_col="Rango de Edad", share_col="Participación (%)", decimal_places=1, group_label="Rango de edad", value_label="Viajeros", share_label="Participación (%)")
+
+            # Motivo viaje
+            # Stacked H
+            fig_stacked_h_motivo_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['motivo_viaje'], date_col='Año', group_col='Motivo de Viaje', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+            # Treemap
+            fig_treemap_motivo_viajeros = plotly_analitica.plot_treemap(df = df_global_data['motivo_viaje'], date_col="Año", value_col="Viajeros", group_col="Motivo de Viaje", share_col="Participación (%)", decimal_places=1, group_label="Motivo", value_label="Viajeros", share_label="Participación (%)")
+
+            # Forma de viaje
+            # Stacked H
+            fig_stacked_h_forma_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['forma_viaje'], date_col='Año', group_col='Forma de Viaje', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+            # Treemap
+            fig_treemap_forma_viajeros = plotly_analitica.plot_treemap(df = df_global_data['forma_viaje'], date_col="Año", value_col="Viajeros", group_col="Forma de Viaje", share_col="Participación (%)", decimal_places=1, group_label="Forma", value_label="Viajeros", share_label="Participación (%)") 
+
+            # Destinos
+            # Stacked H
+            fig_stacked_h_destinos_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['destinos_internacionales_top5'], date_col='Año', group_col='País Destino', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+            # Treemap
+            fig_treemap_destinos_viajeros = plotly_analitica.plot_treemap(df = df_global_data['destinos_internacionales_top5'], date_col="Año", value_col="Viajeros", group_col="País Destino", share_col="Participación (%)", decimal_places=1, group_label="País", value_label="Viajeros", share_label="Participación (%)")
+
+            # Serie de tiempo de Reuniones, incentivos, congresos y exposiciones (MICE)
+            if 'Motivo de viaje' in df_global_data['flujos_negocios'].columns:
+                df_mice = df_global_data['flujos_negocios'][df_global_data['flujos_negocios']['Motivo de viaje'] == 'Reuniones, incentivos, congresos y exposiciones (MICE)']
+            else:
+                df_mice = pd.DataFrame()
+            fig_time_series_mice = plotly_analitica.plot_single_time_series(df=df_mice, date_col='Año', value_col='Viajeros', x_label="Año", y_label="Viajeros", y_units=None, show_labels=True, decimal_places=0)
+
+            # Guardar todo en session_state
+            st.session_state['graficos_global_data'] = {
+                'fig_time_series_viajeros': fig_time_series_viajeros,
+                'fig_stacked_h_medio_viajeros': fig_stacked_h_medio_viajeros,
+                'fig_treemap_medio_viajeros': fig_treemap_medio_viajeros,
+                'fig_time_series_noches_percnotacion': fig_time_series_noches_percnotacion,
+                'fig_time_series_gasto': fig_time_series_gasto,
+                'fig_stacked_h_categoria_gasto': fig_stacked_h_categoria_gasto,
+                'fig_treemap_categoria_gasto': fig_treemap_categoria_gasto,
+                'fig_stacked_h_edad_viajeros': fig_stacked_h_edad_viajeros,
+                'fig_treemap_edad_viajeros': fig_treemap_edad_viajeros,
+                'fig_stacked_h_motivo_viajeros': fig_stacked_h_motivo_viajeros,
+                'fig_treemap_motivo_viajeros': fig_treemap_motivo_viajeros,
+                'fig_stacked_h_forma_viajeros': fig_stacked_h_forma_viajeros,
+                'fig_treemap_forma_viajeros': fig_treemap_forma_viajeros,
+                'fig_stacked_h_destinos_viajeros': fig_stacked_h_destinos_viajeros,
+                'fig_treemap_destinos_viajeros': fig_treemap_destinos_viajeros,
+                'fig_time_series_mice': fig_time_series_mice
+            }
+
+            # Return de los gráficos 
+            return (   
+                    st.session_state['graficos_global_data']['fig_time_series_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_medio_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_medio_viajeros'],
+                    st.session_state['graficos_global_data']['fig_time_series_noches_percnotacion'],
+                    st.session_state['graficos_global_data']['fig_time_series_gasto'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_categoria_gasto'],
+                    st.session_state['graficos_global_data']['fig_treemap_categoria_gasto'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_edad_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_edad_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_motivo_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_motivo_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_forma_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_forma_viajeros'],
+                    st.session_state['graficos_global_data']['fig_stacked_h_destinos_viajeros'],
+                    st.session_state['graficos_global_data']['fig_treemap_destinos_viajeros'],
+                    st.session_state['graficos_global_data']['fig_time_series_mice']                                           
+                )
+    else:
+         # Si ya están cargados, se devuelven directamente
+        return(
+            st.session_state['graficos_global_data']['fig_time_series_viajeros'],
+            st.session_state['graficos_global_data']['fig_stacked_h_medio_viajeros'],
+            st.session_state['graficos_global_data']['fig_treemap_medio_viajeros'],
+            st.session_state['graficos_global_data']['fig_time_series_noches_percnotacion'],
+            st.session_state['graficos_global_data']['fig_time_series_gasto'],
+            st.session_state['graficos_global_data']['fig_stacked_h_categoria_gasto'],
+            st.session_state['graficos_global_data']['fig_treemap_categoria_gasto'],
+            st.session_state['graficos_global_data']['fig_stacked_h_edad_viajeros'],
+            st.session_state['graficos_global_data']['fig_treemap_edad_viajeros'],
+            st.session_state['graficos_global_data']['fig_stacked_h_motivo_viajeros'],
+            st.session_state['graficos_global_data']['fig_treemap_motivo_viajeros'],
+            st.session_state['graficos_global_data']['fig_stacked_h_forma_viajeros'],
+            st.session_state['graficos_global_data']['fig_treemap_forma_viajeros'],
+            st.session_state['graficos_global_data']['fig_stacked_h_destinos_viajeros'],
+            st.session_state['graficos_global_data']['fig_treemap_destinos_viajeros'],
+            st.session_state['graficos_global_data']['fig_time_series_mice']
+
+        )
+
+# Función para obtener los gráficos de OAG de conectividad con el mundo
+def obtener_graficos_oag_mundo(df_oag, _pais_elegido):
+      
+    """
+    Comprueba en 'st.session_state' si ya están almacenados los gráficos de OAG Mundo 
+    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
+    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
+
+    Parámetros:
+    -----------
+    df_oag : dict de DataFrames
+        Estructura que contiene los DataFrames de OAG (p. ej. 'frecuencias', 'sillas gasto_categoria', etc.).
+    _pais_elegido : str
+        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
+    """
+
+    # Verificar si ya existen gráficos en session_state y son del mismo país
+    if 'graficos_oag_mundo' not in st.session_state \
+       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
+        
+            # Single Bar Chart: Conectividad del país con el mundo: Sillas
+            fig_single_barchart_conectividad_mundo_sillas = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_mundo_serie_tiempo'], date_col='Año', value_col='Sillas', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
+
+            # Single Bar Chart Conectividad del país con el mundo: Frencuencias 
+            fig_single_barchart_conectividad_mundo_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_mundo_serie_tiempo'], date_col='Año', value_col='Frecuencias', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
+            
+            # StackedH: Conectividad mundo cerrado destinos: Frecuencias
+            fig_stacked_h_conectividad_frecuencias_destinos_cerrado = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_mundo_destino_cerrado'], date_col='Año', group_col='País Destino', share_col='Participación Frecuencias (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+
+            # StackedH: Conectividad mundo corrido destinos: Frecuencias
+            fig_stacked_h_conectividad_frecuencias_destinos_corrido = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_mundo_destino_corrido'], date_col='Periodo', group_col='País Destino', share_col='Participación Frecuencias (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+
+            # Guardar todo en session_state
+            st.session_state['graficos_oag_mundo'] = {
+                'fig_single_barchart_conectividad_mundo_sillas': fig_single_barchart_conectividad_mundo_sillas,
+                'fig_single_barchart_conectividad_mundo_frecuencias': fig_single_barchart_conectividad_mundo_frecuencias,
+                'fig_stacked_h_conectividad_frecuencias_destinos_cerrado': fig_stacked_h_conectividad_frecuencias_destinos_cerrado,
+                'fig_stacked_h_conectividad_frecuencias_destinos_corrido': fig_stacked_h_conectividad_frecuencias_destinos_corrido
+            }
+
+            # Return de los gráficos 
+            return (
+                    st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_sillas'],
+                    st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_frecuencias'],
+                    st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_cerrado'],
+                    st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_corrido']
+                )
+    else:
+         # Si ya están cargados, se devuelven directamente
+         return(
+            st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_sillas'],
+            st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_frecuencias'],
+            st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_cerrado'],
+            st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_corrido']
+         )
+
+# Función para obtener los gráficos de Forward Keys de búsquedas y reservas con el mundo
+
+def obtener_graficos_fk_mundo(df_fk, _pais_elegido):
+      
+    """
+    Comprueba en 'st.session_state' si ya están almacenados los gráficos de Forward Keys Mundo 
+    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
+    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
+
+    Parámetros:
+    -----------
+    df_fk : dict de DataFrames
+        Estructura que contiene los DataFrames de FK (p. ej. 'reservas', 'búsquedas', etc.).
+    _pais_elegido : str
+        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
+    """
+
+    # Verificar si ya existen gráficos en session_state y son del mismo país
+    if 'graficos_fk_mundo' not in st.session_state \
+       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
+        
+            # Reservas activas del país hacia México, Costa Rica, Perú y Chile
+            fig_multiple_time_series_reservas_mundo = plotly_analitica.plot_multiple_time_series(df=df_fk['reservas_serie_tiempo'], date_col='Fecha', value_col='Reservas', group_col='País', x_label="Año", y_label="Reservas", y_units=None, show_labels=True, decimal_places=0, legend_title=None)
+
+            # Búsquedas activas del país hacia México, Costa Rica, Perú y Chile
+            fig_multiple_time_series_busquedas_mundo = plotly_analitica.plot_multiple_time_series(df=df_fk['busquedas_serie_tiempo'], date_col='Fecha', value_col='Búsquedas', group_col='País', x_label="Año", y_label="Búsquedas", y_units=None, show_labels=True, decimal_places=0, legend_title=None)
+
+            # Guardar todo en session_state
+            st.session_state['graficos_fk_mundo'] = {
+                'fig_multiple_time_series_reservas_mundo': fig_multiple_time_series_reservas_mundo,
+                'fig_multiple_time_series_busquedas_mundo': fig_multiple_time_series_busquedas_mundo
+            }
+
+            # Return de los gráficos
+            return (
+                    st.session_state['graficos_fk_mundo']['fig_multiple_time_series_reservas_mundo'],
+                    st.session_state['graficos_fk_mundo']['fig_multiple_time_series_busquedas_mundo']
+                )
+    else:
+         # Si ya están cargados, se devuelven directamente
+         return(
+            st.session_state['graficos_fk_mundo']['fig_multiple_time_series_reservas_mundo'],
+            st.session_state['graficos_fk_mundo']['fig_multiple_time_series_busquedas_mundo']
+         )
+
+# Función para obtener los gráficos de OAG de conetividad con Colombia
+
+def obtener_graficos_oag_colombia(df_oag, _pais_elegido):
+      
+    """
+    Comprueba en 'st.session_state' si ya están almacenados los gráficos de OAG Colombia 
+    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
+    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
+
+    Parámetros:
+    -----------
+    df_oag : dict de DataFrames
+        Estructura que contiene los DataFrames de OAG (p. ej. 'frecuencias', 'sillas', etc.).
+    _pais_elegido : str
+        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
+    """
+
+    # Verificar si ya existen gráficos en session_state y son del mismo país
+    if 'graficos_oag_colombia' not in st.session_state \
+       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
+    
+            # Single Bar Chart: Conectividad del país con Colombia: Sillas
+            fig_single_barchart_conectividad_colombia_sillas = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_colombia_serie_tiempo'], date_col='Año', value_col='Sillas', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
+
+            # Single Bar Chart Conectividad del país con Colombia: Frencuencias 
+            fig_single_barchart_conectividad_colombia_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_colombia_serie_tiempo'], date_col='Año', value_col='Frecuencias', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
+            
+            # StackedH: Conectividad Colombia cerrado destinos: Frecuencias
+            fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_colombia_municipio_cerrado'], date_col='Año', group_col='Municipio Destino', share_col='Participación Frecuencias (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+
+            # StackedH: Conectividad Colombia corrido destinos: Frecuencias
+            fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_colombia_municipio_corrido'], date_col='Periodo', group_col='Municipio Destino', share_col='Participación Frecuencias (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+
+            # Guardar todo en session_state
+            st.session_state['graficos_oag_colombia'] = {
+                'fig_single_barchart_conectividad_colombia_sillas': fig_single_barchart_conectividad_colombia_sillas,
+                'fig_single_barchart_conectividad_colombia_frecuencias': fig_single_barchart_conectividad_colombia_frecuencias,
+                'fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado': fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado,
+                'fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido': fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido
+            }
+    
+            # Return de los gráficos en un diccionario
+            return (
+                    st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_sillas'],
+                    st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_frecuencias'],
+                    st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado'],
+                    st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido']
+                )
+    else:
+         # Si ya están cargados, se devuelven directamente
+         return(
+            st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_sillas'],
+            st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_frecuencias'],
+            st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado'],
+            st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido']
+         )
+
+
+# Función para obtener los gráficos de Credibanco
+
+def obtener_graficos_credibanco(df_credibanco, _pais_elegido):
+      
+    """
+    Comprueba en 'st.session_state' si ya están almacenados los gráficos de Credibanco 
+    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
+    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
+
+    Parámetros:
+    -----------
+    df_credibanco : dict de DataFrames
+        Estructura que contiene los DataFrames de Credibanco (p. ej. 'gasto', 'tarjetas', etc.).
+    _pais_elegido : str
+        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
+    """
+
+    # Verificar si ya existen gráficos en session_state y son del mismo país
+    if 'graficos_credibanco' not in st.session_state \
+       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
+    
+            # Gasto promedio
+            fig_side_by_side_bar_gasto_promedio =  plotly_analitica.plot_side_by_side_bars(df=df_credibanco['gasto_promedio'], date_col='Año', var1_col='Gasto promedio tarjeta (USD)', var2_col='Gasto promedio transacción (USD)', x_label="Año", y_label="Gasto", y_units='USD', show_labels=True, decimal_places=0, legend_title=' ', legend_labels={'Gasto promedio tarjeta (USD)' : 'Gasto promedio por tarjeta', 'Gasto promedio transacción (USD)' : 'Gasto promedio por transacción'})
+
+            # Gasto por categoria
+            fig_stacked_h_gasto_categoria_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_categoria'], date_col='Año', group_col='Clasificación', share_col='Participación (%)', decimal_places=1, y_label='Año', legend_title=" ")
+
+            # Gasto por categoria
+            fig_treemap_gasto_categoria_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_categoria'], date_col="Año", value_col="Facturación (USD)", group_col="Clasificación", share_col="Participación (%)", decimal_places=1, group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
+
+            # Gasto por productos directo
+            fig_stacked_h_gasto_categoria_directo_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_producto_directo'], date_col='Año', group_col='Categoria', share_col='Participación (%)', decimal_places=1, y_label='Año', legend_title=" ")
+
+            # Gasto por producto directo
+            fig_treemap_gasto_categoria_directo_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_producto_directo'], date_col="Año", value_col="Facturación (USD)", group_col="Categoria", share_col="Participación (%)", decimal_places=1, group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
+
+            # Gasto por productos indirecto
+            fig_stacked_h_gasto_categoria_indirecto_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_producto_indirecto'], date_col='Año', group_col='Categoria', share_col='Participación (%)', decimal_places=1, y_label='Año', legend_title=" ")
+
+            # Gasto por producto indirecto
+            fig_treemap_gasto_categoria_indirecto_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_producto_indirecto'], date_col="Año", value_col="Facturación (USD)", group_col="Categoria", share_col="Participación (%)", decimal_places=1, group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
+
+            # Guardar todo en session_state
+            st.session_state['graficos_credibanco'] = {
+                'fig_side_by_side_bar_gasto_promedio': fig_side_by_side_bar_gasto_promedio,
+                'fig_stacked_h_gasto_categoria_credibanco': fig_stacked_h_gasto_categoria_credibanco,
+                'fig_treemap_gasto_categoria_credibanco': fig_treemap_gasto_categoria_credibanco,
+                'fig_stacked_h_gasto_categoria_directo_credibanco': fig_stacked_h_gasto_categoria_directo_credibanco,
+                'fig_treemap_gasto_categoria_directo_credibanco': fig_treemap_gasto_categoria_directo_credibanco,
+                'fig_stacked_h_gasto_categoria_indirecto_credibanco': fig_stacked_h_gasto_categoria_indirecto_credibanco,
+                'fig_treemap_gasto_categoria_indirecto_credibanco': fig_treemap_gasto_categoria_indirecto_credibanco
+            }
+
+            # Return de los gráficos en un diccionario
+            return (
+                    st.session_state['graficos_credibanco']['fig_side_by_side_bar_gasto_promedio'],
+                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_directo_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_directo_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_indirecto_credibanco'],
+                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_indirecto_credibanco']
+                )
+    else:
+         # Si ya están cargados, se devuelven directamente
+         return(
+            st.session_state['graficos_credibanco']['fig_side_by_side_bar_gasto_promedio'],
+            st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_credibanco'],
+            st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_credibanco'],
+            st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_directo_credibanco'],
+            st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_directo_credibanco'],
+            st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_indirecto_credibanco'],
+            st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_indirecto_credibanco']
+         )
+
+# Función para obtener los gráficos de Forward Keys de búsquedas y reservas con Colombia
+
+def obtener_graficos_fk_colombia(df_fk, _pais_elegido):
+      
+    """
+    Comprueba en 'st.session_state' si ya están almacenados los gráficos de Forward Keys Colombia 
+    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
+    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
+
+    Parámetros:
+    -----------
+    df_fk : dict de DataFrames
+        Estructura que contiene los DataFrames de FK (p. ej. 'reservas', 'búsquedas', etc.).
+    _pais_elegido : str
+        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
+    """
+
+    # Verificar si ya existen gráficos en session_state y son del mismo país
+    if 'graficos_fk_colombia' not in st.session_state \
+       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
+         
+            # Reservas aéreas activas del país hacia Colombia
+            fig_single_time_series_reservas_colombia = plotly_analitica.plot_single_time_series(df=df_fk['reservas_serie_tiempo_colombia'], date_col='Fecha', value_col='Reservas', x_label="Año", y_label="Reservas", y_units=None, show_labels=True, decimal_places=0, mensual=True)
+
+            # Búsquedas activas del país hacia Colombia 
+            fig_single_time_series_busquedas_colombia = plotly_analitica.plot_single_time_series(df=df_fk['busquedas_serie_tiempo_colombia'], date_col='Fecha', value_col='Búsquedas', x_label="Año", y_label="Búsquedas", y_units=None, show_labels=True, decimal_places=0, mensual=True)
+
+             # Guardar todo en session_state
+            st.session_state['graficos_fk_colombia'] = {
+                'fig_single_time_series_reservas_colombia': fig_single_time_series_reservas_colombia,
+                'fig_single_time_series_busquedas_colombia': fig_single_time_series_busquedas_colombia
+            }
+
+            # Return de los gráficos en un diccionario
+            return (
+                    st.session_state['graficos_fk_colombia']['fig_single_time_series_reservas_colombia'],
+                    st.session_state['graficos_fk_colombia']['fig_single_time_series_busquedas_colombia']
+                )
+    else:
+         # Si ya están cargados, se devuelven directamente
+         return(
+            st.session_state['graficos_fk_colombia']['fig_single_time_series_reservas_colombia'],
+            st.session_state['graficos_fk_colombia']['fig_single_time_series_busquedas_colombia']
+         )
+
+# Funciones para obtener los gráficos de IATA GAP de agencias que promocionan Colombia
+
+def obtener_graficos_iata_colombia(df_iata, _pais_elegido):
+      
+    """
+    Comprueba en 'st.session_state' si ya están almacenados los gráficos de IATA GAP Colombia 
+    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
+    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
+
+    Parámetros:
+    -----------
+    df_iata : dict de DataFrames
+        Estructura que contiene los DataFrames de IATA (p. ej. 'agencias', 'ciudades', etc.).
+    _pais_elegido : str
+        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
+    """
+
+    # Verificar si ya existen gráficos en session_state y son del mismo país
+    if 'graficos_iata_colombia' not in st.session_state \
+       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
+
+            # Indicadores de agencias de ese mercado que venden Colombia como destino mostrar por q
+            fig_single_time_series_agencias_colombia = plotly_analitica.plot_single_time_series(df=df_iata['agencias_serie_tiempo'], date_col='Año', value_col='Número de Agencias', x_label="Año", y_label="Agencias", y_units='Número', show_labels=True, decimal_places=0)
+
+            # Agencias que venden Colombia como destino por ciudad de la agencia 15
+            fig_stacked_h_agencias_ciudades = plotly_analitica.plot_stacked_bar_chart_h(df=df_iata['agencias_ciudades'], date_col='Año', group_col='Ciudad de la Agencia', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
+
+            # Guardar todo en session_state
+            st.session_state['graficos_iata_colombia'] = {
+                'fig_single_time_series_agencias_colombia': fig_single_time_series_agencias_colombia,
+                'fig_stacked_h_agencias_ciudades': fig_stacked_h_agencias_ciudades
+            }
+
+            # Return de los gráficos en un diccionario
+            return (
+                    st.session_state['graficos_iata_colombia']['fig_single_time_series_agencias_colombia'],
+                    st.session_state['graficos_iata_colombia']['fig_stacked_h_agencias_ciudades']
+                )
+    else:
+         # Si ya están cargados, se devuelven directamente
+         return(
+            st.session_state['graficos_iata_colombia']['fig_single_time_series_agencias_colombia'],
+            st.session_state['graficos_iata_colombia']['fig_stacked_h_agencias_ciudades']
+         )
+
+
+# Función para Limpiar caches de dfs y gráficos al momento de elegir otro país
+def on_selectbox_change():
+    
+    # Limpia la caché de datos
+    st.cache_data.clear()
+
+    # Limpia la clave 'datos_cargados' (si existe) en session_state
+    if 'datos_cargados' in st.session_state:
+        del st.session_state['datos_cargados']
+    # Limpia la clave 'graficos_global_data' (si existe) en session_state
+    if 'graficos_global_data' in st.session_state:
+        del st.session_state['graficos_global_data']
+    # Limpia la clave 'graficos_oag_mundo' (si existe) en session_state
+    if 'graficos_oag_mundo' in st.session_state:
+        del st.session_state['graficos_oag_mundo']
+    # Limpia la clave 'graficos_fk_mundo' (si existe) en session_state
+    if 'graficos_fk_mundo' in st.session_state:
+        del st.session_state['graficos_fk_mundo']
+    # Limpia la clave 'graficos_oag_colombia' (si existe) en session_state
+    if 'graficos_oag_colombia' in st.session_state:
+        del st.session_state['graficos_oag_colombia']
+    # Limpia la clave 'graficos_credibanco' (si existe) en session_state
+    if 'graficos_credibanco' in st.session_state:
+        del st.session_state['graficos_credibanco']
+    # Limpia la clave 'graficos_fk_colombia' (si existe) en session_state
+    if 'graficos_fk_colombia' in st.session_state:
+        del st.session_state['graficos_fk_colombia']
+    # Limpia la clave 'graficos_iata_colombia' (si existe) en session_state
+    if 'graficos_iata_colombia' in st.session_state:
+        del st.session_state['graficos_iata_colombia']
+
+
+def mostrar_resultado_en_streamlit(resultado, fuente, llave):
+
+    # Caso 1: Gráfico de Plotly
+    if isinstance(resultado, go.Figure):
+        st.plotly_chart(resultado, use_container_width=True, key=llave)
+        st.caption(f'Fuente: {fuente}')
+
+    # Caso 2: Cadena de texto
+    elif isinstance(resultado, str):
+        st.write(resultado)
+        st.caption(f'Fuente: {fuente}')
+
+    # Caso 3: Tipo no soportado
+    else:
+        st.warning(f"Tipo de resultado no reconocido o no soportado: {type(resultado)}")
+
+
+def excel_download_buttons(df: pd.DataFrame, fuente: str = 'CITI', variable: str = 'Turismo') -> BytesIO:
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+        # Crear la hoja
+        workbook = writer.book
+        worksheet = workbook.add_worksheet("Datos")
+        writer.sheets["Datos"] = worksheet
+
+        # Formatos
+        bold_format = workbook.add_format({'bold': True})
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#D3D3D3',  # Gris claro
+            'border': 1
+        })
+        data_format = workbook.add_format({'border': 1})
+
+        # Metadatos en filas superiores
+        worksheet.write("A1", "Centro de Inteligencia de Turismo Internacional (CITI)", bold_format)
+        worksheet.write("A2", f"Fuente: {fuente}", bold_format)
+        worksheet.write("A3", f"Variable: {variable}", bold_format)
+
+        # Cabeceras y datos
+        n_rows, n_cols = df.shape
+
+        # Escribir las cabeceras en la fila 4 (fila 5 “visual”)
+        for j, col in enumerate(df.columns):
+            max_len = max(len(str(col)), df[col].astype(str).map(len).max() if not df[col].empty else 0)
+            worksheet.set_column(j, j, max_len + 2)  # Ajustar ancho
+            worksheet.write(4, j, col, header_format)
+
+        # Escribir los datos a partir de la fila 5 (fila 6 “visual”)
+        for i in range(n_rows):
+            for j in range(n_cols):
+                worksheet.write(i + 5, j, df.iloc[i, j], data_format)
+
+        writer.close()
+    buffer.seek(0)
+    return buffer
+
+
+@st.fragment
+def boton_descarga(fuente, variable, llave, unidad, df=None):
+    
+    # Verificar si el DataFrame no es None y no está vacío
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        st.download_button(
+            label="Descargar Excel",
+            data=excel_download_buttons(df = df,
+                                        fuente=fuente,
+                                        variable = variable),
+            file_name=f"Datos CITI - {fuente} - {unidad} - {variable}.xlsx",
+            mime="application/vnd.ms-excel",
+            use_container_width=True,
+            on_click=snowflake_analitica.registrar_evento,
+            args=(st.session_state.session, 'Descarga archivo Excel', f"Datos CITI - {fuente} - {unidad} - {variable}.xlsx", unidad),
+            key=llave
+        )
+
+    # Caso 3: Tipo no soportado
+    else:
+        st.write("No hay datos diposnibles para descargar.")
+
+
+
 # Geolocalización
 def mostrar_mapa(pais):
     """
@@ -107,728 +747,4 @@ def mostrar_mapa(pais):
     except Exception as e:
         st.error(f"Ha ocurrido un error inesperado al generar el mapa de '{pais}': {e}")
 
-def excel_download_buttons(df: pd.DataFrame, fuente: str = 'CITI') -> BytesIO:
-    """
-    Genera un archivo Excel en memoria a partir de un DataFrame y retorna un buffer en formato BytesIO.
 
-    Descripción:
-    ------------
-    - Crea un objeto BytesIO y lo asocia con un ExcelWriter de pandas utilizando 'xlsxwriter' como motor.
-    - Inicialmente, se escribe un DataFrame vacío en la hoja "Sheet1" para asegurar la creación de la hoja.
-    - Se obtiene el objeto 'worksheet' de la hoja activa "Sheet1" y se escribe el texto "Centro de Inteligencia de Turismo Internacional (CITI)"" en la celda A1.
-    - A continuación, se vuelca el DataFrame 'df' a partir de la fila 3 (startrow=3), incluyendo el encabezado (header=True).
-    - El objeto 'writer' se cierra automáticamente al salir del bloque 'with'.
-    - Finalmente, la función retorna el buffer con el contenido del Excel en memoria.
-
-    Parámetros:
-    -----------
-    df : pd.DataFrame
-        DataFrame que se desea exportar al archivo Excel.
-    fuente: str
-        String con la fuente a Descargar.
-
-    Retorna:
-    --------
-    BytesIO
-        Objeto en memoria que contiene los datos del Excel. Útil para descargar con st.download_button
-        o para enviarlo a otros servicios sin necesidad de escribir un archivo temporal.
-
-    Uso:
-    ----
-    1. Invocar la función pasando un DataFrame como parámetro:
-        excel_buffer = excel_download_buttons(mi_dataframe)
-    2. Emplear 'excel_buffer' con 'st.download_button' para permitir que el usuario descargue el archivo:
-        st.download_button(
-            label="Descargar Excel",
-            data=excel_buffer.getvalue(),   
-            file_name="datos_exportados.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    """
-
-    buffer = BytesIO()
-    with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-        
-        # Crear la hoja "Sheet1" (escribiendo un DataFrame vacío)
-        pd.DataFrame().to_excel(writer, sheet_name="Sheet1", index=False, header=False)
-
-        # Obtener workbook
-        workbook = writer.book
-
-        # Obtener pestaña
-        worksheet = writer.sheets["Sheet1"]
-
-        # Crear el formato en negrilla
-        bold_format = workbook.add_format({'bold': True})
-
-        # Escribir los títulos en negrilla
-        worksheet.write("A1", "Centro de Inteligencia de Turismo Internacional (CITI)", bold_format)
-        worksheet.write("A2", f"Fuente: {fuente}", bold_format)
-
-        # Escribir el DataFrame a partir de la fila 4 (startrow=3)
-        df.to_excel(writer, sheet_name="Sheet1", index=False, header=True, startrow=3)
-
-        # Definir formatos
-        header_format = workbook.add_format({
-            'bold': True,
-            'bg_color': '#D3D3D3',  # Gris claro
-            'border': 1
-        })
-        data_format = workbook.add_format({
-            'border': 1
-        })
-
-        n_rows, n_cols = df.shape
-
-        # Ajustar el ancho de las columnas y re-escribir el encabezado con formato
-        for j, col in enumerate(df.columns):
-            header_text = str(col)
-            # Calcular el ancho máximo: comparar largo del encabezado y de cada celda
-            max_len = len(header_text)
-            if n_rows > 0:
-                # Convertir a cadena para calcular el largo de cada valor
-                col_data = df[col].astype(str)
-                max_len = max(max_len, col_data.map(len).max())
-            # Ajustar el ancho de la columna (agregamos un padding de 2)
-            worksheet.set_column(j, j, max_len + 2)
-            # Re-escribir el encabezado en la fila 4 (índice 3) con el formato definido
-            worksheet.write(3, j, header_text, header_format)
-
-        # Re-escribir cada celda del DataFrame (datos) para aplicarles el borde
-        # Los datos comienzan en la fila 5 (índice 4)
-        for i in range(n_rows):
-            for j, col in enumerate(df.columns):
-                cell_value = df.iloc[i, j]
-                worksheet.write(3 + 1 + i, j, cell_value, data_format)
-
-        writer.close()
-    return buffer
-
-@st.fragment
-def mostrar_resultado_en_streamlit(resultado, fuente, detalle_evento, unidad, df=None):
-    """
-    Función que muestra en Streamlit un resultado según su tipo:
-    
-    - Si el resultado es un gráfico de Plotly (go.Figure), se utiliza st.plotly_chart().
-      - Se muestra un texto de fuente (st.caption(fuente)).
-      - Si se proporciona un DataFrame válido (df) y no está vacío,
-        se genera un botón de descarga para exportar los datos en Excel.
-    - Si el resultado es una cadena (str), se muestra con st.write().
-      - También se muestra un texto de fuente.
-    - En caso contrario, se muestra un mensaje indicando que el tipo no está soportado.
-
-    La función también registra el evento de descarga en caso de que el usuario descargue el archivo Excel.
-
-    Parámetros:
-    -----------
-    resultado : object
-        Cualquier objeto que pueda ser devuelto por una función. 
-        Esta función intentará identificar si es un go.Figure (gráfico de Plotly) o un str (cadena).
-    fuente : str
-        Texto que describe la fuente o referencia del resultado mostrado (por ejemplo, 
-        "Fuente: Ministerio de Turismo").
-    detalle_evento : str
-        Texto que describe el detalle del evento que se registra en Snowflake.
-    unidad : str
-        Se refiere al país de la descarga.
-    df : pd.DataFrame, opcional
-        DataFrame con datos que se pueden descargar en Excel. 
-        Si es None o está vacío, no se mostrará el botón de descarga.
-
-    Retorna:
-    --------
-    None
-        Se limita a imprimir el contenido en la interfaz de Streamlit.
-
-    Uso:
-    ----
-        mostrar_resultado_en_streamlit(figura_de_plotly, "Fuente: Datos oficiales", df_data)
-    """
-
-    row1 = st.columns(1)
-    row2 = st.columns(1)
-
-    # Caso 1: Gráfico de Plotly
-    if isinstance(resultado, go.Figure):
-        st.plotly_chart(resultado, use_container_width=True)
-        st.caption(f'Fuente: {fuente}')
-
-        # Verificar si el DataFrame no es None y no está vacío
-        if isinstance(df, pd.DataFrame) and not df.empty:
-            st.download_button(
-                label="Descargar Excel",
-                data=excel_download_buttons(df = df,
-                                            fuente=fuente),
-                file_name=f"Datos CITI: {fuente} - {unidad}.xlsx",
-                mime="application/vnd.ms-excel",
-                use_container_width=True,
-                on_click=snowflake_analitica.registrar_evento,
-                args=(st.session_state.session, 'Descarga archivo Excel', detalle_evento, unidad),
-                key=detalle_evento
-            )
-
-    # Caso 2: Cadena de texto
-    elif isinstance(resultado, str):
-        st.write(resultado)
-        st.caption(fuente)
-
-    # Caso 3: Tipo no soportado
-    else:
-        st.warning(f"Tipo de resultado no reconocido o no soportado: {type(resultado)}")
-    
-# Función para obtener los datos
-def obtener_datos(_pais_elegido):
-    """
-    1. Verifica si ya están los datos en 'st.session_state' para el país elegido.
-    2. Si no existen o son de un país distinto, ejecuta la operación costosa.
-    3. Guarda los resultados en st.session_state.
-    4. Devuelve los DataFrames directamente desde session_state.
-    """
-    
-    # Si aún no se ha cargado nada o se cambió de país
-    if 'datos_cargados' not in st.session_state or st.session_state['datos_cargados']['pais'] != _pais_elegido:
-
-        with st.spinner("Cargando datos..."):
-            # Barra de progreso y realiza la lógica pesada
-            progress_bar = st.progress(0)
-
-            # Llamadas a procesamiento_datos
-
-            # Global Data
-            df_global_data = procesamiento_datos.datos_global_data(_pais_elegido, st.session_state.session)
-            progress_bar.progress(20)
-
-            # OAG
-            df_oag = procesamiento_datos.datos_oag(_pais_elegido, st.session_state.session)
-            progress_bar.progress(40)
-
-            # Forward Keys
-            df_fk = procesamiento_datos.datos_forward_keys(_pais_elegido, st.session_state.session)
-            progress_bar.progress(60)
-
-            # Credibanco
-            df_credibanco = procesamiento_datos.datos_credibanco(_pais_elegido, st.session_state.session)
-            progress_bar.progress(80)
-
-            # IATA GAP
-            df_iata = procesamiento_datos.datos_iata_gap(_pais_elegido, st.session_state.session)
-            progress_bar.progress(100)
-
-            # Se guardan los datos y el país de referencia en session_state
-            st.session_state['datos_cargados'] = {
-                'pais': _pais_elegido,
-                'df_global_data': df_global_data,
-                'df_oag': df_oag,
-                'df_fk': df_fk,
-                'df_credibanco': df_credibanco,
-                'df_iata': df_iata
-            }
-
-            # Retorna los mismos DataFrames desde la sesión
-            return (
-                st.session_state['datos_cargados']['df_global_data'],
-                st.session_state['datos_cargados']['df_oag'],
-                st.session_state['datos_cargados']['df_fk'],
-                st.session_state['datos_cargados']['df_credibanco'],
-                st.session_state['datos_cargados']['df_iata']
-            )
-    
-    else:
-         # Si ya están cargados, se devuelven directamente
-        return (
-            st.session_state['datos_cargados']['df_global_data'],
-            st.session_state['datos_cargados']['df_oag'],
-            st.session_state['datos_cargados']['df_fk'],
-            st.session_state['datos_cargados']['df_credibanco'],
-            st.session_state['datos_cargados']['df_iata']
-        )
-
-# Función para obtener los gráficos de Global Data
-
-def obtener_graficos_global_data(df_global_data, _pais_elegido):
-      
-    """
-    Comprueba en 'st.session_state' si ya están almacenados los gráficos de GlobalData 
-    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
-    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
-
-    Parámetros:
-    -----------
-    df_global_data : dict de DataFrames
-        Estructura que contiene los DataFrames de GlobalData (p. ej. 'viajeros_medio', 'gasto_categoria', etc.).
-    _pais_elegido : str
-        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
-    """
-
-    # Verificar si ya existen gráficos en session_state y son del mismo país
-    if 'graficos_global_data' not in st.session_state \
-       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
-
-            # Serie de tiempo de viajeros
-            fig_time_series_viajeros = plotly_analitica.plot_single_time_series(df=df_global_data['viajeros_serie_tiempo'], date_col='Año', value_col='Viajeros', title="Flujo de viajeros hacia el mundo", x_label="Año", y_label="Viajeros", y_units=None, show_labels=True, decimal_places=0)
-
-            # Viajeros por medio de transporte
-            # Stacked H
-            fig_stacked_h_medio_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['viajeros_medio'], date_col='Año', group_col='Medio de transporte', share_col='Participación (%)', decimal_places=1, title='Flujo de viajeros hacia el mundo por medio de transporte', y_label=' Año', legend_title=" ")
-            # Treemap
-            fig_treemap_medio_viajeros = plotly_analitica.plot_treemap(df = df_global_data['viajeros_medio'], date_col="Año", value_col="Viajeros", group_col="Medio de transporte", share_col="Participación (%)",decimal_places=1, title="Flujo de viajeros hacia el mundo por medio de transporte", group_label="Medio", value_label="Viajeros", share_label="Participación (%)")
-
-            # Serie de tiempo noches de pernoctación
-            fig_time_series_noches_percnotacion = plotly_analitica.plot_single_time_series(df=df_global_data['noches_pernoctacion'], date_col='Año', value_col='Noches de percnotación', title="Noches de percnotación promedio", x_label="Año", y_label="Noches promedio", y_units=None, show_labels=True, decimal_places=0)
-
-            # Serie de tiempo gasto
-            fig_time_series_gasto = plotly_analitica.plot_single_time_series(df=df_global_data['gasto_serie_tiempo'], date_col='Año', value_col='Gasto (USD)', title="Gasto promedio del viajero al mundo", x_label="Año", y_label="Gasto", y_units='USD', show_labels=True, decimal_places=0)
-
-            # Gasto por categoria
-            # Stacked H
-            fig_stacked_h_categoria_gasto = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['gasto_categoria'], date_col='Año', group_col='Categoria de Gasto', share_col='Participación (%)', decimal_places=1, title='Gasto promedio del viajero al mundo por categoria', y_label=' Año', legend_title=" ")
-            # Treemap
-            fig_treemap_categoria_gasto = plotly_analitica.plot_treemap(df = df_global_data['gasto_categoria'], date_col="Año", value_col="Gasto (USD)", group_col="Categoria de Gasto", share_col="Participación (%)", decimal_places=1, title="Gasto promedio del viajero al mundo por categoria", group_label="Categoria", value_label="Gasto", share_label="Participación (%)")
-
-            # Viajeros por edad
-            # Stacked H
-            fig_stacked_h_edad_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['rango_edad'], date_col='Año', group_col='Rango de Edad', share_col='Participación (%)', decimal_places=1, title='Rango de edad del viajero promedio', y_label=' Año', legend_title=" ")
-            # Treemap
-            fig_treemap_edad_viajeros = plotly_analitica.plot_treemap(df = df_global_data['rango_edad'], date_col="Año", value_col="Viajeros", group_col="Rango de Edad", share_col="Participación (%)", decimal_places=1, title="Rango de edad del viajero promedio", group_label="Rango de edad", value_label="Viajeros", share_label="Participación (%)")
-
-            # Motivo viaje
-            # Stacked H
-            fig_stacked_h_motivo_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['motivo_viaje'], date_col='Año', group_col='Motivo de Viaje', share_col='Participación (%)', decimal_places=1, title='Motivo de viaje del viajero', y_label=' Año', legend_title=" ")
-            # Treemap
-            fig_treemap_motivo_viajeros = plotly_analitica.plot_treemap(df = df_global_data['motivo_viaje'], date_col="Año", value_col="Viajeros", group_col="Motivo de Viaje", share_col="Participación (%)", decimal_places=1, title="Motivo de viaje del viajero", group_label="Motivo", value_label="Viajeros", share_label="Participación (%)")
-
-            # Forma de viaje
-            # Stacked H
-            fig_stacked_h_forma_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['forma_viaje'], date_col='Año', group_col='Forma de Viaje', share_col='Participación (%)', decimal_places=1, title='Forma de viaje del viajero', y_label=' Año', legend_title=" ")
-            # Treemap
-            fig_treemap_forma_viajeros = plotly_analitica.plot_treemap(df = df_global_data['forma_viaje'], date_col="Año", value_col="Viajeros", group_col="Forma de Viaje", share_col="Participación (%)", decimal_places=1, title="Forma de viaje del viajero", group_label="Forma", value_label="Viajeros", share_label="Participación (%)") 
-
-            # Destinos
-            # Stacked H
-            fig_stacked_h_destinos_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['destinos_internacionales_top5'], date_col='Año', group_col='País Destino', share_col='Participación (%)', decimal_places=1, title='Principales destinos internacionales', y_label=' Año', legend_title=" ")
-            # Treemap
-            fig_treemap_destinos_viajeros = plotly_analitica.plot_treemap(df = df_global_data['destinos_internacionales_top5'], date_col="Año", value_col="Viajeros", group_col="País Destino", share_col="Participación (%)", decimal_places=1, title="Principales destinos internacionales", group_label="País", value_label="Viajeros", share_label="Participación (%)")
-
-            # Serie de tiempo de Reuniones, incentivos, congresos y exposiciones (MICE)
-            if 'Motivo de viaje' in df_global_data['flujos_negocios'].columns:
-                df_mice = df_global_data['flujos_negocios'][df_global_data['flujos_negocios']['Motivo de viaje'] == 'Reuniones, incentivos, congresos y exposiciones (MICE)']
-            else:
-                df_mice = pd.DataFrame()
-            fig_time_series_mice = plotly_analitica.plot_single_time_series(df=df_mice, date_col='Año', value_col='Viajeros', title="Flujos internacionales por motivo de negocios", x_label="Año", y_label="Viajeros", y_units=None, show_labels=True, decimal_places=0)
-
-            # Guardar todo en session_state
-            st.session_state['graficos_global_data'] = {
-                'fig_time_series_viajeros': fig_time_series_viajeros,
-                'fig_stacked_h_medio_viajeros': fig_stacked_h_medio_viajeros,
-                'fig_treemap_medio_viajeros': fig_treemap_medio_viajeros,
-                'fig_time_series_noches_percnotacion': fig_time_series_noches_percnotacion,
-                'fig_time_series_gasto': fig_time_series_gasto,
-                'fig_stacked_h_categoria_gasto': fig_stacked_h_categoria_gasto,
-                'fig_treemap_categoria_gasto': fig_treemap_categoria_gasto,
-                'fig_stacked_h_edad_viajeros': fig_stacked_h_edad_viajeros,
-                'fig_treemap_edad_viajeros': fig_treemap_edad_viajeros,
-                'fig_stacked_h_motivo_viajeros': fig_stacked_h_motivo_viajeros,
-                'fig_treemap_motivo_viajeros': fig_treemap_motivo_viajeros,
-                'fig_stacked_h_forma_viajeros': fig_stacked_h_forma_viajeros,
-                'fig_treemap_forma_viajeros': fig_treemap_forma_viajeros,
-                'fig_stacked_h_destinos_viajeros': fig_stacked_h_destinos_viajeros,
-                'fig_treemap_destinos_viajeros': fig_treemap_destinos_viajeros,
-                'fig_time_series_mice': fig_time_series_mice
-            }
-
-            # Return de los gráficos 
-            return (   
-                    st.session_state['graficos_global_data']['fig_time_series_viajeros'],
-                    st.session_state['graficos_global_data']['fig_stacked_h_medio_viajeros'],
-                    st.session_state['graficos_global_data']['fig_treemap_medio_viajeros'],
-                    st.session_state['graficos_global_data']['fig_time_series_noches_percnotacion'],
-                    st.session_state['graficos_global_data']['fig_time_series_gasto'],
-                    st.session_state['graficos_global_data']['fig_stacked_h_categoria_gasto'],
-                    st.session_state['graficos_global_data']['fig_treemap_categoria_gasto'],
-                    st.session_state['graficos_global_data']['fig_stacked_h_edad_viajeros'],
-                    st.session_state['graficos_global_data']['fig_treemap_edad_viajeros'],
-                    st.session_state['graficos_global_data']['fig_stacked_h_motivo_viajeros'],
-                    st.session_state['graficos_global_data']['fig_treemap_motivo_viajeros'],
-                    st.session_state['graficos_global_data']['fig_stacked_h_forma_viajeros'],
-                    st.session_state['graficos_global_data']['fig_treemap_forma_viajeros'],
-                    st.session_state['graficos_global_data']['fig_stacked_h_destinos_viajeros'],
-                    st.session_state['graficos_global_data']['fig_treemap_destinos_viajeros'],
-                    st.session_state['graficos_global_data']['fig_time_series_mice']                                           
-                )
-    else:
-         # Si ya están cargados, se devuelven directamente
-        return(
-            st.session_state['graficos_global_data']['fig_time_series_viajeros'],
-            st.session_state['graficos_global_data']['fig_stacked_h_medio_viajeros'],
-            st.session_state['graficos_global_data']['fig_treemap_medio_viajeros'],
-            st.session_state['graficos_global_data']['fig_time_series_noches_percnotacion'],
-            st.session_state['graficos_global_data']['fig_time_series_gasto'],
-            st.session_state['graficos_global_data']['fig_stacked_h_categoria_gasto'],
-            st.session_state['graficos_global_data']['fig_treemap_categoria_gasto'],
-            st.session_state['graficos_global_data']['fig_stacked_h_edad_viajeros'],
-            st.session_state['graficos_global_data']['fig_treemap_edad_viajeros'],
-            st.session_state['graficos_global_data']['fig_stacked_h_motivo_viajeros'],
-            st.session_state['graficos_global_data']['fig_treemap_motivo_viajeros'],
-            st.session_state['graficos_global_data']['fig_stacked_h_forma_viajeros'],
-            st.session_state['graficos_global_data']['fig_treemap_forma_viajeros'],
-            st.session_state['graficos_global_data']['fig_stacked_h_destinos_viajeros'],
-            st.session_state['graficos_global_data']['fig_treemap_destinos_viajeros'],
-            st.session_state['graficos_global_data']['fig_time_series_mice']
-
-        )
-
-# Función para obtener los gráficos de OAG de conectividad con el mundo
-def obtener_graficos_oag_mundo(df_oag, _pais_elegido):
-      
-    """
-    Comprueba en 'st.session_state' si ya están almacenados los gráficos de OAG Mundo 
-    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
-    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
-
-    Parámetros:
-    -----------
-    df_oag : dict de DataFrames
-        Estructura que contiene los DataFrames de OAG (p. ej. 'frecuencias', 'sillas gasto_categoria', etc.).
-    _pais_elegido : str
-        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
-    """
-
-    # Verificar si ya existen gráficos en session_state y son del mismo país
-    if 'graficos_oag_mundo' not in st.session_state \
-       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
-        
-            # Single Bar Chart: Conectividad del país con el mundo: Sillas
-            fig_single_barchart_conectividad_mundo_sillas = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_mundo_serie_tiempo'], date_col='Año', value_col='Sillas', title='Conectividad del país con el mundo: Sillas', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
-
-            # Single Bar Chart Conectividad del país con el mundo: Frencuencias 
-            fig_single_barchart_conectividad_mundo_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_mundo_serie_tiempo'], date_col='Año', value_col='Frecuencias', title='Conectividad del país con el mundo: Frencuencias', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
-            
-            # StackedH: Conectividad mundo cerrado destinos: Frecuencias
-            fig_stacked_h_conectividad_frecuencias_destinos_cerrado = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_mundo_destino_cerrado'], date_col='Año', group_col='País Destino', share_col='Participación Frecuencias (%)', decimal_places=1, title='Conectividad mundo cerrado destinos: Frecuencias', y_label=' Año', legend_title=" ")
-
-            # StackedH: Conectividad mundo corrido destinos: Frecuencias
-            fig_stacked_h_conectividad_frecuencias_destinos_corrido = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_mundo_destino_corrido'], date_col='Periodo', group_col='País Destino', share_col='Participación Frecuencias (%)', decimal_places=1, title='Conectividad mundo corrido destinos: Frecuencias', y_label=' Año', legend_title=" ")
-
-            # Guardar todo en session_state
-            st.session_state['graficos_oag_mundo'] = {
-                'fig_single_barchart_conectividad_mundo_sillas': fig_single_barchart_conectividad_mundo_sillas,
-                'fig_single_barchart_conectividad_mundo_frecuencias': fig_single_barchart_conectividad_mundo_frecuencias,
-                'fig_stacked_h_conectividad_frecuencias_destinos_cerrado': fig_stacked_h_conectividad_frecuencias_destinos_cerrado,
-                'fig_stacked_h_conectividad_frecuencias_destinos_corrido': fig_stacked_h_conectividad_frecuencias_destinos_corrido
-            }
-
-            # Return de los gráficos 
-            return (
-                    st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_sillas'],
-                    st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_frecuencias'],
-                    st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_cerrado'],
-                    st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_corrido']
-                )
-    else:
-         # Si ya están cargados, se devuelven directamente
-         return(
-            st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_sillas'],
-            st.session_state['graficos_oag_mundo']['fig_single_barchart_conectividad_mundo_frecuencias'],
-            st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_cerrado'],
-            st.session_state['graficos_oag_mundo']['fig_stacked_h_conectividad_frecuencias_destinos_corrido']
-         )
-
-# Función para obtener los gráficos de Forward Keys de búsquedas y reservas con el mundo
-
-def obtener_graficos_fk_mundo(df_fk, _pais_elegido):
-      
-    """
-    Comprueba en 'st.session_state' si ya están almacenados los gráficos de Forward Keys Mundo 
-    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
-    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
-
-    Parámetros:
-    -----------
-    df_fk : dict de DataFrames
-        Estructura que contiene los DataFrames de FK (p. ej. 'reservas', 'búsquedas', etc.).
-    _pais_elegido : str
-        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
-    """
-
-    # Verificar si ya existen gráficos en session_state y son del mismo país
-    if 'graficos_fk_mundo' not in st.session_state \
-       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
-        
-            # Reservas activas del país hacia México, Costa Rica, Perú y Chile
-            fig_multiple_time_series_reservas_mundo = plotly_analitica.plot_multiple_time_series(df=df_fk['reservas_serie_tiempo'], date_col='Fecha', value_col='Reservas', group_col='País', title='Reservas aéreas activas del país hacia México, Costa Rica, Perú y Chile', x_label="Año", y_label="Reservas", y_units=None, show_labels=True, decimal_places=0, legend_title=None)
-
-            # Búsquedas activas del país hacia México, Costa Rica, Perú y Chile
-            fig_multiple_time_series_busquedas_mundo = plotly_analitica.plot_multiple_time_series(df=df_fk['busquedas_serie_tiempo'], date_col='Fecha', value_col='Búsquedas', group_col='País', title='Búsquedas aéreas activas del país hacia México, Costa Rica, Perú y Chile', x_label="Año", y_label="Búsquedas", y_units=None, show_labels=True, decimal_places=0, legend_title=None)
-
-            # Guardar todo en session_state
-            st.session_state['graficos_fk_mundo'] = {
-                'fig_multiple_time_series_reservas_mundo': fig_multiple_time_series_reservas_mundo,
-                'fig_multiple_time_series_busquedas_mundo': fig_multiple_time_series_busquedas_mundo
-            }
-
-            # Return de los gráficos
-            return (
-                    st.session_state['graficos_fk_mundo']['fig_multiple_time_series_reservas_mundo'],
-                    st.session_state['graficos_fk_mundo']['fig_multiple_time_series_busquedas_mundo']
-                )
-    else:
-         # Si ya están cargados, se devuelven directamente
-         return(
-            st.session_state['graficos_fk_mundo']['fig_multiple_time_series_reservas_mundo'],
-            st.session_state['graficos_fk_mundo']['fig_multiple_time_series_busquedas_mundo']
-         )
-
-# Función para obtener los gráficos de OAG de conetividad con Colombia
-
-def obtener_graficos_oag_colombia(df_oag, _pais_elegido):
-      
-    """
-    Comprueba en 'st.session_state' si ya están almacenados los gráficos de OAG Colombia 
-    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
-    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
-
-    Parámetros:
-    -----------
-    df_oag : dict de DataFrames
-        Estructura que contiene los DataFrames de OAG (p. ej. 'frecuencias', 'sillas', etc.).
-    _pais_elegido : str
-        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
-    """
-
-    # Verificar si ya existen gráficos en session_state y son del mismo país
-    if 'graficos_oag_colombia' not in st.session_state \
-       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
-    
-            # Single Bar Chart: Conectividad del país con Colombia: Sillas
-            fig_single_barchart_conectividad_colombia_sillas = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_colombia_serie_tiempo'], date_col='Año', value_col='Sillas', title='Conectividad del país con Colombia: Sillas', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
-
-            # Single Bar Chart Conectividad del país con Colombia: Frencuencias 
-            fig_single_barchart_conectividad_colombia_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_colombia_serie_tiempo'], date_col='Año', value_col='Frecuencias', title='Conectividad del país con Colombia: Frecuencias', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
-            
-            # StackedH: Conectividad Colombia cerrado destinos: Frecuencias
-            fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_colombia_municipio_cerrado'], date_col='Año', group_col='Municipio Destino', share_col='Participación Frecuencias (%)', decimal_places=1, title='Conectividad mundo cerrado municipios: Frecuencias', y_label=' Año', legend_title=" ")
-
-            # StackedH: Conectividad Colombia corrido destinos: Frecuencias
-            fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_colombia_municipio_corrido'], date_col='Periodo', group_col='Municipio Destino', share_col='Participación Frecuencias (%)', decimal_places=1, title='Conectividad mundo corrido municipios: Frecuencias', y_label=' Año', legend_title=" ")
-
-            # Guardar todo en session_state
-            st.session_state['graficos_oag_colombia'] = {
-                'fig_single_barchart_conectividad_colombia_sillas': fig_single_barchart_conectividad_colombia_sillas,
-                'fig_single_barchart_conectividad_colombia_frecuencias': fig_single_barchart_conectividad_colombia_frecuencias,
-                'fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado': fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado,
-                'fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido': fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido
-            }
-    
-            # Return de los gráficos en un diccionario
-            return (
-                    st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_sillas'],
-                    st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_frecuencias'],
-                    st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado'],
-                    st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido']
-                )
-    else:
-         # Si ya están cargados, se devuelven directamente
-         return(
-            st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_sillas'],
-            st.session_state['graficos_oag_colombia']['fig_single_barchart_conectividad_colombia_frecuencias'],
-            st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado'],
-            st.session_state['graficos_oag_colombia']['fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido']
-         )
-
-
-# Función para obtener los gráficos de Credibanco
-
-def obtener_graficos_credibanco(df_credibanco, _pais_elegido):
-      
-    """
-    Comprueba en 'st.session_state' si ya están almacenados los gráficos de Credibanco 
-    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
-    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
-
-    Parámetros:
-    -----------
-    df_credibanco : dict de DataFrames
-        Estructura que contiene los DataFrames de Credibanco (p. ej. 'gasto', 'tarjetas', etc.).
-    _pais_elegido : str
-        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
-    """
-
-    # Verificar si ya existen gráficos en session_state y son del mismo país
-    if 'graficos_credibanco' not in st.session_state \
-       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
-    
-            # Gasto promedio
-            fig_side_by_side_bar_gasto_promedio =  plotly_analitica.plot_side_by_side_bars(df=df_credibanco['gasto_promedio'], date_col='Año', var1_col='Gasto promedio tarjeta (USD)', var2_col='Gasto promedio transacción (USD)', title='Gasto promedio', x_label="Año", y_label="Gasto", y_units='USD', show_labels=True, decimal_places=0, legend_title=' ', legend_labels={'Gasto promedio tarjeta (USD)' : 'Gasto promedio por tarjeta', 'Gasto promedio transacción (USD)' : 'Gasto promedio por transacción'})
-
-            # Gasto por categoria
-            fig_stacked_h_gasto_categoria_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_categoria'], date_col='Año', group_col='Clasificación', share_col='Participación (%)', decimal_places=1, title='Gasto por categoria', y_label='Año', legend_title=" ")
-
-            # Gasto por categoria
-            fig_treemap_gasto_categoria_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_categoria'], date_col="Año", value_col="Facturación (USD)", group_col="Clasificación", share_col="Participación (%)", decimal_places=1, title="Gasto por categoria", group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
-
-            # Gasto por productos directo
-            fig_stacked_h_gasto_categoria_directo_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_producto_directo'], date_col='Año', group_col='Categoria', share_col='Participación (%)', decimal_places=1, title='Gasto por producto directo', y_label='Año', legend_title=" ")
-
-            # Gasto por producto directo
-            fig_treemap_gasto_categoria_directo_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_producto_directo'], date_col="Año", value_col="Facturación (USD)", group_col="Categoria", share_col="Participación (%)", decimal_places=1, title="Gasto por producto directo", group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
-
-            # Gasto por productos indirecto
-            fig_stacked_h_gasto_categoria_indirecto_credibanco = plotly_analitica.plot_stacked_bar_chart_h(df=df_credibanco['gasto_producto_indirecto'], date_col='Año', group_col='Categoria', share_col='Participación (%)', decimal_places=1, title='Gasto por producto indirecto', y_label='Año', legend_title=" ")
-
-            # Gasto por producto indirecto
-            fig_treemap_gasto_categoria_indirecto_credibanco = plotly_analitica.plot_treemap(df = df_credibanco['gasto_producto_indirecto'], date_col="Año", value_col="Facturación (USD)", group_col="Categoria", share_col="Participación (%)", decimal_places=1, title="Gasto por producto indirecto", group_label="Categoría", value_label="Facturación USD", share_label="Participación (%)")
-
-            # Guardar todo en session_state
-            st.session_state['graficos_credibanco'] = {
-                'fig_side_by_side_bar_gasto_promedio': fig_side_by_side_bar_gasto_promedio,
-                'fig_stacked_h_gasto_categoria_credibanco': fig_stacked_h_gasto_categoria_credibanco,
-                'fig_treemap_gasto_categoria_credibanco': fig_treemap_gasto_categoria_credibanco,
-                'fig_stacked_h_gasto_categoria_directo_credibanco': fig_stacked_h_gasto_categoria_directo_credibanco,
-                'fig_treemap_gasto_categoria_directo_credibanco': fig_treemap_gasto_categoria_directo_credibanco,
-                'fig_stacked_h_gasto_categoria_indirecto_credibanco': fig_stacked_h_gasto_categoria_indirecto_credibanco,
-                'fig_treemap_gasto_categoria_indirecto_credibanco': fig_treemap_gasto_categoria_indirecto_credibanco
-            }
-
-            # Return de los gráficos en un diccionario
-            return (
-                    st.session_state['graficos_credibanco']['fig_side_by_side_bar_gasto_promedio'],
-                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_credibanco'],
-                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_credibanco'],
-                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_directo_credibanco'],
-                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_directo_credibanco'],
-                    st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_indirecto_credibanco'],
-                    st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_indirecto_credibanco']
-                )
-    else:
-         # Si ya están cargados, se devuelven directamente
-         return(
-            st.session_state['graficos_credibanco']['fig_side_by_side_bar_gasto_promedio'],
-            st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_credibanco'],
-            st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_credibanco'],
-            st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_directo_credibanco'],
-            st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_directo_credibanco'],
-            st.session_state['graficos_credibanco']['fig_stacked_h_gasto_categoria_indirecto_credibanco'],
-            st.session_state['graficos_credibanco']['fig_treemap_gasto_categoria_indirecto_credibanco']
-         )
-
-# Función para obtener los gráficos de Forward Keys de búsquedas y reservas con Colombia
-
-def obtener_graficos_fk_colombia(df_fk, _pais_elegido):
-      
-    """
-    Comprueba en 'st.session_state' si ya están almacenados los gráficos de Forward Keys Colombia 
-    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
-    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
-
-    Parámetros:
-    -----------
-    df_fk : dict de DataFrames
-        Estructura que contiene los DataFrames de FK (p. ej. 'reservas', 'búsquedas', etc.).
-    _pais_elegido : str
-        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
-    """
-
-    # Verificar si ya existen gráficos en session_state y son del mismo país
-    if 'graficos_fk_colombia' not in st.session_state \
-       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
-         
-            # Reservas aéreas activas del país hacia Colombia
-            fig_single_time_series_reservas_colombia = plotly_analitica.plot_single_time_series(df=df_fk['reservas_serie_tiempo_colombia'], date_col='Fecha', value_col='Reservas', title="Reservas aéreas activas del país hacia Colombia", x_label="Año", y_label="Reservas", y_units=None, show_labels=True, decimal_places=0, mensual=True)
-
-            # Búsquedas activas del país hacia Colombia 
-            fig_single_time_series_busquedas_colombia = plotly_analitica.plot_single_time_series(df=df_fk['busquedas_serie_tiempo_colombia'], date_col='Fecha', value_col='Búsquedas', title="Búsquedas aéreas activas del país hacia hacia Colombia", x_label="Año", y_label="Búsquedas", y_units=None, show_labels=True, decimal_places=0, mensual=True)
-
-             # Guardar todo en session_state
-            st.session_state['graficos_fk_colombia'] = {
-                'fig_single_time_series_reservas_colombia': fig_single_time_series_reservas_colombia,
-                'fig_single_time_series_busquedas_colombia': fig_single_time_series_busquedas_colombia
-            }
-
-            # Return de los gráficos en un diccionario
-            return (
-                    st.session_state['graficos_fk_colombia']['fig_single_time_series_reservas_colombia'],
-                    st.session_state['graficos_fk_colombia']['fig_single_time_series_busquedas_colombia']
-                )
-    else:
-         # Si ya están cargados, se devuelven directamente
-         return(
-            st.session_state['graficos_fk_colombia']['fig_single_time_series_reservas_colombia'],
-            st.session_state['graficos_fk_colombia']['fig_single_time_series_busquedas_colombia']
-         )
-
-# Funciones para obtener los gráficos de IATA GAP de agencias que promocionan Colombia
-
-def obtener_graficos_iata_colombia(df_iata, _pais_elegido):
-      
-    """
-    Comprueba en 'st.session_state' si ya están almacenados los gráficos de IATA GAP Colombia 
-    para el país actual. Si no existen o el país cambió, se generan de nuevo y se guardan 
-    en session_state. Devuelve un diccionario con todos los objetos de gráfico.
-
-    Parámetros:
-    -----------
-    df_iata : dict de DataFrames
-        Estructura que contiene los DataFrames de IATA (p. ej. 'agencias', 'ciudades', etc.).
-    _pais_elegido : str
-        Nombre o ISO del país elegido (para saber cuándo cambiar los gráficos).
-    """
-
-    # Verificar si ya existen gráficos en session_state y son del mismo país
-    if 'graficos_iata_colombia' not in st.session_state \
-       or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
-
-            # Indicadores de agencias de ese mercado que venden Colombia como destino mostrar por q
-            fig_single_time_series_agencias_colombia = plotly_analitica.plot_single_time_series(df=df_iata['agencias_serie_tiempo'], date_col='Año', value_col='Número de Agencias', title="Agencias que venden Colombia como destino", x_label="Año", y_label="Agencias", y_units='Número', show_labels=True, decimal_places=0)
-
-            # Agencias que venden Colombia como destino por ciudad de la agencia 15
-            fig_stacked_h_agencias_ciudades = plotly_analitica.plot_stacked_bar_chart_h(df=df_iata['agencias_ciudades'], date_col='Año', group_col='Ciudad de la Agencia', share_col='Participación (%)', decimal_places=1, title='Agencias que venden Colombia como destino por ciudad de la agencia', y_label=' Año', legend_title=" ")
-
-            # Guardar todo en session_state
-            st.session_state['graficos_iata_colombia'] = {
-                'fig_single_time_series_agencias_colombia': fig_single_time_series_agencias_colombia,
-                'fig_stacked_h_agencias_ciudades': fig_stacked_h_agencias_ciudades
-            }
-
-            # Return de los gráficos en un diccionario
-            return (
-                    st.session_state['graficos_iata_colombia']['fig_single_time_series_agencias_colombia'],
-                    st.session_state['graficos_iata_colombia']['fig_stacked_h_agencias_ciudades']
-                )
-    else:
-         # Si ya están cargados, se devuelven directamente
-         return(
-            st.session_state['graficos_iata_colombia']['fig_single_time_series_agencias_colombia'],
-            st.session_state['graficos_iata_colombia']['fig_stacked_h_agencias_ciudades']
-         )
-
-
-# Función para Limpiar caches de dfs y gráficos al momento de elegir otro país
-def on_selectbox_change():
-    
-    # Limpia la caché de datos
-    st.cache_data.clear()
-
-    # Limpia la clave 'datos_cargados' (si existe) en session_state
-    if 'datos_cargados' in st.session_state:
-        del st.session_state['datos_cargados']
-    # Limpia la clave 'graficos_global_data' (si existe) en session_state
-    if 'graficos_global_data' in st.session_state:
-        del st.session_state['graficos_global_data']
-    # Limpia la clave 'graficos_oag_mundo' (si existe) en session_state
-    if 'graficos_oag_mundo' in st.session_state:
-        del st.session_state['graficos_oag_mundo']
-    # Limpia la clave 'graficos_fk_mundo' (si existe) en session_state
-    if 'graficos_fk_mundo' in st.session_state:
-        del st.session_state['graficos_fk_mundo']
-    # Limpia la clave 'graficos_oag_colombia' (si existe) en session_state
-    if 'graficos_oag_colombia' in st.session_state:
-        del st.session_state['graficos_oag_colombia']
-    # Limpia la clave 'graficos_credibanco' (si existe) en session_state
-    if 'graficos_credibanco' in st.session_state:
-        del st.session_state['graficos_credibanco']
-    # Limpia la clave 'graficos_fk_colombia' (si existe) en session_state
-    if 'graficos_fk_colombia' in st.session_state:
-        del st.session_state['graficos_fk_colombia']
-    # Limpia la clave 'graficos_iata_colombia' (si existe) en session_state
-    if 'graficos_iata_colombia' in st.session_state:
-        del st.session_state['graficos_iata_colombia']

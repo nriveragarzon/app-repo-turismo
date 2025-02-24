@@ -12,7 +12,7 @@ locale.setlocale(locale.LC_ALL, "es_ES.UTF-8")
 st.set_page_config(page_title="Centro de Inteligencia de Turismo", 
                    page_icon = ':world_map', 
                    layout="wide",  
-                   initial_sidebar_state="collapsed")
+                   initial_sidebar_state="expanded")
 
 # Inclusión de la hoja de estilos de Bootstrap para mejorar la apariencia.
 st.markdown("""
@@ -35,5 +35,14 @@ if st.query_params.page == '2':
 if st.query_params.page == '3':
     st.switch_page("pages/fuentes.py")
 
-# Mostrar contenido de la página inicial
-streamlit_analitica.home_page()
+# Estructura
+leftsidebar, body, rightsidebar = st.columns([0.01,0.98, 0.01], gap='small',vertical_alignment='top')
+
+# Aprovechar el máximo espacio horizontal de la pantalla
+with body:
+    
+    # Mostrar contenido de la página inicial
+    streamlit_analitica.home_page()
+
+# Agregar footer
+streamlit_analitica.footer()
