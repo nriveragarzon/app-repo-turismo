@@ -100,13 +100,13 @@ def obtener_graficos_global_data(df_global_data, _pais_elegido):
        or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
 
             # Serie de tiempo de viajeros
-            fig_time_series_viajeros = plotly_analitica.plot_single_time_series(df=df_global_data['viajeros_serie_tiempo'], date_col='Año', value_col='Viajeros', x_label="Año", y_label="Viajeros", y_units=None, show_labels=True, decimal_places=0)
+            fig_time_series_viajeros = plotly_analitica.plot_single_time_series(df=df_global_data['viajeros_serie_tiempo'], date_col='Año', value_col='Viajeros', x_label="Año", y_label="Viajeros (miles)", y_units=None, show_labels=True, decimal_places=0)
 
             # Viajeros por medio de transporte
             # Stacked H
             fig_stacked_h_medio_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['viajeros_medio'], date_col='Año', group_col='Medio de transporte', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
             # Treemap
-            fig_treemap_medio_viajeros = plotly_analitica.plot_treemap(df = df_global_data['viajeros_medio'], date_col="Año", value_col="Viajeros", group_col="Medio de transporte", share_col="Participación (%)",decimal_places=1, group_label="Medio", value_label="Viajeros", share_label="Participación (%)")
+            fig_treemap_medio_viajeros = plotly_analitica.plot_treemap(df = df_global_data['viajeros_medio'], date_col="Año", value_col="Viajeros", group_col="Medio de transporte", share_col="Participación (%)",decimal_places=1, group_label="Medio", value_label="Viajeros (miles)", share_label="Participación (%)")
 
             # Serie de tiempo noches de pernoctación
             fig_time_series_noches_percnotacion = plotly_analitica.plot_single_time_series(df=df_global_data['noches_pernoctacion'], date_col='Año', value_col='Noches de percnotación', x_label="Año", y_label="Noches promedio", y_units=None, show_labels=True, decimal_places=0)
@@ -118,38 +118,38 @@ def obtener_graficos_global_data(df_global_data, _pais_elegido):
             # Stacked H
             fig_stacked_h_categoria_gasto = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['gasto_categoria'], date_col='Año', group_col='Categoria de Gasto', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
             # Treemap
-            fig_treemap_categoria_gasto = plotly_analitica.plot_treemap(df = df_global_data['gasto_categoria'], date_col="Año", value_col="Gasto (USD)", group_col="Categoria de Gasto", share_col="Participación (%)", decimal_places=1, group_label="Categoria", value_label="Gasto", share_label="Participación (%)")
+            fig_treemap_categoria_gasto = plotly_analitica.plot_treemap(df = df_global_data['gasto_categoria'], date_col="Año", value_col="Gasto (USD)", group_col="Categoria de Gasto", share_col="Participación (%)", decimal_places=1, group_label="Categoria", value_label="Gasto (USD)", share_label="Participación (%)")
 
             # Viajeros por edad
             # Stacked H
             fig_stacked_h_edad_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['rango_edad'], date_col='Año', group_col='Rango de Edad', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
             # Treemap
-            fig_treemap_edad_viajeros = plotly_analitica.plot_treemap(df = df_global_data['rango_edad'], date_col="Año", value_col="Viajeros", group_col="Rango de Edad", share_col="Participación (%)", decimal_places=1, group_label="Rango de edad", value_label="Viajeros", share_label="Participación (%)")
+            fig_treemap_edad_viajeros = plotly_analitica.plot_treemap(df = df_global_data['rango_edad'], date_col="Año", value_col="Viajeros", group_col="Rango de Edad", share_col="Participación (%)", decimal_places=1, group_label="Rango de edad", value_label="Viajeros (miles)", share_label="Participación (%)")
 
             # Motivo viaje
             # Stacked H
             fig_stacked_h_motivo_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['motivo_viaje'], date_col='Año', group_col='Motivo de Viaje', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
             # Treemap
-            fig_treemap_motivo_viajeros = plotly_analitica.plot_treemap(df = df_global_data['motivo_viaje'], date_col="Año", value_col="Viajeros", group_col="Motivo de Viaje", share_col="Participación (%)", decimal_places=1, group_label="Motivo", value_label="Viajeros", share_label="Participación (%)")
+            fig_treemap_motivo_viajeros = plotly_analitica.plot_treemap(df = df_global_data['motivo_viaje'], date_col="Año", value_col="Viajeros", group_col="Motivo de Viaje", share_col="Participación (%)", decimal_places=1, group_label="Motivo", value_label="Viajeros (miles)", share_label="Participación (%)")
 
             # Forma de viaje
             # Stacked H
             fig_stacked_h_forma_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['forma_viaje'], date_col='Año', group_col='Forma de Viaje', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
             # Treemap
-            fig_treemap_forma_viajeros = plotly_analitica.plot_treemap(df = df_global_data['forma_viaje'], date_col="Año", value_col="Viajeros", group_col="Forma de Viaje", share_col="Participación (%)", decimal_places=1, group_label="Forma", value_label="Viajeros", share_label="Participación (%)") 
+            fig_treemap_forma_viajeros = plotly_analitica.plot_treemap(df = df_global_data['forma_viaje'], date_col="Año", value_col="Viajeros", group_col="Forma de Viaje", share_col="Participación (%)", decimal_places=1, group_label="Forma", value_label="Viajeros (miles)", share_label="Participación (%)") 
 
             # Destinos
             # Stacked H
             fig_stacked_h_destinos_viajeros = plotly_analitica.plot_stacked_bar_chart_h(df=df_global_data['destinos_internacionales_top5'], date_col='Año', group_col='País Destino', share_col='Participación (%)', decimal_places=1, y_label=' Año', legend_title=" ")
             # Treemap
-            fig_treemap_destinos_viajeros = plotly_analitica.plot_treemap(df = df_global_data['destinos_internacionales_top5'], date_col="Año", value_col="Viajeros", group_col="País Destino", share_col="Participación (%)", decimal_places=1, group_label="País", value_label="Viajeros", share_label="Participación (%)")
+            fig_treemap_destinos_viajeros = plotly_analitica.plot_treemap(df = df_global_data['destinos_internacionales_top5'], date_col="Año", value_col="Viajeros", group_col="País Destino", share_col="Participación (%)", decimal_places=1, group_label="País", value_label="Viajeros (miles)", share_label="Participación (%)")
 
             # Serie de tiempo de Reuniones, incentivos, congresos y exposiciones (MICE)
             if 'Motivo de viaje' in df_global_data['flujos_negocios'].columns:
                 df_mice = df_global_data['flujos_negocios'][df_global_data['flujos_negocios']['Motivo de viaje'] == 'Reuniones, incentivos, congresos y exposiciones (MICE)']
             else:
                 df_mice = pd.DataFrame()
-            fig_time_series_mice = plotly_analitica.plot_single_time_series(df=df_mice, date_col='Año', value_col='Viajeros', x_label="Año", y_label="Viajeros", y_units=None, show_labels=True, decimal_places=0)
+            fig_time_series_mice = plotly_analitica.plot_single_time_series(df=df_mice, date_col='Año', value_col='Viajeros', x_label="Año", y_label="Viajeros (miles)", y_units=None, show_labels=True, decimal_places=0)
 
             # Guardar todo en session_state
             st.session_state['graficos_global_data'] = {
@@ -236,7 +236,7 @@ def obtener_graficos_oag_mundo(df_oag, _pais_elegido):
             fig_single_barchart_conectividad_mundo_sillas = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_mundo_serie_tiempo'], date_col='Año', value_col='Sillas', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
 
             # Single Bar Chart Conectividad del país con el mundo: Frencuencias 
-            fig_single_barchart_conectividad_mundo_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_mundo_serie_tiempo'], date_col='Año', value_col='Frecuencias', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
+            fig_single_barchart_conectividad_mundo_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_mundo_serie_tiempo'], date_col='Año', value_col='Frecuencias', x_label="Año", y_label="Frecuencias", y_units=None, show_labels=True, decimal_places=0)
             
             # StackedH: Conectividad mundo cerrado destinos: Frecuencias
             fig_stacked_h_conectividad_frecuencias_destinos_cerrado = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_mundo_destino_cerrado'], date_col='Año', group_col='País Destino', share_col='Participación Frecuencias (%)', decimal_places=1, y_label=' Año', legend_title=" ")
@@ -338,7 +338,7 @@ def obtener_graficos_oag_colombia(df_oag, _pais_elegido):
             fig_single_barchart_conectividad_colombia_sillas = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_colombia_serie_tiempo'], date_col='Año', value_col='Sillas', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
 
             # Single Bar Chart Conectividad del país con Colombia: Frencuencias 
-            fig_single_barchart_conectividad_colombia_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_colombia_serie_tiempo'], date_col='Año', value_col='Frecuencias', x_label="Año", y_label="Sillas", y_units=None, show_labels=True, decimal_places=0)
+            fig_single_barchart_conectividad_colombia_frecuencias = plotly_analitica.plot_single_bar_chart(df=df_oag['conectividad_colombia_serie_tiempo'], date_col='Año', value_col='Frecuencias', x_label="Año", y_label="Frecuencias", y_units=None, show_labels=True, decimal_places=0)
             
             # StackedH: Conectividad Colombia cerrado destinos: Frecuencias
             fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado = plotly_analitica.plot_stacked_bar_chart_h(df=df_oag['conectividad_colombia_municipio_cerrado'], date_col='Año', group_col='Municipio Destino', share_col='Participación Frecuencias (%)', decimal_places=1, y_label=' Año', legend_title=" ")
@@ -468,10 +468,10 @@ def obtener_graficos_fk_colombia(df_fk, _pais_elegido):
        or st.session_state['datos_cargados'].get('pais') != _pais_elegido:
          
             # Reservas aéreas activas del país hacia Colombia
-            fig_single_time_series_reservas_colombia = plotly_analitica.plot_single_time_series(df=df_fk['reservas_serie_tiempo_colombia'], date_col='Fecha', value_col='Reservas', x_label="Año", y_label="Reservas", y_units=None, show_labels=True, decimal_places=0, mensual=True)
+            fig_single_time_series_reservas_colombia = plotly_analitica.plot_multiple_time_series(df=df_fk['reservas_serie_tiempo_colombia'], date_col='Fecha', value_col='Reservas', group_col='País', x_label="Año", y_label="Reservas", y_units=None, show_labels=True, decimal_places=0, legend_title=None)
 
             # Búsquedas activas del país hacia Colombia 
-            fig_single_time_series_busquedas_colombia = plotly_analitica.plot_single_time_series(df=df_fk['busquedas_serie_tiempo_colombia'], date_col='Fecha', value_col='Búsquedas', x_label="Año", y_label="Búsquedas", y_units=None, show_labels=True, decimal_places=0, mensual=True)
+            fig_single_time_series_busquedas_colombia = plotly_analitica.plot_multiple_time_series(df=df_fk['busquedas_serie_tiempo_colombia'], date_col='Fecha', value_col='Búsquedas', group_col='País', x_label="Año", y_label="Búsquedas", y_units=None, show_labels=True, decimal_places=0, legend_title=None)
 
              # Guardar todo en session_state
             st.session_state['graficos_fk_colombia'] = {

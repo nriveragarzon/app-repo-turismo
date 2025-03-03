@@ -9,8 +9,8 @@ import locale
 locale.setlocale(locale.LC_ALL, "es_ES.UTF-8")
 
 # Configuración página web - tipo wide sin sidebar activa
-st.set_page_config(page_title="Centro de Inteligencia de Turismo", 
-                   page_icon = ':world_map', 
+st.set_page_config(page_title="Inicio", 
+                   page_icon = ':airplane_arriving:', 
                    layout="wide",  
                    initial_sidebar_state="expanded")
 

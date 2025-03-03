@@ -312,7 +312,7 @@ def plot_stacked_bar_chart_h(df, date_col, group_col, share_col,
         fig.update_layout(
             barmode='stack',
             xaxis=dict(title="Participación (%)"),
-            yaxis=dict(title=y_label_text, categoryorder='category ascending'),
+            yaxis=dict(title=y_label_text, categoryorder='category ascending', tickmode="array",  tickvals=df[date_col].unique(),  ticktext=df[date_col].unique()),
             legend_title=legend_title if legend_title else "Categoría""Categorías",
             legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
         )

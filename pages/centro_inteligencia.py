@@ -9,8 +9,8 @@ import src.streamlit_analitica as streamlit_analitica
 import src.snowflake_analitica as snowflake_analitica
 
 # Configuración página web - tipo wide sin sidebar activa
-st.set_page_config(page_title="Dashboard", 
-                   page_icon = ':beach_with_umbrella:', 
+st.set_page_config(page_title="Centro de Inteligencia de Turismo Internacional", 
+                   page_icon = ':world_map:', 
                    layout="wide",  
                    initial_sidebar_state="expanded")
 
@@ -137,19 +137,19 @@ with body:
             ## **Tabla de Contenido**
 
             ### **Indicadores de turismo de {pais_elegido} hacia el mundo**
-            - [Flujo de viajeros de {pais_elegido} hacia el mundo](#flujos-de-viajeros-hacia-el-mundo)
-            - [Conectividad de {pais_elegido} con el mundo](#conectividad-con-el-mundo)
-            - [Reservas y Búsquedas de {pais_elegido} hacia México, Costa Rica, Perú y Chile](#reservas-y-busquedas-hacia-mexico-costa-rica-peru-y-chile)
+            - [Flujos de viajeros hacia el mundo](#flujos-de-viajeros-hacia-el-mundo)
+            - [Conectividad con el mundo](#conectividad-con-el-mundo)
+            - [Reservas y Búsquedas hacia México, Costa Rica, Perú y Chile](#reservas-y-busquedas-hacia-mexico-costa-rica-peru-y-chile)
 
             ### **Indicadores de turismo de {pais_elegido} hacia Colombia**
-            - [Flujo de viajeros de {pais_elegido} hacia Colombia](#flujos-de-viajeros-hacia-colombia)
-            - [Conectividad de {pais_elegido} con Colombia](#conectividad-con-colombia)
-            - [Gasto de los turistas de {pais_elegido} con tarjeta de crédito en Colombia](#gasto-con-tarjeta-de-credito-en-colombia)
-            - [Reservas y Búsquedas de {pais_elegido} hacia Colombia](#reservas-y-busquedas-hacia-colombia)
-            - [Agencias de {pais_elegido} que venden Colombia como destino](#agencias-que-venden-colombia-como-destino)
+            - [Flujos de viajeros hacia Colombia](#flujos-de-viajeros-hacia-colombia)
+            - [Conectividad con Colombia](#conectividad-con-colombia)
+            - [Gasto con tarjeta de crédito en Colombia](#gasto-con-tarjeta-de-credito-en-colombia)
+            - [Reservas y Búsquedas hacia Colombia](#reservas-y-busquedas-hacia-colombia)
+            - [Agencias que venden Colombia como destino](#agencias-que-venden-colombia-como-destino)
 
             ### **Salida de colombianos hacia {pais_elegido}**
-            - [Salida de colombianos hacia {pais_elegido}](#salida-de-colombianos-hacia-el-mercado)
+            - [Salida de colombianos hacia el mercado](#salida-de-colombianos-hacia-el-mercado)
             """)
             
             ###################################################
@@ -217,7 +217,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_time_series_viajeros, fuente=global_data_fuente, llave='graph_1')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Viajeros', llave='boton_1', unidad=pais_elegido, df=df_global_data['viajeros_serie_tiempo'][['Año', 'Viajeros']])
+                        if not df_global_data['viajeros_serie_tiempo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Viajeros (miles)', llave='boton_1', unidad=pais_elegido, df=df_global_data['viajeros_serie_tiempo'][['Año', 'Viajeros']])
                     with col2: 
                         # Título
                         st.markdown(f'<h6 class="custom-header" style="text-align:center;">Flujo de viajeros de {pais_elegido} hacia el mundo por medio de transporte</h6>', unsafe_allow_html=True)
@@ -232,7 +233,8 @@ with body:
                                 # Gráfico
                                 streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_medio_viajeros, fuente=global_data_fuente, llave='graph_3')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Viajeros por medio de transporte', llave='boton_2', unidad=pais_elegido, df=df_global_data['viajeros_medio'][['Año', 'Medio de transporte', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['viajeros_medio'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Viajeros (miles) por medio de transporte', llave='boton_2', unidad=pais_elegido, df=df_global_data['viajeros_medio'][['Año', 'Medio de transporte', 'Viajeros', 'Participación (%)']])
 
                 # Contenedor con la estructura: Gráfico único en el centro
                 with st.container(height = 625, border=True):
@@ -243,7 +245,8 @@ with body:
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_time_series_noches_percnotacion, fuente=global_data_fuente, llave='graph_4')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Noches de percnotación', llave='boton_3', unidad=pais_elegido, df=df_global_data['noches_pernoctacion'][['Año', 'Noches de percnotación']])
+                    if not df_global_data['noches_pernoctacion'].empty:
+                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Noches de percnotación', llave='boton_3', unidad=pais_elegido, df=df_global_data['noches_pernoctacion'][['Año', 'Noches de percnotación']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y botones de cambio a la derecha
                 with st.container(height = 625):
@@ -260,7 +263,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_time_series_gasto, fuente=global_data_fuente, llave='graph_5')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Gasto (USD)', llave='boton_4', unidad=pais_elegido, df=df_global_data['gasto_serie_tiempo'][['Año', 'Gasto (USD)']])
+                        if not df_global_data['gasto_serie_tiempo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Gasto (USD)', llave='boton_4', unidad=pais_elegido, df=df_global_data['gasto_serie_tiempo'][['Año', 'Gasto (USD)']])
                     with col2: 
                         # Título
                         st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto promedio del viajero de {pais_elegido} al mundo por categoria</h6>', unsafe_allow_html=True)
@@ -275,7 +279,8 @@ with body:
                                 # Gráfico
                                 streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_categoria_gasto, fuente=global_data_fuente, llave='graph_7')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Categoria de Gasto (USD)', llave='boton_5', unidad=pais_elegido, df=df_global_data['gasto_categoria'][['Año', 'Categoria de Gasto', 'Gasto (USD)', 'Participación (%)']])
+                        if not df_global_data['gasto_categoria'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Categoria de Gasto (USD)', llave='boton_5', unidad=pais_elegido, df=df_global_data['gasto_categoria'][['Año', 'Categoria de Gasto', 'Gasto (USD)', 'Participación (%)']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
@@ -291,14 +296,16 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_edad_viajeros, fuente=global_data_fuente, llave='graph_8')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Rango de edad del viajero promedio', llave='boton_6', unidad=pais_elegido, df=df_global_data['rango_edad'][['Año', 'Rango de Edad', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['rango_edad'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Rango de edad del viajero (miles) promedio', llave='boton_6', unidad=pais_elegido, df=df_global_data['rango_edad'][['Año', 'Rango de Edad', 'Viajeros', 'Participación (%)']])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_edad_viajeros, fuente=global_data_fuente, llave='graph_9')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Rango de edad del viajero promedio', llave='boton_7', unidad=pais_elegido, df=df_global_data['rango_edad'][['Año', 'Rango de Edad', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['rango_edad'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Rango de edad del viajero (miles) promedio', llave='boton_7', unidad=pais_elegido, df=df_global_data['rango_edad'][['Año', 'Rango de Edad', 'Viajeros', 'Participación (%)']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
@@ -315,14 +322,16 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_motivo_viajeros, fuente=global_data_fuente, llave='graph_10')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Motivo de Viaje', llave='boton_8', unidad=pais_elegido, df=df_global_data['motivo_viaje'][['Año', 'Motivo de Viaje', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['motivo_viaje'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Motivo de Viaje - Viajeros (miles)', llave='boton_8', unidad=pais_elegido, df=df_global_data['motivo_viaje'][['Año', 'Motivo de Viaje', 'Viajeros', 'Participación (%)']])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_motivo_viajeros, fuente=global_data_fuente, llave='graph_11')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Motivo de Viaje', llave='boton_9', unidad=pais_elegido, df=df_global_data['motivo_viaje'][['Año', 'Motivo de Viaje', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['motivo_viaje'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Motivo de Viaje - Viajeros (miles)', llave='boton_9', unidad=pais_elegido, df=df_global_data['motivo_viaje'][['Año', 'Motivo de Viaje', 'Viajeros', 'Participación (%)']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
@@ -339,14 +348,16 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_forma_viajeros, fuente=global_data_fuente, llave='graph_12')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Forma de Viaje', llave='boton_10', unidad=pais_elegido, df=df_global_data['forma_viaje'][['Año', 'Forma de Viaje', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['forma_viaje'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Forma de Viaje - Viajeros (miles)', llave='boton_10', unidad=pais_elegido, df=df_global_data['forma_viaje'][['Año', 'Forma de Viaje', 'Viajeros', 'Participación (%)']])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_forma_viajeros, fuente=global_data_fuente, llave='graph_13')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Forma de Viaje', llave='boton_11', unidad=pais_elegido, df=df_global_data['forma_viaje'][['Año', 'Forma de Viaje', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['forma_viaje'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Forma de Viaje - Viajeros (miles)', llave='boton_11', unidad=pais_elegido, df=df_global_data['forma_viaje'][['Año', 'Forma de Viaje', 'Viajeros', 'Participación (%)']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
@@ -363,14 +374,16 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_destinos_viajeros, fuente=global_data_fuente, llave='graph_14')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Principales destinos internacionales', llave='boton_12', unidad=pais_elegido, df=df_global_data['destinos_internacionales_top5'][['Año', 'País Destino', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['destinos_internacionales_top5'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Principales destinos internacionales', llave='boton_12', unidad=pais_elegido, df=df_global_data['destinos_internacionales_top5'][['Año', 'País Destino', 'Viajeros', 'Participación (%)']])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_destinos_viajeros, fuente=global_data_fuente, llave='graph_15')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Principales destinos internacionales', llave='boton_13', unidad=pais_elegido, df=df_global_data['destinos_internacionales_top5'][['Año', 'País Destino', 'Viajeros', 'Participación (%)']])
+                        if not df_global_data['destinos_internacionales_top5'].empty:
+                            streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Principales destinos internacionales - Viajeros (miles)', llave='boton_13', unidad=pais_elegido, df=df_global_data['destinos_internacionales_top5'][['Año', 'País Destino', 'Viajeros', 'Participación (%)']])
 
                 # Contenedor con la estructura: Gráfico único en el centro
                 with st.container(height = 625, border=True):
@@ -381,7 +394,8 @@ with body:
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_time_series_mice, fuente=global_data_fuente, llave='graph_16')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Flujo de viajeros internacionales por MICE', llave='boton_14', unidad=pais_elegido, df=df_mice[['Año', 'Motivo de viaje', 'Viajeros']])
+                    if not df_mice.empty:
+                        streamlit_analitica.boton_descarga(fuente=global_data_fuente, variable='Flujo de viajeros (miles) internacionales por MICE', llave='boton_14', unidad=pais_elegido, df=df_mice[['Año', 'Motivo de viaje', 'Viajeros']])
                 
             ###########################
             # Conectividad con el mundo
@@ -418,7 +432,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_single_barchart_conectividad_mundo_sillas, fuente=oag_fuente, llave='graph_17')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con el mundo - Sillas', llave='boton_15', unidad=pais_elegido, df=df_oag['conectividad_mundo_serie_tiempo'][['Año', 'Sillas']])
+                        if not df_oag['conectividad_mundo_serie_tiempo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con el mundo - Sillas', llave='boton_15', unidad=pais_elegido, df=df_oag['conectividad_mundo_serie_tiempo'][['Año', 'Sillas']])
                     with col2: 
                         # Título
                         st.markdown(f'<h6 class="custom-header" style="text-align:center;">Conectividad de {pais_elegido} con el mundo: Frecuencias</h6>', unsafe_allow_html=True)
@@ -427,7 +442,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_single_barchart_conectividad_mundo_frecuencias, fuente=oag_fuente, llave='graph_18')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con el mundo - Frecuencias', llave='boton_16', unidad=pais_elegido, df=df_oag['conectividad_mundo_serie_tiempo'][['Año', 'Frecuencias']])
+                        if not df_oag['conectividad_mundo_serie_tiempo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con el mundo - Frecuencias', llave='boton_16', unidad=pais_elegido, df=df_oag['conectividad_mundo_serie_tiempo'][['Año', 'Frecuencias']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
@@ -444,7 +460,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_conectividad_frecuencias_destinos_cerrado, fuente=oag_fuente, llave='graph_19')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año cerrado', llave='boton_17', unidad=pais_elegido, df=df_oag['conectividad_mundo_destino_cerrado'][['Año', 'País Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
+                        if not df_oag['conectividad_mundo_destino_cerrado'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año cerrado', llave='boton_17', unidad=pais_elegido, df=df_oag['conectividad_mundo_destino_cerrado'][['Año', 'País Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
                     with col2: 
                         # Título
                         st.markdown(f'<h6 class="custom-header" style="text-align:center;">Conectividad de {pais_elegido} con algunos destinos internacionales: Frecuencias - Año corrido</h6>', unsafe_allow_html=True)
@@ -453,7 +470,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_conectividad_frecuencias_destinos_corrido, fuente=oag_fuente, llave='graph_20')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año corrido', llave='boton_18', unidad=pais_elegido, df=df_oag['conectividad_mundo_destino_corrido'][['Periodo', 'País Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
+                        if not df_oag['conectividad_mundo_destino_corrido'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año corrido', llave='boton_18', unidad=pais_elegido, df=df_oag['conectividad_mundo_destino_corrido'][['Periodo', 'País Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
 
             #############################################################
             # Reservas y Búsquedas hacia México, Costa Rica, Perú y Chile
@@ -482,7 +500,8 @@ with body:
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_multiple_time_series_reservas_mundo, fuente=fk_fuente, llave='graph_21')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Reservas activas del país hacia México, Costa Rica, Perú y Chile', llave='boton_19', unidad=pais_elegido, df=df_fk['reservas_serie_tiempo'][['País', 'Fecha', 'Reservas']])
+                    if not df_fk['reservas_serie_tiempo'].empty:
+                        streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Reservas activas del país hacia México, Costa Rica, Perú y Chile', llave='boton_19', unidad=pais_elegido, df=df_fk['reservas_serie_tiempo'][['País', 'Fecha', 'Reservas']])
                 
                 # Contenedor con la estructura: Gráfico único en el centro
                 with st.container(height = 625, border=True):
@@ -493,7 +512,8 @@ with body:
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_multiple_time_series_busquedas_mundo, fuente=fk_fuente, llave='graph_22')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Búsquedas activas del país hacia México, Costa Rica, Perú y Chile', llave='boton_20', unidad=pais_elegido, df=df_fk['busquedas_serie_tiempo'][['País', 'Fecha', 'Búsquedas']])
+                    if not df_fk['busquedas_serie_tiempo'].empty:
+                        streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Búsquedas activas del país hacia México, Costa Rica, Perú y Chile', llave='boton_20', unidad=pais_elegido, df=df_fk['busquedas_serie_tiempo'][['País', 'Fecha', 'Búsquedas']])
 
             ###################################################
             # Indicadores de turismo del mercado hacia Colombia
@@ -544,7 +564,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_single_barchart_conectividad_colombia_sillas, fuente=oag_fuente, llave='graph_23')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con Colombia - Sillas', llave='boton_21', unidad=pais_elegido, df=df_oag['conectividad_colombia_serie_tiempo'][['Año', 'Sillas']])
+                        if not df_oag['conectividad_colombia_serie_tiempo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con Colombia - Sillas', llave='boton_21', unidad=pais_elegido, df=df_oag['conectividad_colombia_serie_tiempo'][['Año', 'Sillas']])
                     with col2: 
                         # Título
                         st.markdown(f'<h6 class="custom-header" style="text-align:center;">Conectividad de {pais_elegido} con Colombia: Frecuencias</h6>', unsafe_allow_html=True)
@@ -553,7 +574,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_single_barchart_conectividad_colombia_frecuencias, fuente=oag_fuente, llave='graph_24')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con Colombia - Frecuencias', llave='boton_22', unidad=pais_elegido, df=df_oag['conectividad_colombia_serie_tiempo'][['Año', 'Frecuencias']])
+                        if not df_oag['conectividad_colombia_serie_tiempo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con Colombia - Frecuencias', llave='boton_22', unidad=pais_elegido, df=df_oag['conectividad_colombia_serie_tiempo'][['Año', 'Frecuencias']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
@@ -570,7 +592,8 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado, fuente=oag_fuente, llave='graph_25')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año cerrado', llave='boton_23', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_cerrado'][['Año', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
+                        if not df_oag['conectividad_colombia_municipio_cerrado'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año cerrado', llave='boton_23', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_cerrado'][['Año', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
                     with col2: 
                         # Título
                         st.markdown(f'<h6 class="custom-header" style="text-align:center;">Conectividad del {pais_elegido} con Colombia: Frecuencias - Año corrido</h6>', unsafe_allow_html=True)
@@ -579,14 +602,15 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido, fuente=oag_fuente, llave='graph_26')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año corrido', llave='boton_24', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_corrido'][['Periodo', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
+                        if not df_oag['conectividad_colombia_municipio_corrido'].empty:
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año corrido', llave='boton_24', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_corrido'][['Periodo', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
 
 
             ##########################################
             # Gasto con tarjeta de crédito en Colombia
             ##########################################
             st.markdown("<a id='gasto-con-tarjeta-de-credito-en-colombia'></a>", unsafe_allow_html=True)
-            st.subheader(f"Gasto de los turistas de {pais_elegido} con tarjeta de crédito en Colombia")
+            st.subheader(f"Gasto de los viajeros de {pais_elegido} con tarjeta de crédito en Colombia")
             
             # Fuente
             credibanco_fuente = 'Credibanco'
@@ -608,19 +632,20 @@ with body:
                 # Contenedor con la estructura: Gráfico único en el centro
                 with st.container(height = 625, border=True):
                     # Título
-                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto promedio de los turistas de {pais_elegido}</h6>', unsafe_allow_html=True)
+                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto promedio de los viajeros de {pais_elegido}</h6>', unsafe_allow_html=True)
                     # Contenedor con el gráfico
                     with st.container(height = 500, border=True):
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_side_by_side_bar_gasto_promedio, fuente=credibanco_fuente, llave='graph_27')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto promedio', llave='boton_25', unidad=pais_elegido, df=df_credibanco['gasto_promedio'][['Año', 'Facturación (USD)', 'Turistas', 'Transacciones', 'Gasto promedio tarjeta (USD)', 'Gasto promedio transacción (USD)']])
+                    if not df_credibanco['gasto_promedio'].empty:
+                        streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto promedio', llave='boton_25', unidad=pais_elegido, df=df_credibanco['gasto_promedio'][['Año', 'Facturación (USD)', 'Viajeros', 'Transacciones', 'Gasto promedio tarjeta (USD)', 'Gasto promedio transacción (USD)']])
                 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
                     
                     # Título
-                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto por categoria de los turistas de {pais_elegido}</h6>', unsafe_allow_html=True)
+                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto por categoria de los viajeros de {pais_elegido}</h6>', unsafe_allow_html=True)
                     # Gráfico único a la izquierda y a la derecha
                     col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="top") 
 
@@ -631,20 +656,22 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_credibanco, fuente=credibanco_fuente, llave='graph_28')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por categoria', llave='boton_26', unidad=pais_elegido, df=df_credibanco['gasto_categoria'])
+                        if not df_credibanco['gasto_categoria'].empty:
+                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por categoria', llave='boton_26', unidad=pais_elegido, df=df_credibanco['gasto_categoria'])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_gasto_categoria_credibanco, fuente=credibanco_fuente, llave='graph_29')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por categoria', llave='boton_27', unidad=pais_elegido, df=df_credibanco['gasto_categoria'])
+                        if not df_credibanco['gasto_categoria'].empty:
+                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por categoria', llave='boton_27', unidad=pais_elegido, df=df_credibanco['gasto_categoria'])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
                     
                     # Título
-                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto por producto directo de los turistas de {pais_elegido}</h6>', unsafe_allow_html=True)
+                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto por producto directo de los viajeros de {pais_elegido}</h6>', unsafe_allow_html=True)
                     # Gráfico único a la izquierda y a la derecha
                     col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="top") 
 
@@ -655,20 +682,22 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_directo_credibanco, fuente=credibanco_fuente, llave='graph_30')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por productos - Directo', llave='boton_28', unidad=pais_elegido, df=df_credibanco['gasto_producto_directo'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
+                        if not df_credibanco['gasto_producto_directo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por productos - Directo', llave='boton_28', unidad=pais_elegido, df=df_credibanco['gasto_producto_directo'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_directo_credibanco, fuente=credibanco_fuente, llave='graph_31')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por productos - Directo', llave='boton_29', unidad=pais_elegido, df=df_credibanco['gasto_producto_directo'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
+                        if not df_credibanco['gasto_producto_directo'].empty:
+                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por productos - Directo', llave='boton_29', unidad=pais_elegido, df=df_credibanco['gasto_producto_directo'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
 
                 # Contenedor con la estructura: Gráfico único a la izquierda y a la derecha
                 with st.container(height = 625):
                     
                     # Título
-                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto por producto indirecto de los turistas de {pais_elegido}</h6>', unsafe_allow_html=True)
+                    st.markdown(f'<h6 class="custom-header" style="text-align:center;">Gasto por producto indirecto de los viajeros de {pais_elegido}</h6>', unsafe_allow_html=True)
                     # Gráfico único a la izquierda y a la derecha
                     col1, col2 = st.columns([1, 1], gap="small", vertical_alignment="top") 
 
@@ -679,14 +708,16 @@ with body:
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_indirecto_credibanco, fuente=credibanco_fuente, llave='graph_32')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por producto - Indirecto', llave='boton_30', unidad=pais_elegido, df=df_credibanco['gasto_producto_indirecto'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
+                        if not df_credibanco['gasto_producto_indirecto'].empty:
+                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por producto - Indirecto', llave='boton_30', unidad=pais_elegido, df=df_credibanco['gasto_producto_indirecto'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
                             # Gráfico
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_treemap_gasto_categoria_indirecto_credibanco, fuente=credibanco_fuente, llave='graph_33')
                         # Botón de descarga fuera del contenedor y dentro de la columna
-                        streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por producto - Indirecto', llave='boton_31', unidad=pais_elegido, df=df_credibanco['gasto_producto_indirecto'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
+                        if not df_credibanco['gasto_producto_indirecto'].empty:
+                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por producto - Indirecto', llave='boton_31', unidad=pais_elegido, df=df_credibanco['gasto_producto_indirecto'][['Año', 'Categoria', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
 
                         
             #####################################
@@ -713,7 +744,8 @@ with body:
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_single_time_series_reservas_colombia, fuente=fk_fuente, llave='graph_34')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Reservas aéreas activas del país hacia Colombia', llave='boton_32', unidad=pais_elegido, df=df_fk['reservas_serie_tiempo_colombia'][['País', 'Fecha', 'Reservas']])
+                    if not df_fk['reservas_serie_tiempo_colombia'].empty:
+                        streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Reservas aéreas activas del país hacia Colombia', llave='boton_32', unidad=pais_elegido, df=df_fk['reservas_serie_tiempo_colombia'][['País', 'Fecha', 'Reservas']])
 
                 # Contenedor con la estructura: Gráfico único en el centro
                 with st.container(height = 625, border=True):
@@ -724,7 +756,8 @@ with body:
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_single_time_series_busquedas_colombia, fuente=fk_fuente, llave='graph_35')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Búsquedas activas del país hacia Colombia', llave='boton_33', unidad=pais_elegido, df=df_fk['busquedas_serie_tiempo_colombia'][['País', 'Fecha', 'Búsquedas']])    
+                    if not df_fk['busquedas_serie_tiempo_colombia'].empty:
+                        streamlit_analitica.boton_descarga(fuente=fk_fuente, variable='Búsquedas activas del país hacia Colombia', llave='boton_33', unidad=pais_elegido, df=df_fk['busquedas_serie_tiempo_colombia'][['País', 'Fecha', 'Búsquedas']])    
                 
             ###########################################
             # Agencias que venden Colombia como destino
@@ -734,6 +767,7 @@ with body:
 
             # Fuente
             iata_fuente = 'IATA-GAP'
+            iata_nota = 'Datos de 2024 actualizados al tercer trimestre'
 
             # Obtener gráficos IATA-GAP
             (
@@ -752,8 +786,10 @@ with body:
                     with st.container(height = 500, border=True):
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_single_time_series_agencias_colombia, fuente=iata_fuente, llave='graph_36')
+                        st.caption(f'Nota: {iata_nota}')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=iata_fuente, variable='Indicadores de agencias de ese mercado que venden Colombia como destino', llave='boton_34', unidad=pais_elegido, df=df_iata['agencias_ciudades'][['Año', 'Número de Agencias']])
+                    if not df_iata['agencias_serie_tiempo'].empty:
+                        streamlit_analitica.boton_descarga(fuente=iata_fuente, variable='Indicadores de agencias de ese mercado que venden Colombia como destino', llave='boton_34', unidad=pais_elegido, df=df_iata['agencias_serie_tiempo'][['Año', 'Número de Agencias']])
                 
                 # Contenedor con la estructura: Gráfico único en el centro
                 with st.container(height = 625, border=True):
@@ -763,8 +799,10 @@ with body:
                     with st.container(height = 500, border=True):
                         # Gráfico
                         streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_agencias_ciudades, fuente=iata_fuente, llave='graph_37')
+                        st.caption(f'Nota: {iata_nota}')
                     # Botón de descarga fuera del contenedor del gráfico
-                    streamlit_analitica.boton_descarga(fuente=iata_fuente, variable='Agencias que venden Colombia como destino por ciudad de la agencia', llave='boton_35', unidad=pais_elegido, df=df_iata['agencias_ciudades'][['Año', 'Ciudad de la Agencia', 'Número de Agencias', 'Total Anual', 'Participación (%)']])
+                    if not df_iata['agencias_ciudades'].empty:
+                        streamlit_analitica.boton_descarga(fuente=iata_fuente, variable='Agencias que venden Colombia como destino por ciudad de la agencia', llave='boton_35', unidad=pais_elegido, df=df_iata['agencias_ciudades'][['Año', 'Ciudad de la Agencia', 'Número de Agencias', 'Total Anual', 'Participación (%)']])
 
 
             ########################################

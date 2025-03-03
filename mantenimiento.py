@@ -36,7 +36,7 @@ def main():
     st.markdown(
         '<div class="maintenance-text">'
         'La aplicación está en mantenimiento.<br>'
-        'La Gerencia de Inteligencia Comercial está actualizando tu aplicación.<br>'
+        'La Gerencia de Inteligencia Comercial de ProColombia está actualizando tu aplicación.<br>'
         'Por favor, vuelve más tarde.'
         '</div>',
         unsafe_allow_html=True
