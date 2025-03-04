@@ -618,7 +618,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         sub_dict = dict_flujos_viajeros_mundo.get(year_global_data, {})
 
         # Extraer val
-        val = sub_dict.get('Viajeros', {})
+        val = sub_dict.get('Viajeros', 0)
 
         # Agregar formato
         val_flujos_viajeros_mundo =  helpers.formato_miles(valor=val, decimales=0) + ' miles de viajeros'
@@ -646,7 +646,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         sub_dict = dict_noches_percnotacion.get(year_global_data, {})
 
         # Extraer val
-        val = sub_dict.get('Noches de percnotación', {})
+        val = sub_dict.get('Noches de percnotación', 0)
 
         # Agregar formato
         val_noches_percnotacion =  helpers.formato_miles(valor=val, decimales=0) + ' noches'
@@ -674,7 +674,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         sub_dict = dict_gasto_promedio_viajero_mundo.get(year_global_data, {})
 
         # Extraer val
-        val = sub_dict.get('Gasto (USD)', {})
+        val = sub_dict.get('Gasto (USD)', 0)
 
         # Agregar formato
         val_gasto_promedio_viajero_mundo =  helpers.formato_miles(valor=val, decimales=0) + ' USD'
@@ -702,7 +702,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         sub_dict = dict_conectividad_mundo.get(year_oag_mundo, {})
 
         # Extraer val
-        val = sub_dict.get('Frecuencias', {})
+        val = sub_dict.get('Frecuencias', 0)
 
         # Agregar formato
         val_conectividad_mundo =  helpers.formato_miles(valor=val, decimales=0) + ' frecuencias'
@@ -730,7 +730,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         sub_dict = dict_conectividad_colombia.get(year_oag_colombia, {})
 
         # Extraer val
-        val = sub_dict.get('Frecuencias', {})
+        val = sub_dict.get('Frecuencias', 0)
 
         # Agregar formato
         val_conectividad_colombia =  helpers.formato_miles(valor=val, decimales=0) + ' frecuencias'
@@ -758,7 +758,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         sub_dict = dict_gasto_tarjeta_crédito_colombia.get(year_credibanco, {})
 
         # Extraer val
-        val = sub_dict.get('Gasto promedio tarjeta (USD)', {})
+        val = sub_dict.get('Gasto promedio tarjeta (USD)', 0)
 
         # Agregar formato
         val_gasto_tarjeta_crédito_colombia =  helpers.formato_miles(valor=val, decimales=1) + ' USD'
@@ -786,7 +786,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         sub_dict = dict_indicadores_agencias_colombia_destino.get(year_iata, {})
 
         # Extraer val
-        val = sub_dict.get('Número de Agencias', {})
+        val = sub_dict.get('Número de Agencias', 0)
 
         # Agregar formato
         val_indicadores_agencias_colombia_destino =  helpers.formato_miles(valor=val, decimales=0) + ' agencias'
