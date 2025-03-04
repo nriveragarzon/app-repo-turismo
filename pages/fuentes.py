@@ -12,7 +12,7 @@ import src.snowflake_analitica as snowflake_analitica
 st.set_page_config(page_title="Fuentes", 
                    page_icon = ':book:', 
                    layout="wide",  
-                   initial_sidebar_state="collapsed")
+                   initial_sidebar_state="expanded")
 
 # Inclusión de la hoja de estilos de Bootstrap para mejorar la apariencia.
 st.markdown("""
@@ -36,7 +36,18 @@ if st.query_params.page == '2':
 # CONTENIDO
 ###########
 
-st.title("Fuentes")
+# Estructura
+leftsidebar, body, rightsidebar = st.columns([0.01,0.98, 0.01], gap='small',vertical_alignment='top')
 
-# Marcador para volver al inicio
-st.markdown("<a id='top'></a>", unsafe_allow_html=True)
+# Aprovechar el máximo espacio horizontal de la pantalla
+with body:
+
+    st.title("Fuentes")
+
+    # Marcador para volver al inicio
+    st.markdown("<a id='top'></a>", unsafe_allow_html=True)
+
+
+
+# Agregar footer
+streamlit_analitica.footer()

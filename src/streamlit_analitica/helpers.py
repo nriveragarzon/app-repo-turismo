@@ -96,3 +96,51 @@ def limpiar_cache():
     """
     st.cache_data.clear()  # Limpia el caché de datos de Streamlit
 
+def load_css(file_name):
+    """
+    Carga el contenido de un archivo CSS y lo devuelve como una cadena de texto.
+
+    Esta función lee un archivo de hojas de estilo en cascada (CSS) desde la ruta 
+    especificada y devuelve su contenido en forma de string. Es útil para insertar 
+    estilos personalizados en una aplicación de Streamlit mediante `st.markdown(unsafe_allow_html=True)`.
+
+    Parámetros:
+    -----------
+    file_name : str
+        Ruta del archivo CSS que se desea cargar.
+
+    Retorna:
+    --------
+    str
+        Contenido del archivo CSS como una cadena de texto.
+
+    Excepciones:
+    ------------
+    - FileNotFoundError: Se lanza si el archivo no existe en la ruta especificada.
+    - IOError: Se lanza si ocurre un error al leer el archivo.
+
+    Ejemplo de uso:
+    ---------------
+    ```python
+    import streamlit as st
+
+    # Cargar el archivo CSS
+    css_content = load_css("styles.css")
+
+    # Aplicar los estilos en la app de Streamlit
+    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+    ```
+    """
+    with open(file_name) as f:
+        return f.read()
+    
+# Para formato separador de miles intercambiando punto y coma
+def formato_miles(valor, decimales=0):
+    # f"{x:,.{decimales}f}" crea el separador con coma,
+    # luego intercambiamos '.' por ',' y la coma original por '.'
+    return (
+        f"{valor:,.{decimales}f}"
+        .replace(',', 'X')   # Primer swap: ',' -> 'X'
+        .replace('.', ',')  # Segundo swap: '.' -> ','
+        .replace('X', '.')  # Tercer swap: 'X' -> '.'
+    )

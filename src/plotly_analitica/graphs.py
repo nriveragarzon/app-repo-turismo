@@ -64,11 +64,16 @@ def plot_single_time_series(df, date_col, value_col, title=None,
 
         # Configurar el diseño del gráfico
         fig.update_layout(
-            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label_text if x_label_text else None,
             yaxis_title=y_label_text if y_label_text else None,
             template="plotly_white"  # Estilo limpio
         )
+
+        # Ajuste de título
+        if title:
+            fig.update_layout(
+                title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
+            )
 
         # Configurar el formato del eje Y con separadores de miles y decimales
         tick_format = ".0f"  # Crear el formato con decimales especificados
@@ -170,7 +175,6 @@ def plot_multiple_time_series(df, date_col, value_col, group_col,
         # Formatear el eje X directamente en el gráfico con el formato de mes en español
         fig.update_layout(
             template="plotly_white",
-            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label_text,
             yaxis_title=y_label_text,
             xaxis=dict(
@@ -188,6 +192,12 @@ def plot_multiple_time_series(df, date_col, value_col, group_col,
                 title_text=legend_title if legend_title else " "
             )
         )
+
+        # Ajuste de título
+        if title:
+            fig.update_layout(
+                title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
+            )
  
         # Formato del eje Y
         tick_format = f".{decimal_places}f"
@@ -302,11 +312,16 @@ def plot_stacked_bar_chart_h(df, date_col, group_col, share_col,
         fig.update_layout(
             barmode='stack',
             xaxis=dict(title="Participación (%)"),
-            yaxis=dict(title=y_label_text, categoryorder='category ascending'),
+            yaxis=dict(title=y_label_text, categoryorder='category ascending', tickmode="array",  tickvals=df[date_col].unique(),  ticktext=df[date_col].unique()),
             legend_title=legend_title if legend_title else "Categoría""Categorías",
-            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
         )
+
+        # Ajuste de título
+        if title:
+            fig.update_layout(
+                title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
+            )
 
         # Hacer cambio de orden en el eje Y
         fig.update_layout(barmode = 'stack', yaxis = {'autorange' : 'reversed'})
@@ -394,10 +409,15 @@ def plot_stacked_bar_chart_v(df, date_col, group_col, share_col,
             xaxis=dict(title="Año", categoryorder='category ascending'),
             yaxis=dict(title="Participación (%)"),
             legend_title=legend_title if legend_title else "Categoría",
-            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
         )
- 
+
+        # Ajuste de título
+        if title:
+            fig.update_layout(
+                title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
+            )
+
         return fig
  
     except Exception as e:
@@ -451,11 +471,16 @@ def plot_single_bar_chart(df, date_col, value_col,
 
         # Ajustar el diseño del gráfico
         fig.update_layout(
-            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label_text,
             yaxis_title=y_label_text,
             template="plotly_white"
         )
+
+        # Ajuste de título
+        if title:
+            fig.update_layout(
+                title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
+            )
 
         # Configurar el formato del eje Y (separadores de miles y decimales)
         tick_format = f".{decimal_places}f"  # Controla la cantidad de decimales
@@ -536,7 +561,6 @@ def plot_side_by_side_bars(df,date_col, var1_col, var2_col, title=None, x_label=
 
         # Ajustar layout básico
         fig.update_layout(
-            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
             xaxis_title=x_label,
             yaxis_title=y_label_text,
             template="plotly_white",
@@ -548,6 +572,12 @@ def plot_side_by_side_bars(df,date_col, var1_col, var2_col, title=None, x_label=
                 yanchor="top"
             )
         )
+
+        # Ajuste de título
+        if title:
+            fig.update_layout(
+                title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
+            )
 
         # Si el usuario especifica un título para la leyenda
         if legend_title:
@@ -716,9 +746,14 @@ def plot_treemap(df, date_col, value_col, group_col, share_col,
         # Ajustar diseño general de la figura
         fig.update_layout(
             updatemenus=updatemenus,
-            margin=dict(t=50, l=25, r=25, b=25),
-            title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5}
+            margin=dict(t=50, l=25, r=25, b=25)
         )
+
+        # Ajuste de título
+        if title:
+            fig.update_layout(
+                title={'text': title, 'xanchor': 'center', 'yanchor': 'top', 'x':0.5},
+            )
 
         return fig
 

@@ -1,0 +1,2 @@
+# Importar módulos
+from .procesamiento_datos import obtener_datos_global_data, procesar_datos_global_data, datos_global_data, obtener_datos_oag, procesar_datos_oag, datos_oag, obtener_datos_forward_keys, procesar_datos_forward_keys, datos_forward_keys, obtener_datos_credibanco, procesar_datos_credibanco, datos_credibanco, obtener_datos_iata_gap, procesar_datos_iata_gap, datos_iata_gap 
