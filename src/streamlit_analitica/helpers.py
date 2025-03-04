@@ -133,3 +133,14 @@ def load_css(file_name):
     """
     with open(file_name) as f:
         return f.read()
+    
+# Para formato separador de miles intercambiando punto y coma
+def formato_miles(valor, decimales=0):
+    # f"{x:,.{decimales}f}" crea el separador con coma,
+    # luego intercambiamos '.' por ',' y la coma original por '.'
+    return (
+        f"{valor:,.{decimales}f}"
+        .replace(',', 'X')   # Primer swap: ',' -> 'X'
+        .replace('.', ',')  # Segundo swap: '.' -> ','
+        .replace('X', '.')  # Tercer swap: 'X' -> '.'
+    )

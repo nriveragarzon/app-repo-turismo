@@ -10,6 +10,7 @@ import src.snowflake_analitica as snowflake_analitica
 import src.datos_citi as procesamiento_datos
 import src.plotly_analitica as plotly_analitica
 from openpyxl.utils import get_column_letter
+import src.streamlit_analitica.helpers as helpers
 
 # Función para obtener los datos
 def obtener_datos(_pais_elegido):
@@ -535,7 +536,273 @@ def obtener_graficos_iata_colombia(df_iata, _pais_elegido):
             st.session_state['graficos_iata_colombia']['fig_single_time_series_agencias_colombia'],
             st.session_state['graficos_iata_colombia']['fig_stacked_h_agencias_ciudades']
          )
+    
+# Función para generar la tabla de resumen
+def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, df_iata, year_global_data, year_oag_mundo, year_oag_colombia, year_credibanco, year_iata):
 
+    """
+    Esta función construye una tabla resumen con diversos indicadores de turismo para un país dado. 
+    Cada indicador se extrae de diferentes DataFrames que están contenidos en diccionarios, 
+    y luego se formatea de manera adecuada para mostrar el valor de forma legible.
+    
+    Parámetros
+    ----------
+    pais_elegido : str
+        Nombre del país que se va a filtrar en los indicadores.
+
+    df_global_data : dict
+        Diccionario que contiene DataFrames relacionados con indicadores globales, 
+        por ejemplo: flujos de viajeros, noches de pernoctación y gasto promedio.
+
+    df_oag : dict
+        Diccionario que contiene DataFrames relacionados con la conectividad aérea (OAG).
+
+    df_credibanco : dict
+        Diccionario que contiene DataFrames con la información de gasto con tarjeta de crédito.
+
+    df_iata : dict
+        Diccionario que contiene DataFrames con la información de agencias de viajes (IATA).
+
+    year_global_data : int
+        Año que se quiere consultar para los DataFrames de df_global_data.
+
+    year_oag_mundo : int
+        Año que se quiere consultar para la conectividad del país con el mundo.
+
+    year_oag_colombia : int
+        Año que se quiere consultar para la conectividad del país hacia Colombia.
+
+    year_credibanco : int
+        Año que se quiere consultar para la información de gasto con tarjeta de crédito en Colombia.
+
+    year_iata : int
+        Año que se quiere consultar para la información de agencias de viajes (IATA).
+
+    Retorna
+    -------
+    pd.DataFrame
+        Un DataFrame con dos columnas:
+        - "Indicador": Descripción de cada indicador consultado.
+        - "Valor": Valor formateado correspondiente a cada indicador (por ejemplo, miles de viajeros, USD, etc.).
+    
+    Ejemplo de uso
+    --------------
+    >>> df_resumen = generar_tabla_resumen(
+    ...     "Brasil", 
+    ...     df_global_data=datos_globales, 
+    ...     df_oag=datos_oag, 
+    ...     df_credibanco=datos_credibanco, 
+    ...     df_iata=datos_iata, 
+    ...     year_global_data=2022, 
+    ...     year_oag_mundo=2022, 
+    ...     year_oag_colombia=2022, 
+    ...     year_credibanco=2022, 
+    ...     year_iata=2022
+    ... )
+    ... print(df_resumen)
+    """
+
+    # Crear df vacío
+    df_tabla_resumen = pd.DataFrame()
+
+    # Flujos de viajeros hacia el mundo
+    df_flujos_viajeros_mundo = df_global_data.get('viajeros_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_flujos_viajeros_mundo.empty:
+
+        # Volver diccionario
+        dict_flujos_viajeros_mundo = df_flujos_viajeros_mundo.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_flujos_viajeros_mundo.get(year_global_data, {})
+
+        # Extraer val
+        val = sub_dict.get('Viajeros', {})
+
+        # Agregar formato
+        val_flujos_viajeros_mundo =  helpers.formato_miles(valor=val, decimales=0) + ' miles de viajeros'
+
+        # Crear fila
+        row_resumen_flujos_viajeros_mundo = pd.DataFrame({
+            'Indicador': [f'Flujos de viajeros de {pais_elegido} hacia el mundo en {year_global_data}'],
+            'Valor': [val_flujos_viajeros_mundo],
+            'Fuente' : 'GlobalData'
+        })
+
+        # Agregar fila a la tabla resumen
+        df_tabla_resumen = pd.concat([df_tabla_resumen, row_resumen_flujos_viajeros_mundo])
+
+    # Noches de percnotacion promedio
+    df_noches_percnotacion = df_global_data.get('noches_pernoctacion', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_noches_percnotacion.empty:
+
+        # Volver diccionario
+        dict_noches_percnotacion = df_noches_percnotacion.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_noches_percnotacion.get(year_global_data, {})
+
+        # Extraer val
+        val = sub_dict.get('Noches de percnotación', {})
+
+        # Agregar formato
+        val_noches_percnotacion =  helpers.formato_miles(valor=val, decimales=0) + ' noches'
+
+        # Crear fila
+        row_noches_percnotacion = pd.DataFrame({
+            'Indicador': [f'Noches de percnotación promedio de los viajeros de {pais_elegido} en {year_global_data}'],
+            'Valor': [val_noches_percnotacion],
+            'Fuente' : 'GlobalData'
+        })
+
+        # Agregar fila a la tabla resumen
+        df_tabla_resumen = pd.concat([df_tabla_resumen, row_noches_percnotacion])
+
+    # Gasto promedio del viajero al mundo
+    df_gasto_promedio_viajero_mundo = df_global_data.get('gasto_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_promedio_viajero_mundo.empty:
+
+        # Volver diccionario
+        dict_gasto_promedio_viajero_mundo = df_gasto_promedio_viajero_mundo.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_gasto_promedio_viajero_mundo.get(year_global_data, {})
+
+        # Extraer val
+        val = sub_dict.get('Gasto (USD)', {})
+
+        # Agregar formato
+        val_gasto_promedio_viajero_mundo =  helpers.formato_miles(valor=val, decimales=0) + ' USD'
+
+        # Crear fila
+        row_gasto_promedio_viajero_mundo = pd.DataFrame({
+            'Indicador': [f'Gasto promedio del viajero de {pais_elegido} al mundo en {year_global_data}'],
+            'Valor': [val_gasto_promedio_viajero_mundo],
+            'Fuente' : 'GlobalData'
+        })
+
+        # Agregar fila a la tabla resumen
+        df_tabla_resumen = pd.concat([df_tabla_resumen, row_gasto_promedio_viajero_mundo])
+
+    # Conectividad del país con el mundo
+    df_conectividad_mundo = df_oag.get('conectividad_mundo_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_conectividad_mundo.empty:
+
+        # Volver diccionario
+        dict_conectividad_mundo = df_conectividad_mundo.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_conectividad_mundo.get(year_oag_mundo, {})
+
+        # Extraer val
+        val = sub_dict.get('Frecuencias', {})
+
+        # Agregar formato
+        val_conectividad_mundo =  helpers.formato_miles(valor=val, decimales=0) + ' frecuencias'
+
+        # Crear fila
+        row_conectividad_mundo = pd.DataFrame({
+            'Indicador': [f'Conectividad de {pais_elegido} con el mundo en {year_oag_mundo}'],
+            'Valor': [val_conectividad_mundo],
+            'Fuente' : 'OAG'
+        })
+
+        # Agregar fila a la tabla resumen
+        df_tabla_resumen = pd.concat([df_tabla_resumen, row_conectividad_mundo])
+
+    # Conectividad aérea hacia Colombia
+    df_conectividad_colombia = df_oag.get('conectividad_colombia_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_conectividad_colombia.empty:
+
+        # Volver diccionario
+        dict_conectividad_colombia = df_conectividad_colombia.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_conectividad_colombia.get(year_oag_colombia, {})
+
+        # Extraer val
+        val = sub_dict.get('Frecuencias', {})
+
+        # Agregar formato
+        val_conectividad_colombia =  helpers.formato_miles(valor=val, decimales=0) + ' frecuencias'
+
+        # Crear fila
+        row_conectividad_colombia = pd.DataFrame({
+            'Indicador': [f'Conectividad aérea de {pais_elegido} hacia Colombia en {year_oag_colombia}'],
+            'Valor': [val_conectividad_colombia],
+            'Fuente' : 'OAG'
+        })
+
+        # Agregar fila a la tabla resumen
+        df_tabla_resumen = pd.concat([df_tabla_resumen, row_conectividad_colombia])
+
+    # Gasto con tarjeta de crédito proveniente de ese país en Colombia
+    df_gasto_tarjeta_crédito_colombia = df_credibanco.get('gasto_promedio', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_tarjeta_crédito_colombia.empty:
+
+        # Volver diccionario
+        dict_gasto_tarjeta_crédito_colombia = df_gasto_tarjeta_crédito_colombia.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_gasto_tarjeta_crédito_colombia.get(year_credibanco, {})
+
+        # Extraer val
+        val = sub_dict.get('Gasto promedio tarjeta (USD)', {})
+
+        # Agregar formato
+        val_gasto_tarjeta_crédito_colombia =  helpers.formato_miles(valor=val, decimales=1) + ' USD'
+
+        # Crear fila
+        row_gasto_tarjeta_crédito_colombia = pd.DataFrame({
+            'Indicador': [f'Gasto promedio con tarjeta de crédito de los viajeros de {pais_elegido} en Colombia en {year_credibanco}'],
+            'Valor': [val_gasto_tarjeta_crédito_colombia],
+            'Fuente' : 'Credibanco'
+        })
+
+        # Agregar fila a la tabla resumen
+        df_tabla_resumen = pd.concat([df_tabla_resumen, row_gasto_tarjeta_crédito_colombia])
+
+    # Indicadores de agencias de ese mercado que venden Colombia como destino
+    df_indicadores_agencias_colombia_destino = df_iata.get('agencias_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_indicadores_agencias_colombia_destino.empty:
+
+        # Volver diccionario
+        dict_indicadores_agencias_colombia_destino = df_indicadores_agencias_colombia_destino.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_indicadores_agencias_colombia_destino.get(year_iata, {})
+
+        # Extraer val
+        val = sub_dict.get('Número de Agencias', {})
+
+        # Agregar formato
+        val_indicadores_agencias_colombia_destino =  helpers.formato_miles(valor=val, decimales=0) + ' agencias'
+
+        # Crear fila
+        row_indicadores_agencias_colombia_destino = pd.DataFrame({
+            'Indicador': [f'Agencias de {pais_elegido} que venden Colombia como destino en {year_iata}'],
+            'Valor': [val_indicadores_agencias_colombia_destino],
+            'Fuente' : 'IATA-GAP'
+        })
+
+        # Agregar fila a la tabla resumen
+        df_tabla_resumen = pd.concat([df_tabla_resumen, row_indicadores_agencias_colombia_destino])
+
+    # Resultado
+    return df_tabla_resumen
 
 # Función para Limpiar caches de dfs y gráficos al momento de elegir otro país
 def on_selectbox_change():

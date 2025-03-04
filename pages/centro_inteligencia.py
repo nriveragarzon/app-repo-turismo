@@ -1,5 +1,5 @@
 # Librerias
-import warnings
+import requests
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
@@ -119,7 +119,12 @@ with body:
             with col2:
                 st.title(f'{pais_elegido}')
             with col3:
-                st.image(f"https://flagcdn.com/h120/{iso_code.lower()}.png", width=100)
+                url = f"https://flagcdn.com/h120/{iso_code.lower()}.png"
+                response = requests.head(url)
+                if response.status_code == 200:
+                    st.image(f"https://flagcdn.com/h120/{iso_code.lower()}.png", width=100)
+                else:
+                    st.write("Bandera no disponible")
             with col4:
                 st.write("")
 
@@ -128,6 +133,17 @@ with body:
             ###############################################
             df_global_data, df_oag, df_fk, df_credibanco, df_iata = streamlit_analitica.obtener_datos(_pais_elegido=pais_elegido)
             st.divider()
+
+            # Obtener tabla de resumen
+            df_resumen = streamlit_analitica.generar_tabla_resumen(pais_elegido=pais_elegido, df_global_data=df_global_data, df_oag=df_oag, df_credibanco=df_credibanco, df_iata=df_iata, year_global_data='2025', year_oag_mundo='2024', year_oag_colombia='2024', year_credibanco='2024', year_iata='2024')
+
+            # Mostrar tabla de resumen
+            if not df_resumen.empty:
+                
+                # Título
+                st.markdown("## Resumen")
+                st.dataframe(data=df_resumen, use_container_width=True, hide_index=True, key='tabla_resumen', on_select="ignore", selection_mode="multi-row")
+                
 
             ####################
             # TABLA DE CONTENIDO
