@@ -143,6 +143,7 @@ with body:
                 # Título
                 st.markdown("## Resumen")
                 st.dataframe(data=df_resumen, use_container_width=True, hide_index=True, key='tabla_resumen', on_select="ignore", selection_mode="multi-row")
+                st.caption("Fuente: GlobalData, OAG, Credibanco y IATA-GAP")
                 
 
             ####################

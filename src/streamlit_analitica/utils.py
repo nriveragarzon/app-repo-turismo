@@ -626,9 +626,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         # Crear fila
         row_resumen_flujos_viajeros_mundo = pd.DataFrame({
             'Indicador': [f'Flujos de viajeros de {pais_elegido} hacia el mundo en {year_global_data}'],
-            'Valor': [val_flujos_viajeros_mundo],
-            'Fuente' : 'GlobalData'
-        })
+            'Valor': [val_flujos_viajeros_mundo]})
 
         # Agregar fila a la tabla resumen
         df_tabla_resumen = pd.concat([df_tabla_resumen, row_resumen_flujos_viajeros_mundo])
@@ -654,9 +652,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         # Crear fila
         row_noches_percnotacion = pd.DataFrame({
             'Indicador': [f'Noches de percnotación promedio de los viajeros de {pais_elegido} en {year_global_data}'],
-            'Valor': [val_noches_percnotacion],
-            'Fuente' : 'GlobalData'
-        })
+            'Valor': [val_noches_percnotacion]})
 
         # Agregar fila a la tabla resumen
         df_tabla_resumen = pd.concat([df_tabla_resumen, row_noches_percnotacion])
@@ -682,9 +678,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         # Crear fila
         row_gasto_promedio_viajero_mundo = pd.DataFrame({
             'Indicador': [f'Gasto promedio del viajero de {pais_elegido} al mundo en {year_global_data}'],
-            'Valor': [val_gasto_promedio_viajero_mundo],
-            'Fuente' : 'GlobalData'
-        })
+            'Valor': [val_gasto_promedio_viajero_mundo]})
 
         # Agregar fila a la tabla resumen
         df_tabla_resumen = pd.concat([df_tabla_resumen, row_gasto_promedio_viajero_mundo])
@@ -710,9 +704,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         # Crear fila
         row_conectividad_mundo = pd.DataFrame({
             'Indicador': [f'Conectividad de {pais_elegido} con el mundo en {year_oag_mundo}'],
-            'Valor': [val_conectividad_mundo],
-            'Fuente' : 'OAG'
-        })
+            'Valor': [val_conectividad_mundo]})
 
         # Agregar fila a la tabla resumen
         df_tabla_resumen = pd.concat([df_tabla_resumen, row_conectividad_mundo])
@@ -738,9 +730,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         # Crear fila
         row_conectividad_colombia = pd.DataFrame({
             'Indicador': [f'Conectividad aérea de {pais_elegido} hacia Colombia en {year_oag_colombia}'],
-            'Valor': [val_conectividad_colombia],
-            'Fuente' : 'OAG'
-        })
+            'Valor': [val_conectividad_colombia]})
 
         # Agregar fila a la tabla resumen
         df_tabla_resumen = pd.concat([df_tabla_resumen, row_conectividad_colombia])
@@ -766,9 +756,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         # Crear fila
         row_gasto_tarjeta_crédito_colombia = pd.DataFrame({
             'Indicador': [f'Gasto promedio con tarjeta de crédito de los viajeros de {pais_elegido} en Colombia en {year_credibanco}'],
-            'Valor': [val_gasto_tarjeta_crédito_colombia],
-            'Fuente' : 'Credibanco'
-        })
+            'Valor': [val_gasto_tarjeta_crédito_colombia]})
 
         # Agregar fila a la tabla resumen
         df_tabla_resumen = pd.concat([df_tabla_resumen, row_gasto_tarjeta_crédito_colombia])
@@ -794,9 +782,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         # Crear fila
         row_indicadores_agencias_colombia_destino = pd.DataFrame({
             'Indicador': [f'Agencias de {pais_elegido} que venden Colombia como destino en {year_iata}'],
-            'Valor': [val_indicadores_agencias_colombia_destino],
-            'Fuente' : 'IATA-GAP'
-        })
+            'Valor': [val_indicadores_agencias_colombia_destino]})
 
         # Agregar fila a la tabla resumen
         df_tabla_resumen = pd.concat([df_tabla_resumen, row_indicadores_agencias_colombia_destino])

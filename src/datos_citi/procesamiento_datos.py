@@ -5,6 +5,7 @@
 # Importar módulos necesarios
 
 import src.snowflake_analitica as snowflake_analitica
+from src.streamlit_analitica import formato_miles
 
 # Warnings
 import warnings
@@ -1406,3 +1407,1653 @@ def datos_iata_gap(pais_seleccionado, sesion_activa):
         # Manejo de errores
         print(f"Error al obtener o procesar datos de IATA GAP para el país {pais_seleccionado}: {str(e)}")
         return {}
+
+def calcular_tasa_variacion(valor_actual, valor_anterior):
+    """
+    Calcula la tasa de variación entre dos valores y la devuelve con dos decimales en formato numérico con coma decimal.
+    
+    Parámetros
+    ----------
+    valor_actual : float or int
+        Valor más reciente o actual.
+    valor_anterior : float or int
+        Valor anterior con el cual se compara.
+    
+    Retorna
+    -------
+    str
+        Tasa de variación formateada con dos decimales y coma decimal (Ejemplo: "2,23%").
+        Si los valores son inválidos o generan una división por cero, devuelve None.
+    """
+    try:
+        # Validar si los valores son nulos o no numéricos
+        if valor_actual is None or valor_anterior is None:
+            return None
+
+        # Convertir a float en caso de que los valores sean enteros o strings numéricos
+        valor_actual = float(valor_actual)
+        valor_anterior = float(valor_anterior)
+
+        # Manejar el caso donde valor_anterior es 0 para evitar división por infinito
+        if valor_anterior == 0:
+            return None
+
+        # Calcular la tasa de variación
+        tasa_variacion = ((valor_actual - valor_anterior) / valor_anterior) * 100
+
+        # Retornar el resultado formateado con dos decimales y coma decimal
+        return f"{tasa_variacion:,.2f}".replace(".", ",") + " %"
+    
+    except (ValueError, TypeError):
+        return None
+    
+def filtrar_df_top_n(df: pd.DataFrame, year: int, categoria: str, top_n: int) -> pd.DataFrame:
+    """
+    Filtra un DataFrame por un año específico, selecciona las filas con mayor participación,
+    formatea la columna "Participación (%)".
+
+    Parámetros
+    ----------
+    df : pd.DataFrame
+        DataFrame de entrada con una columna "Año", una columna "Participación (%)"
+        y otra que represente la categoría (por ejemplo "Producto", "País", etc.).
+    year : int
+        Año por el cual se quiere filtrar la información.
+    categoria : str
+        Nombre de la columna que representa la categoría en el DataFrame.
+    top_n : int
+        Cantidad máxima de filas a conservar basadas en los valores mayores de la columna
+        "Participación (%)".
+
+    Retorna
+    -------
+    pd.DataFrame
+        DataFrame filtrado y transformado, con la columna "Participación (%)" formateada. 
+        Devuelve un DataFrame vacío si no hay registros para el año especificado.
+
+    Ejemplo de uso
+    --------------
+    >>> df_resultado = filtrar_df_top_n(df_original, 2022, "País", 5)
+    >>> st.dataframe(df_resultado)
+    """
+    
+    # 1) Crear una copia del DataFrame original para no alterar el entorno
+    df_copy = df.copy()
+
+    # 2) Filtrar el DataFrame por el año especificado
+    df_copy = df_copy[df_copy["Año"] == year]
+
+    # 3) Verificar si el DataFrame filtrado tiene datos
+    if df_copy.empty:
+        # Si no hay datos, se retorna un DataFrame vacío
+        return df_copy
+
+    # 4) Seleccionar las filas con mayor participación según el top_n
+    #    Si top_n es mayor que el número de filas, se devuelven todas las filas
+    df_copy = df_copy.nlargest(top_n, "Participación (%)")
+
+    # 5) Formatear la columna "Participación (%)" usando la función formato_miles
+    df_copy["Participación (%)"] = df_copy["Participación (%)"].apply(
+        lambda x: formato_miles(valor=x, decimales=2)
+    )
+
+    # 6) Transformar la columna de categoria
+    df_copy[categoria] = df_copy[categoria].str.lower()
+        
+    # 7) Retornar el DataFrame resultante
+    return df_copy
+
+def global_data_bullets_viajeros_mundo(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre los flujos de viajeros de un país hacia el mundo,
+    comparando dos periodos de tiempo y calculando la variación porcentual.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la serie de tiempo de viajeros.
+    year_global_data_t_1 : int
+        Año base para la comparación (t-1).
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número de viajeros y la variación porcentual entre ambos años.
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Flujos de viajeros hacia el mundo
+    df_flujos_viajeros_mundo = df_global_data.get('viajeros_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_flujos_viajeros_mundo.empty:
+
+        # Volver diccionario
+        dict_flujos_viajeros_mundo = df_flujos_viajeros_mundo.set_index('Año').T.to_dict()
+
+        # Obtener valores para t_1
+
+        # Extraer subdiccionario
+        sub_dict = dict_flujos_viajeros_mundo.get(year_global_data_t_1, {})
+
+        # Extraer val t_1
+        val_t_1 = sub_dict.get('Viajeros', 0) * 1000
+
+        # Agregar formato
+        val_flujos_viajeros_mundo_t_1 =  formato_miles(valor=val_t_1, decimales=0)
+
+        # Obtener valores para t
+
+        # Extraer subdiccionario
+        sub_dict = dict_flujos_viajeros_mundo.get(year_global_data_t, {})
+
+        # Extraer val t
+        val_t = sub_dict.get('Viajeros', 0) * 1000
+
+        # Agregar formato
+        val_flujos_viajeros_mundo_t =  formato_miles(valor=val_t, decimales=0)
+
+        # Calcular variación
+        val_flujos_viajeros_mundo_variacion = calcular_tasa_variacion(val_t, val_t_1)
+
+        # Crear bullet
+        if val_flujos_viajeros_mundo_variacion:
+            bullet_flujos_viajeros_mundo = f"En {year_global_data_t}, el número de viajeros de {pais_elegido} al mundo alcanza los {val_flujos_viajeros_mundo_t}, lo que representa una variación del {val_flujos_viajeros_mundo_variacion} en comparación con los {val_flujos_viajeros_mundo_t_1} de {year_global_data_t_1}."
+        else:
+            bullet_flujos_viajeros_mundo = f"En {year_global_data_t}, el número de viajeros de {pais_elegido} al mundo alcanza los {val_flujos_viajeros_mundo_t} en comparación con los {val_flujos_viajeros_mundo_t_1} de {year_global_data_t_1}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_flujos_viajeros_mundo = None
+
+    # Resultado
+    return bullet_flujos_viajeros_mundo
+
+def global_data_bullets_medio_transporte(df_global_data, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre los principales medios de transporte utilizados 
+    por los viajeros de un país para salir al exterior en un año determinado.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre el medio de transporte 
+        utilizado por los viajeros.
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con los principales medios de transporte utilizados por los viajeros en el año analizado.
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Medio de transporte
+    df_medio_transporte = df_global_data.get('viajeros_medio', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_medio_transporte.empty:
+
+        # Obtener el dataframe con el topn categorias
+        df_medio_transporte_topn = filtrar_df_top_n(df=df_medio_transporte, year=year_global_data_t, categoria="Medio de transporte", top_n=3)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Medio de transporte']} ({row['Participación (%)']}%)" for _, row in df_medio_transporte_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos
+        if len(elementos) == 0:
+            bullet_gasto_categoria = None
+        if len(elementos) == 1:
+            bullet_medio_transporte = f"El principal medio de transporte utilizado en {year_global_data_t} para las salidas internacionales de los viajeros de {pais_elegido} es {elementos[0]}."
+        elif len(elementos) == 2:
+            bullet_medio_transporte = f"El principal medio de transporte utilizado en {year_global_data_t} para las salidas internacionales de los viajeros de {pais_elegido} es {elementos[0]}, seguido por {elementos[1]}."
+        else:
+            bullet_medio_transporte = f"El principal medio de transporte utilizado en {year_global_data_t} para las salidas internacionales de los viajeros de {pais_elegido} es {elementos[0]}, seguido por {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_medio_transporte = None
+
+    # Resultado
+    return bullet_medio_transporte
+
+def global_data_bullets_noches_percnotacion(df_global_data, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre el número promedio de noches de pernoctación 
+    de los viajeros de un país en un año determinado.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre las noches de pernoctación.
+    year_global_data_t_1 : int
+        Año base para la comparación (t-1). No se usa en la función, pero se mantiene por consistencia.
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el promedio de noches de pernoctación en el año analizado.
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Noches de percnotacion promedio
+    df_noches_percnotacion = df_global_data.get('noches_pernoctacion', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_noches_percnotacion.empty:
+
+        # Volver diccionario
+        dict_noches_percnotacion = df_noches_percnotacion.set_index('Año').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict = dict_noches_percnotacion.get(year_global_data_t, {})
+
+        # Extraer val
+        val = sub_dict.get('Noches de percnotación', 0)
+
+        # Agregar formato
+        val_noches_percnotacion_t =  formato_miles(valor=val, decimales=0)
+
+        # Crear bullet
+        bullet_noches_percnotacion = f"En {year_global_data_t}, los viajeros de {pais_elegido} registran un promedio de {val_noches_percnotacion_t} noches de pernoctación."   
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_noches_percnotacion = None
+
+    # Resultado
+    return bullet_noches_percnotacion
+
+def global_data_bullets_rango_edad(df_global_data, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre los rangos de edad predominantes de los viajeros 
+    internacionales de un país en un año determinado.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre el rango de edad de los viajeros.
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con los rangos de edad más representativos de los viajeros en el año analizado.
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Rango de edad
+    df_rango_edad = df_global_data.get('rango_edad', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_rango_edad.empty:
+
+        # Obtener el dataframe con el topn categorias
+        df_rango_edad_topn = filtrar_df_top_n(df=df_rango_edad, year=year_global_data_t, categoria="Rango de Edad", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Rango de Edad']} ({row['Participación (%)']}%)" for _, row in df_rango_edad_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos
+        if len(elementos) == 0:
+            bullet_rango_edad = None
+        if len(elementos) == 1:
+            bullet_rango_edad = f"Predominantemente, los viajeros internacionales de {pais_elegido} se encuentran en el rango de edad de {elementos[0]} en {year_global_data_t}"
+        elif len(elementos) == 2:
+            bullet_rango_edad = f"Predominantemente, los viajeros internacionales de {pais_elegido} se encuentran en el rango de edad de {elementos[0]} en {year_global_data_t}, seguido por {elementos[1]}."
+        else:
+            bullet_rango_edad = f"Predominantemente, los viajeros internacionales de {pais_elegido} se encuentran en el rango de edad de {elementos[0]} en {year_global_data_t}, seguido por {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_rango_edad = None
+
+    # Resultado
+    return bullet_rango_edad
+
+def global_data_bullets_motivo_viaje(df_global_data, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre los principales motivos de viaje de los 
+    viajeros internacionales de un país en un año determinado.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre los motivos de viaje.
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con los motivos de viaje más representativos de los viajeros en el año analizado.
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Motivo de viaje
+    df_motivo_viaje = df_global_data.get('motivo_viaje', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_motivo_viaje.empty:
+
+        # Obtener el dataframe con el topn categorias
+        df_motivo_viaje_topn = filtrar_df_top_n(df=df_motivo_viaje, year=year_global_data_t, categoria="Motivo de Viaje", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Motivo de Viaje']} ({row['Participación (%)']}%)" for _, row in df_motivo_viaje_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos
+        if len(elementos) == 0:
+            bullet_motivo_viaje = None
+        if len(elementos) == 1:
+            bullet_motivo_viaje = f"El principal motivo de viaje en {year_global_data_t} de los viajeros internacionales de {pais_elegido} es {elementos[0]}."
+        elif len(elementos) == 2:
+            bullet_motivo_viaje = f"El principal motivo de viaje en {year_global_data_t} de los viajeros internacionales de {pais_elegido} es {elementos[0]}, seguido por {elementos[1]}."
+        else:
+            bullet_motivo_viaje = f"El principal motivo de viaje en {year_global_data_t} de los viajeros internacionales de {pais_elegido} es {elementos[0]}, seguido por {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_motivo_viaje = None
+
+    # Resultado
+    return bullet_motivo_viaje
+
+def global_data_bullets_forma_viaje(df_global_data, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las principales formas de viaje utilizadas 
+    por los viajeros internacionales de un país en un año determinado.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre la forma de viaje.
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con las principales formas de viaje elegidas por los viajeros en el año analizado.
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Forma de viaje
+    df_forma_viaje = df_global_data.get('forma_viaje', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_forma_viaje.empty:
+
+        # Obtener el dataframe con el topn categorias
+        df_forma_viaje_topn = filtrar_df_top_n(df=df_forma_viaje, year=year_global_data_t, categoria="Forma de Viaje", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Forma de Viaje']} ({row['Participación (%)']}%)" for _, row in df_forma_viaje_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos
+        if len(elementos) == 0:
+            bullet_forma_viaje = None
+        if len(elementos) == 1:
+            bullet_forma_viaje = f"El ranking de las formas de viaje elegidas por los viajeros internacionales de {pais_elegido} en {year_global_data_t} es liderado por {elementos[0]}."
+        elif len(elementos) == 2:
+            bullet_forma_viaje = f"El ranking de las formas de viaje elegidas por los viajeros internacionales de {pais_elegido} en {year_global_data_t} es liderado por {elementos[0]}, seguida por {elementos[1]}."
+        else:
+            bullet_forma_viaje = f"El ranking de las formas de viaje elegidas por los viajeros internacionales de {pais_elegido} en {year_global_data_t} es liderado por {elementos[0]}, seguida por {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_forma_viaje = None
+
+    # Resultado
+    return bullet_forma_viaje
+
+def global_data_bullets_destinos_internacionales(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido):
+
+    """
+    Genera textos en formato bullet con información sobre los principales destinos internacionales 
+    visitados por los viajeros de un país en dos años consecutivos, permitiendo comparar tendencias.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre los destinos 
+        internacionales visitados por los viajeros.
+    year_global_data_t_1 : int
+        Año base para la comparación (t-1).
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    tuple (str o None, str o None)
+        - Un texto con los principales destinos visitados en el año t.
+        - Un texto con los principales destinos visitados en el año t-1.
+        Si no hay datos disponibles, retorna None en lugar del texto correspondiente.
+    """
+
+    # Destinos internacionales
+    df_destinos_internacionales = df_global_data.get('destinos_internacionales_top5', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_destinos_internacionales.empty:
+
+        # Filtras otros para que no salga en los bullets
+        df_destinos_internacionales = df_destinos_internacionales[df_destinos_internacionales['País Destino'] != 'Otros']
+
+        # Obtener el dataframe con el topn categorias para el año t
+        df_destinos_internacionales_topn_t = filtrar_df_top_n(df=df_destinos_internacionales, year=year_global_data_t, categoria="País Destino", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos_t = [f"{row['País Destino']} ({row['Participación (%)']}%)" for _, row in df_destinos_internacionales_topn_t.iterrows()]
+
+        # Obtener el dataframe con el topn categorias para el año t_1
+        df_destinos_internacionales_topn_t_1 = filtrar_df_top_n(df=df_destinos_internacionales, year=year_global_data_t_1, categoria="País Destino", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos_t_1 = [f"{row['País Destino']} ({row['Participación (%)']}%)" for _, row in df_destinos_internacionales_topn_t_1.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos para year_t
+        if len(elementos_t) == 0:
+            bullet_destinos_internacionales_t = None
+        if len(elementos_t) == 1:
+            bullet_destinos_internacionales_t = f"En {year_global_data_t}, el principal destino visitado por el viajero de {pais_elegido} es {elementos_t[0].capitalize()}."
+        elif len(elementos_t) == 2:
+            bullet_destinos_internacionales_t = f"En {year_global_data_t}, los principales destinos visitados por el viajero de {pais_elegido} son {elementos_t[0].capitalize()} y {elementos_t[1].capitalize()}."
+        else:
+            bullet_destinos_internacionales_t = f"En {year_global_data_t}, los principales destinos visitados por el viajero de {pais_elegido} son {elementos_t[0].capitalize()}, {', '.join([e.capitalize() for e in elementos_t[1:-1]])} y {elementos_t[-1].capitalize()}."
+
+        # Construcción del bullet en función de la cantidad de elementos para year_t_1
+        if len(elementos_t_1) == 0:
+            bullet_destinos_internacionales_t_1 = None
+        if len(elementos_t_1) == 1:
+            bullet_destinos_internacionales_t_1 = f"Mientras que {year_global_data_t_1}, el principal destino fue {elementos_t_1[0].capitalize()}."
+        elif len(elementos_t_1) == 2:
+            bullet_destinos_internacionales_t_1 = f"Mientras que {year_global_data_t_1}, los principales destinos fueron {elementos_t_1[0].capitalize()} y {elementos_t[1].capitalize()}."
+        else:
+            bullet_destinos_internacionales_t_1 = f"Mientras que {year_global_data_t_1}, los principales destinos fueron {elementos_t_1[0].capitalize()}, {', '.join([e.capitalize() for e in elementos_t[1:-1]])} y {elementos_t[-1].capitalize()}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_destinos_internacionales_t_1 = None
+        bullet_destinos_internacionales_t = None
+
+    # Resultado
+    return bullet_destinos_internacionales_t_1, bullet_destinos_internacionales_t
+
+def global_data_bullets_gasto_promedio(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre el gasto promedio en dólares (USD) de los viajeros 
+    de un país en dos años consecutivos, permitiendo comparar su evolución.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre el gasto promedio.
+    year_global_data_t_1 : int
+        Año base para la comparación (t-1).
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el gasto promedio por viajero en el año analizado, junto con la variación porcentual respecto 
+        al año anterior. Si no hay datos disponibles, retorna None.
+    """
+
+    # Gasto promedio
+    df_gasto_promedio = df_global_data.get('gasto_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_promedio.empty:
+
+        # Volver diccionario
+        dict_gasto_promedio = df_gasto_promedio.set_index('Año').T.to_dict()
+
+        # Obtener valores para t_1
+
+        # Extraer subdiccionario
+        sub_dict = dict_gasto_promedio.get(year_global_data_t_1, {})
+
+        # Extraer val t_1
+        val_t_1 = sub_dict.get('Gasto (USD)', 0)
+
+        # Agregar formato
+        val_gasto_promedio_t_1 =  formato_miles(valor=val_t_1, decimales=0)
+
+        # Obtener valores para t
+
+        # Extraer subdiccionario
+        sub_dict = dict_gasto_promedio.get(year_global_data_t, {})
+
+        # Extraer val t
+        val_t = sub_dict.get('Gasto (USD)', 0)
+
+        # Agregar formato
+        val_gasto_promedio_t =  formato_miles(valor=val_t, decimales=0)
+
+        # Calcular variación
+        val_gasto_promedio_variacion = calcular_tasa_variacion(val_t, val_t_1)
+
+        # Crear bullet
+        if val_gasto_promedio_variacion:
+            bullet_gasto_promedio = f"En {year_global_data_t}, el gasto promedio del viajero de {pais_elegido} es USD {val_gasto_promedio_t}, lo que representa una variación del {val_gasto_promedio_variacion} en comparación con los {val_gasto_promedio_t_1} USD de {year_global_data_t_1}."
+        else:
+            bullet_gasto_promedio = f"En {year_global_data_t}, el gasto promedio del viajero de {pais_elegido} es USD {val_gasto_promedio_t} en comparación con los {val_gasto_promedio_t_1} USD de {year_global_data_t_1}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_gasto_promedio = None
+
+    # Resultado
+    return bullet_gasto_promedio
+
+def global_data_bullets_gasto_categoria(df_global_data, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las principales categorías de gasto 
+    de los viajeros internacionales de un país en un año determinado.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre las categorías de gasto.
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con las principales categorías en las que los viajeros han gastado en el año analizado.
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Gasto por categoria
+    df_gasto_categoria = df_global_data.get('gasto_categoria', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_categoria.empty:
+
+        # Obtener el dataframe con el topn categorias
+        df_gasto_categoria_topn = filtrar_df_top_n(df=df_gasto_categoria, year=year_global_data_t, categoria="Categoria de Gasto", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Categoria de Gasto']} ({row['Participación (%)']}%)" for _, row in df_gasto_categoria_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos
+        if len(elementos) == 0:
+            bullet_gasto_categoria = None
+        if len(elementos) == 1:
+            bullet_gasto_categoria = f"La actividad en donde más gastan los viajeros internacionales de {pais_elegido} en {year_global_data_t} es {elementos[0]}."
+        elif len(elementos) == 2:
+            bullet_gasto_categoria = f"La actividad en donde más gastan los viajeros internacionales de {pais_elegido} en {year_global_data_t} es {elementos[0]}, seguida por {elementos[1]}."
+        else:
+            bullet_gasto_categoria = f"La actividad en donde más gastan los viajeros internacionales de {pais_elegido} en {year_global_data_t} es {elementos[0]}, seguida por {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_gasto_categoria = None
+
+    # Resultado
+    return bullet_gasto_categoria
+
+def global_data_bullets_mice(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre los flujos de viajeros internacionales 
+    de un país que han viajado por motivos de negocios, reuniones, incentivos, congresos y exposiciones (MICE), 
+    comparando dos años consecutivos.
+
+    Parámetros:
+    -----------
+    df_global_data : dict
+        Diccionario que contiene los datos globales, incluyendo la información sobre los flujos de viajeros 
+        por motivo de viaje.
+    year_global_data_t_1 : int
+        Año base para la comparación (t-1).
+    year_global_data_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número de viajeros que han viajado por motivos MICE en el año analizado y su variación 
+        porcentual respecto al año anterior. Si no hay datos disponibles, retorna None.
+    """
+
+    # MICE
+    df_mice = df_global_data.get('flujos_negocios', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_mice.empty:
+
+        # Filtra solo mice
+        df_mice = df_mice[df_mice['Motivo de viaje']=='Reuniones, incentivos, congresos y exposiciones (MICE)']
+
+        # Volver diccionario
+        dict_mice = df_mice.set_index('Año').T.to_dict()
+
+        # Obtener valores para t_1
+
+        # Extraer subdiccionario
+        sub_dict = dict_mice.get(year_global_data_t_1, {})
+
+        # Extraer val t_1
+        val_t_1 = sub_dict.get('Viajeros', 0) * 1000
+
+        # Agregar formato
+        val_mice_t_1 =  formato_miles(valor=val_t_1, decimales=0)
+
+        # Obtener valores para t
+
+        # Extraer subdiccionario
+        sub_dict = dict_mice.get(year_global_data_t, {})
+
+        # Extraer val t
+        val_t = sub_dict.get('Viajeros', 0) * 1000
+
+        # Agregar formato
+        val_mice_t =  formato_miles(valor=val_t, decimales=0)
+
+        # Calcular variación
+        val_mice_variacion = calcular_tasa_variacion(val_t, val_t_1)
+
+        # Crear bullet
+        if val_mice_variacion:
+            bullet_mice = f"En {year_global_data_t}, se registran {val_mice_t} viajeros provenientes de {pais_elegido} al exterior por motivo de negocios, lo que representa una variación del {val_mice_variacion} en comparación con los {val_mice_t_1} viajeros de {year_global_data_t_1}."
+        else:
+            bullet_mice = f"En {year_global_data_t}, se registran {val_mice_t} viajeros provenientes de {pais_elegido} al exterior por motivo de negocios, en comparación con los {val_mice_t_1} viajeros de {year_global_data_t_1}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_mice = None
+
+    # Resultado
+    return bullet_mice
+
+def oag_bullets_frecuencias_mundo(df_oag, year_oag_t_1, year_oag_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las frecuencias aéreas internacionales 
+    directas de un país con el mundo, comparando dos años consecutivos.
+
+    Parámetros:
+    -----------
+    df_oag : dict
+        Diccionario que contiene los datos de conectividad aérea, incluyendo la serie de tiempo 
+        de frecuencias internacionales.
+    year_oag_t_1 : int
+        Año base para la comparación (t-1).
+    year_oag_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número de frecuencias aéreas internacionales directas en el año analizado 
+        y su variación porcentual respecto al año anterior. Si no hay datos disponibles, retorna None.
+    """
+
+    #  Frecuencias con el mundo 
+    df_frecuencias_mundo = df_oag.get('conectividad_mundo_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_frecuencias_mundo.empty:
+
+        # Volver diccionario
+        dict_frecuencias_mundo = df_frecuencias_mundo.set_index('Año').T.to_dict()
+
+        # Obtener valores para t_1
+
+        # Extraer subdiccionario
+        sub_dict = dict_frecuencias_mundo.get(year_oag_t_1, {})
+
+        # Extraer val t_1
+        val_t_1 = sub_dict.get('Frecuencias', 0)
+
+        # Agregar formato
+        val_frecuencias_mundo_t_1 =  formato_miles(valor=val_t_1, decimales=0)
+
+        # Obtener valores para t
+
+        # Extraer subdiccionario
+        sub_dict = dict_frecuencias_mundo.get(year_oag_t, {})
+
+        # Extraer val t
+        val_t = sub_dict.get('Frecuencias', 0)
+
+        # Agregar formato
+        val_frecuencias_mundo_t =  formato_miles(valor=val_t, decimales=0)
+
+        # Calcular variación
+        val_frecuencias_mundo_variacion = calcular_tasa_variacion(val_t, val_t_1)
+
+        # Crear bullet
+        if val_frecuencias_mundo_variacion:
+            bullet_frecuencias_mundo = f"En {year_oag_t}, se registraron {val_frecuencias_mundo_t} frecuencias aéreas internacionales directas de {pais_elegido} con el mundo, lo que representa una variación del {val_frecuencias_mundo_variacion} en comparación con las {val_frecuencias_mundo_t_1} frecuencias de {year_oag_t_1}."
+        else:
+            bullet_frecuencias_mundo = f"En {year_oag_t}, se registraron {val_frecuencias_mundo_t} frecuencias aéreas internacionales directas de {pais_elegido} con el mundo en comparación con las {val_frecuencias_mundo_t_1} frecuencias de {year_oag_t_1}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_frecuencias_mundo = None
+
+    # Resultado
+    return bullet_frecuencias_mundo
+
+def oag_bullets_paises_con_frecuencias(year_oag_t, pais_elegido, sesion_activa):
+
+    """
+    Genera un texto en formato bullet con información sobre la cantidad de países con los que un país 
+    tiene conexión aérea directa en un año determinado.
+
+    Parámetros:
+    -----------
+    year_oag_t : int
+        Año de análisis.
+    pais_elegido : str
+        Nombre del país para el cual se genera el informe.
+    sesion_activa : objeto de sesión
+        Conexión activa a la base de datos en Snowflake para ejecutar la consulta SQL.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número de países con los que el país seleccionado tiene frecuencias aéreas directas 
+        en el año analizado. Si no hay datos disponibles, retorna None.
+    """
+
+    # Número de países con frecuencias
+
+    # Constuir consulta
+    query_paises_con_frecuencias = f"""
+    SELECT COUNT(DISTINCT PAIS_ARRIVAL) AS PAISES
+    FROM REPOSITORIO_TURISMO.VISTAS.OAG_CONECTIVIDAD_MUNDO
+    WHERE PAIS_DEPARTURE = '{pais_elegido}'
+        AND PAIS_ARRIVAL <> '{pais_elegido}'
+        AND SUBSTR(TIME_SERIES, 1, 4) = {year_oag_t}
+    """
+
+    # Ejecutar
+    try:
+        df_paises_con_frecuencias = pd.DataFrame(sesion_activa.sql(query_paises_con_frecuencias).collect())
+    except:
+        df_paises_con_frecuencias = pd.DataFrame()
+
+    # Procesar si no llegan vacíos
+    if not df_paises_con_frecuencias.empty:
+
+        try:
+            # Extraer el valor
+            val_t = int(df_paises_con_frecuencias.iloc[0, 0])
+        except:
+            val_t = 0  # Si hay un error en la extracción, asignar 0
+
+        # Crear bullet
+        bullet_paises_con_frecuencias = f"En {year_oag_t}, {pais_elegido} conectó con {val_t} países"
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_paises_con_frecuencias = None
+
+
+    # Resultado
+    return bullet_paises_con_frecuencias
+
+def oag_bullets_frecuencias_destino_cerrado(df_oag, year_oag_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre los principales países con conectividad aérea 
+    en términos de frecuencias desde un país en un año determinado.
+
+    Parámetros:
+    -----------
+    df_oag : dict
+        Diccionario que contiene los datos de conectividad aérea, incluyendo información sobre las frecuencias 
+        por destino en un año cerrado.
+    year_oag_t : int
+        Año de análisis.
+    pais_elegido : str
+        Nombre del país desde el cual se evalúa la conectividad aérea.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con los principales países con mayor conectividad aérea en términos de frecuencias desde 
+        el país analizado en el año especificado. Si no hay datos disponibles, retorna None.
+    """
+
+    # Frecuencias por destino año cerrado
+    df_frecuencias_destino_cerrado = df_oag.get('conectividad_mundo_destino_cerrado', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if (not df_frecuencias_destino_cerrado.empty) and (not df_frecuencias_destino_cerrado[df_frecuencias_destino_cerrado['Año']==year_oag_t].empty):
+
+        # Crear una copia solo con las variables necesarias
+        df_copy = df_frecuencias_destino_cerrado[['Año', 'País Destino', 'Participación Frecuencias (%)']]
+
+        # Cambiar nombre de columna
+        df_copy = df_copy.rename(columns = {'Participación Frecuencias (%)' : 'Participación (%)'})
+
+        # Filtrar otros
+        df_copy = df_copy[df_copy['País Destino'] != 'Otros']
+
+        # Obtener el dataframe con el topn categorias (Se usa el try porque es probable que haya un rezago en el cargue de datos y que no haya info para crear el bullet)
+        try:
+            df_frecuencias_destino_cerrado_topn = filtrar_df_top_n(df=df_copy, year=year_oag_t, categoria="País Destino", top_n=5)
+        except:
+            df_frecuencias_destino_cerrado_topn = pd.DataFrame()
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        # (Se usa el try porque es probable que haya un rezago en el cargue de datos y que no haya info para crear el bullet)
+        try: 
+            elementos = [f"{row['País Destino']} ({row['Participación (%)']}%)" for _, row in df_frecuencias_destino_cerrado_topn.iterrows()]
+        except:
+            elementos = []
+
+        # Construcción del bullet en función de la cantidad de elementos para año cerrado
+        if len(elementos) == 0:
+            bullet_frecuencias_destino_cerrado_t = None
+        if len(elementos) == 1:
+            bullet_frecuencias_destino_cerrado_t = f"En {year_oag_t}, los países con mayor conectividad áerea de frecuencias desde {pais_elegido} fueron {elementos[0].capitalize()}."
+        elif len(elementos) == 2:
+            bullet_frecuencias_destino_cerrado_t = f"En {year_oag_t}, los países con mayor conectividad áerea de frecuencias desde {pais_elegido} fueron {elementos[0].capitalize()} y {elementos[1].capitalize()}."
+        else:
+            bullet_frecuencias_destino_cerrado_t = f"En {year_oag_t}, los países con mayor conectividad áerea de frecuencias desde {pais_elegido} fueron {elementos[0].capitalize()}, {', '.join([e.capitalize() for e in elementos[1:-1]])} y {elementos[-1].capitalize()}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_frecuencias_destino_cerrado_t = None
+
+    # Resultado
+    return bullet_frecuencias_destino_cerrado_t
+
+def fk_mundo_bullets_reservas_aereas_mex_cost_chi_per(df_fk, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las reservas aéreas activas desde un país 
+    hacia México, Costa Rica, Chile y Perú en un periodo determinado.
+
+    Parámetros:
+    -----------
+    df_fk : dict
+        Diccionario que contiene los datos de reservas aéreas en serie de tiempo.
+    pais_elegido : str
+        Nombre del país desde el cual se originan las reservas.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número total de reservas aéreas en el periodo analizado, junto con la distribución 
+        porcentual entre los países destino. Si no hay datos disponibles, retorna None.
+    """
+
+    # Reservas aéreas hacia México, Costa Rica, Chile y Perú
+    df_reservas_aereas_mex_cost_chi_per = df_fk.get('reservas_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_reservas_aereas_mex_cost_chi_per.empty:
+
+        # En español:
+        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+
+        # Extraer meses
+        mes_min = df_reservas_aereas_mex_cost_chi_per["Fecha"].min().strftime("%B")
+        mes_max = df_reservas_aereas_mex_cost_chi_per["Fecha"].max().strftime("%B")
+        year = df_reservas_aereas_mex_cost_chi_per["Fecha"].max().strftime("%Y")
+
+        # Calcular reservas
+        try:
+            df_reservas_agrupadas = df_reservas_aereas_mex_cost_chi_per.groupby('País', as_index=False).agg({'Reservas': 'sum'})
+
+            # Calcular la participación porcentual
+            total_reservas = df_reservas_agrupadas['Reservas'].sum()
+            df_reservas_agrupadas['Participación (%)'] = (df_reservas_agrupadas['Reservas'] / total_reservas) * 100
+
+            # Formatear la columna "Participación (%)" usando la función formato_miles
+            df_reservas_agrupadas["Participación (%)"] = df_reservas_agrupadas["Participación (%)"].apply(lambda x: formato_miles(valor=x, decimales=2))
+
+            # Ordenar de mayor a menor por la columna 'Reservas'
+            df_reservas_agrupadas = df_reservas_agrupadas.sort_values(by='Reservas', ascending=False)
+
+            # Crear suma de reservas del periodo
+            reservas_totales = formato_miles(valor=df_reservas_agrupadas['Reservas'].sum(), decimales=0)
+
+            # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+            elementos = [f"{row['País']} ({row['Participación (%)']}%)" for _, row in df_reservas_agrupadas.iterrows()]
+
+            # Construcción del bullet en función de la cantidad de elementos
+            if len(elementos) == 0:
+                bullet_reservas_aereas_mex_cost_chi_per = None
+            if len(elementos) == 1:
+                bullet_reservas_aereas_mex_cost_chi_per = f"Entre {mes_min} y {mes_max} de {year} se registran {reservas_totales} reservas aéreas activas provenientes de {pais_elegido}. La distribución de estas reservas es la siguiente: {elementos[0]}."
+            elif len(elementos) == 2:
+                bullet_reservas_aereas_mex_cost_chi_per = f"Entre {mes_min} y {mes_max} de {year} se registran {reservas_totales} reservas aéreas activas provenientes de {pais_elegido}. La distribución de estas reservas es la siguiente: {elementos[0]} y {elementos[1]}."
+            else:
+                bullet_reservas_aereas_mex_cost_chi_per = f"Entre {mes_min} y {mes_max} de {year} se registran {reservas_totales} reservas aéreas activas provenientes de {pais_elegido}. La distribución de estas reservas es la siguiente: {elementos[0]}, {', '.join(elementos[1:-1])} y {elementos[-1]}."
+            
+        except Exception as e:
+            bullet_reservas_aereas_mex_cost_chi_per = None
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_reservas_aereas_mex_cost_chi_per = None
+
+    # Resultado
+    return bullet_reservas_aereas_mex_cost_chi_per
+
+def fk_mundo_bullets_busquedas_aereas_mex_cost_chi_per(df_fk, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las búsquedas aéreas activas desde un país 
+    hacia México, Costa Rica, Chile y Perú en un periodo determinado.
+
+    Parámetros:
+    -----------
+    df_fk : dict
+        Diccionario que contiene los datos de búsquedas aéreas en serie de tiempo.
+    pais_elegido : str
+        Nombre del país desde el cual se originan las búsquedas.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número total de búsquedas aéreas en el periodo analizado, junto con la distribución 
+        porcentual entre los países destino. Si no hay datos disponibles, retorna None.
+    """
+
+    # Busquedas aéreas hacia México, Costa Rica, Chile y Perú
+    df_busquedas_aereas_mex_cost_chi_per = df_fk.get('busquedas_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_busquedas_aereas_mex_cost_chi_per.empty:
+
+        # En español:
+        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+
+        # Extraer meses
+        year_min = df_busquedas_aereas_mex_cost_chi_per["Fecha"].min().strftime("%Y")
+        mes_min = df_busquedas_aereas_mex_cost_chi_per["Fecha"].min().strftime("%B")
+
+        mes_max = df_busquedas_aereas_mex_cost_chi_per["Fecha"].max().strftime("%B")
+        year_max = df_busquedas_aereas_mex_cost_chi_per["Fecha"].max().strftime("%Y")
+
+        # Calcular busquedas
+        try:
+            df_busquedas_agrupadas = df_busquedas_aereas_mex_cost_chi_per.groupby('País', as_index=False).agg({'Búsquedas': 'sum'})
+
+            # Calcular la participación porcentual
+            total_busquedas = df_busquedas_agrupadas['Búsquedas'].sum()
+            df_busquedas_agrupadas['Participación (%)'] = (df_busquedas_agrupadas['Búsquedas'] / total_busquedas) * 100
+
+            # Formatear la columna "Participación (%)" usando la función formato_miles
+            df_busquedas_agrupadas["Participación (%)"] = df_busquedas_agrupadas["Participación (%)"].apply(lambda x: formato_miles(valor=x, decimales=2))
+
+            # Ordenar de mayor a menor por la columna 'Reservas'
+            df_busquedas_agrupadas = df_busquedas_agrupadas.sort_values(by='Búsquedas', ascending=False)
+
+            # Crear suma de busquedas del periodo
+            busquedas_totales = formato_miles(valor=df_busquedas_agrupadas['Búsquedas'].sum(), decimales=0)
+
+            # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+            elementos = [f"{row['País']} ({row['Participación (%)']}%)" for _, row in df_busquedas_agrupadas.iterrows()]
+
+            # Construcción del bullet en función de la cantidad de elementos
+            if len(elementos) == 0:
+                bullet_busquedas_aereas_mex_cost_chi_per = None
+            if len(elementos) == 1:
+                bullet_busquedas_aereas_mex_cost_chi_per = f"Entre {mes_min} de {year_min} y {mes_max} de {year_max} se registran {busquedas_totales} búsquedas aéreas activas provenientes de {pais_elegido}. La distribución de estas busquedas es la siguiente: {elementos[0]}."
+            elif len(elementos) == 2:
+                bullet_busquedas_aereas_mex_cost_chi_per = f"Entre {mes_min} de {year_min} y {mes_max} de {year_max} se registran {busquedas_totales} búsquedas aéreas activas provenientes de {pais_elegido}. La distribución de estas busquedas es la siguiente: {elementos[0]} y {elementos[1]}."
+            else:
+                bullet_busquedas_aereas_mex_cost_chi_per = f"Entre {mes_min} de {year_min} y {mes_max} de {year_max} se registran {busquedas_totales} búsquedas aéreas activas provenientes de {pais_elegido}. La distribución de estas busquedas es la siguiente: {elementos[0]}, {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+        except Exception as e:
+            bullet_busquedas_aereas_mex_cost_chi_per = None
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_busquedas_aereas_mex_cost_chi_per = None
+
+    # Resultado
+    return bullet_busquedas_aereas_mex_cost_chi_per
+
+def oag_bullets_frecuencias_colombia(df_oag, year_oag_t_1, year_oag_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las frecuencias aéreas internacionales 
+    directas entre un país y Colombia, comparando dos años consecutivos.
+
+    Parámetros:
+    -----------
+    df_oag : dict
+        Diccionario que contiene los datos de conectividad aérea, incluyendo la serie de tiempo 
+        de frecuencias internacionales con Colombia.
+    year_oag_t_1 : int
+        Año base para la comparación (t-1).
+    year_oag_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país desde el cual se analizan las frecuencias con Colombia.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número de frecuencias aéreas internacionales directas entre el país seleccionado 
+        y Colombia en el año analizado, junto con la variación porcentual respecto al año anterior. 
+        Si no hay datos disponibles, retorna None.
+    """
+
+    #  Frecuencias con el colombia 
+    df_frecuencias_colombia = df_oag.get('conectividad_colombia_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_frecuencias_colombia.empty:
+
+        # Volver diccionario
+        dict_frecuencias_colombia = df_frecuencias_colombia.set_index('Año').T.to_dict()
+
+        # Obtener valores para t_1
+
+        # Extraer subdiccionario
+        sub_dict = dict_frecuencias_colombia.get(year_oag_t_1, {})
+
+        # Extraer val t_1
+        val_t_1 = sub_dict.get('Frecuencias', 0)
+
+        # Agregar formato
+        val_frecuencias_colombia_t_1 = formato_miles(valor=val_t_1, decimales=0)
+
+        # Obtener valores para t
+
+        # Extraer subdiccionario
+        sub_dict = dict_frecuencias_colombia.get(year_oag_t, {})
+
+        # Extraer val t
+        val_t = sub_dict.get('Frecuencias', 0)
+
+        # Agregar formato
+        val_frecuencias_colombia_t =  formato_miles(valor=val_t, decimales=0)
+
+        # Calcular variación
+        val_frecuencias_colombia_variacion = calcular_tasa_variacion(val_t, val_t_1)
+
+        # Crear bullet
+        if val_frecuencias_colombia_variacion:
+            bullet_frecuencias_colombia = f"En {year_oag_t}, se registraron {val_frecuencias_colombia_t} frecuencias aéreas internacionales directas entre {pais_elegido} con Colombia, lo que representa una variación del {val_frecuencias_colombia_variacion} en comparación con las {val_frecuencias_colombia_t_1} frecuencias de {year_oag_t_1}."
+        else:
+            bullet_frecuencias_colombia = f"En {year_oag_t}, se registraron {val_frecuencias_colombia_t} frecuencias aéreas internacionales directas de {pais_elegido} con Colombia en comparación con las {val_frecuencias_colombia_t_1} frecuencias de {year_oag_t_1}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_frecuencias_colombia = None
+
+    # Resultado
+    return bullet_frecuencias_colombia
+
+def oag_bullets_frecuencias_municipio_cerrado(df_oag, year_oag_t_1, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre los municipios de Colombia con mayor 
+    conectividad aérea en términos de frecuencias directas desde un país en un año determinado.
+
+    Parámetros:
+    -----------
+    df_oag : dict
+        Diccionario que contiene los datos de conectividad aérea, incluyendo información sobre las 
+        frecuencias por municipio en un año cerrado.
+    year_oag_t_1 : int
+        Año base para la comparación (t-1).
+    pais_elegido : str
+        Nombre del país desde el cual se evalúa la conectividad aérea con los municipios de Colombia.
+
+    Retorna:
+    --------
+    str
+        Un texto con los municipios colombianos con mayor conectividad aérea en términos de frecuencias 
+        directas desde el país analizado en el año especificado. Si no hay conectividad, retorna un mensaje 
+        indicando la ausencia de vuelos directos.
+    """
+
+    # Frecuencias por municipio año cerrado
+    df_frecuencias_municipio_cerrado = df_oag.get('conectividad_colombia_municipio_cerrado', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_frecuencias_municipio_cerrado.empty:
+
+        # Crear una copia solo con las variables necesarias
+        df_copy = df_frecuencias_municipio_cerrado[['Año', 'Municipio Destino', 'Participación Frecuencias (%)']]
+
+        # Cambiar nombre de columna
+        df_copy = df_copy.rename(columns = {'Participación Frecuencias (%)' : 'Participación (%)'})
+
+        # Filtrar otros
+        df_copy = df_copy[df_copy['Municipio Destino'] != 'Otros']
+
+        # Obtener el dataframe con el topn categorias
+        df_frecuencias_municipio_cerrado_topn = filtrar_df_top_n(df=df_copy, year=year_oag_t_1, categoria="Municipio Destino", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Municipio Destino']} ({row['Participación (%)']}%)" for _, row in df_frecuencias_municipio_cerrado_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos para año cerrado
+        if len(elementos) == 0:
+            bullet_frecuencias_municipio_cerrado_t = f"Actualmente Colombia no tiene conectividad directa con {pais_elegido}"
+        if len(elementos) == 1:
+            bullet_frecuencias_municipio_cerrado_t = f"En {year_oag_t_1}, los municipios con mayor conectividad áerea de frecuencias directas desde {pais_elegido} son {elementos[0].capitalize()}."
+        elif len(elementos) == 2:
+            bullet_frecuencias_municipio_cerrado_t = f"En {year_oag_t_1}, los municipios con mayor conectividad áerea de frecuencias directas desde {pais_elegido} son {elementos[0].capitalize()} y {elementos[1].capitalize()}."
+        else:
+            bullet_frecuencias_municipio_cerrado_t = f"En {year_oag_t_1}, los municipios con mayor conectividad áerea de frecuencias directas desde {pais_elegido} son {elementos[0].capitalize()}, {', '.join([e.capitalize() for e in elementos[1:-1]])} y {elementos[-1].capitalize()}."
+
+    # Sin conectividad aérea
+    else:
+        bullet_frecuencias_municipio_cerrado_t = f"Actualmente Colombia no tiene conectividad directa con {pais_elegido}"
+
+    # Resultado
+    return bullet_frecuencias_municipio_cerrado_t
+
+def credibanco_bullets_gasto_cerrado_promedio(df_credibanco, year_credibanco_t_1, year_credibanco_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre el gasto promedio con tarjeta de crédito 
+    de los viajeros de un país en Colombia, comparando dos años consecutivos.
+
+    Parámetros:
+    -----------
+    df_credibanco : dict
+        Diccionario que contiene los datos de gasto con tarjeta de crédito en serie de tiempo.
+    year_credibanco_t_1 : int
+        Año base para la comparación (t-1).
+    year_credibanco_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país desde el cual provienen los viajeros cuyo gasto se analiza.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el gasto promedio con tarjeta de crédito en Colombia en el año analizado, junto con 
+        la variación porcentual respecto al año anterior. Si no hay datos disponibles, retorna None.
+    """
+
+    # Gasto cerrado promedio 
+    df_gasto_credibanco_cerrado_promedio = df_credibanco.get('gasto_promedio', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_credibanco_cerrado_promedio.empty:
+
+        # Volver diccionario
+        dict_gasto_credibanco_cerrado_promedio = df_gasto_credibanco_cerrado_promedio.set_index('Año').T.to_dict()
+
+        # Obtener valores para t_1
+
+        # Extraer subdiccionario
+        sub_dict = dict_gasto_credibanco_cerrado_promedio.get(year_credibanco_t_1, {})
+
+        # Extraer val t_1
+        val_t_1 = sub_dict.get('Gasto promedio tarjeta (USD)', 0)
+
+        # Agregar formato
+        val_gasto_credibanco_cerrado_promedio_t_1 = formato_miles(valor=val_t_1, decimales=1)
+
+        # Obtener valores para t
+
+        # Extraer subdiccionario
+        sub_dict = dict_gasto_credibanco_cerrado_promedio.get(year_credibanco_t, {})
+
+        # Extraer val t
+        val_t = sub_dict.get('Gasto promedio tarjeta (USD)', 0)
+
+        # Agregar formato
+        val_gasto_credibanco_cerrado_promedio_t =  formato_miles(valor=val_t, decimales=1)
+
+        # Calcular variación
+        val_gasto_credibanco_cerrado_promedio_variacion = calcular_tasa_variacion(val_t, val_t_1)
+
+        # Crear bullet
+        if val_gasto_credibanco_cerrado_promedio_variacion:
+            bullet_gasto_credibanco_cerrado_promedio = f"En {year_credibanco_t}, el gasto promedio del viajero de {pais_elegido} en Colombia con tarjeta de crédito fue USD {val_gasto_credibanco_cerrado_promedio_t}, lo que representa una variación del {val_gasto_credibanco_cerrado_promedio_variacion} en comparación con los {val_gasto_credibanco_cerrado_promedio_t_1} USD de {year_credibanco_t_1}."
+        else:
+            bullet_gasto_credibanco_cerrado_promedio = f"En {year_credibanco_t}, el gasto promedio del viajero de {pais_elegido} en Colombia con tarjeta de crédito fue USD {val_gasto_credibanco_cerrado_promedio_t} en comparación con los {val_gasto_credibanco_cerrado_promedio_t_1} USD de {year_credibanco_t_1}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_gasto_credibanco_cerrado_promedio = None
+
+    # Resultado
+    return bullet_gasto_credibanco_cerrado_promedio
+
+def credibanco_bullets_gasto_directo_indirecto_cerrado(df_credibanco, year_credibanco_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre la participación y facturación del gasto 
+    directo e indirecto de los viajeros de un país en Colombia en un año determinado.
+
+    Parámetros:
+    -----------
+    df_credibanco : dict
+        Diccionario que contiene los datos de gasto con tarjeta de crédito categorizados en directo e indirecto.
+    year_credibanco_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país desde el cual provienen los viajeros cuyo gasto se analiza.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el porcentaje de participación y la facturación en USD del gasto directo e indirecto 
+        de los viajeros en Colombia durante el año analizado. Si no hay datos disponibles, retorna None.
+    """
+
+    # Gasto directo e indirecto cerrado
+    df_gasto_directo_indirecto_credibanco_cerrado = df_credibanco.get('gasto_categoria', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_directo_indirecto_credibanco_cerrado.empty:
+
+        # Filtrar año
+        df_gasto_directo_indirecto_credibanco_cerrado = df_gasto_directo_indirecto_credibanco_cerrado[df_gasto_directo_indirecto_credibanco_cerrado['Año']==year_credibanco_t]
+
+        # Volver diccionario
+        dict_gasto_directo_indirecto_credibanco_cerrado = df_gasto_directo_indirecto_credibanco_cerrado.set_index('Clasificación').T.to_dict()
+
+        # Extraer subdiccionario
+        sub_dict_directo = dict_gasto_directo_indirecto_credibanco_cerrado.get('Directo', {})
+        sub_dict_indirecto = dict_gasto_directo_indirecto_credibanco_cerrado.get('Indirecto', {})
+
+        # Extrae elementos
+
+        # Directo
+        part_directo = formato_miles(valor=sub_dict_directo.get('Participación (%)', 0), decimales=1)
+        factu_directo = formato_miles(valor=sub_dict_directo.get('Facturación (USD)', 0), decimales=0)
+
+        # Indirecto
+        part_indirecto = formato_miles(valor=sub_dict_indirecto.get('Participación (%)', 0), decimales=1)
+        factu_indirecto = formato_miles(valor=sub_dict_indirecto.get('Facturación (USD)', 0), decimales=0)
+
+        # Crear bullet
+        bullet_gasto_directo_indirecto_credibanco_cerrado = f"En {year_credibanco_t}, el gasto directo en Colombia del viajero de {pais_elegido} participa con el {part_directo}% y una facturación total de USD {factu_directo}, mientras que los gastos indirectos tienen una participación de {part_indirecto}% y una facturación total de USD {factu_indirecto}"
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_gasto_directo_indirecto_credibanco_cerrado = None
+
+    # Resultado
+    return bullet_gasto_directo_indirecto_credibanco_cerrado
+
+
+def credibanco_bullets_gasto_directo_cerrado(df_credibanco, year_credibanco_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre la distribución del gasto directo en turismo 
+    de los viajeros de un país en Colombia, basado en las principales categorías de gasto en un año determinado.
+
+    Parámetros:
+    -----------
+    df_credibanco : dict
+        Diccionario que contiene los datos de gasto con tarjeta de crédito categorizados por productos de gasto directo.
+    year_credibanco_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país desde el cual provienen los viajeros cuyo gasto se analiza.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con la distribución del gasto directo en turismo, especificando las principales categorías de gasto 
+        y su porcentaje de participación en el año analizado. Si no hay datos disponibles, retorna None.
+    """
+
+    # Producto de gasto directo
+    df_gasto_directo_cerrado = df_credibanco.get('gasto_producto_directo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_directo_cerrado.empty:
+
+        # Filtrar otros
+        df_gasto_directo_cerrado = df_gasto_directo_cerrado[df_gasto_directo_cerrado['Categoria'] != 'Otros']
+
+        # Obtener el dataframe con el topn categorias
+        df_gasto_directo_cerrado_topn = filtrar_df_top_n(df=df_gasto_directo_cerrado, year=year_credibanco_t, categoria="Categoria", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Categoria']} ({row['Participación (%)']}%)" for _, row in df_gasto_directo_cerrado_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos
+        if len(elementos) == 0:
+            bullet_gasto_directo_cerrado = None
+        if len(elementos) == 1:
+            bullet_gasto_directo_cerrado = f"En {year_credibanco_t}, la distribución del gasto directo en turismo de los viajeros de {pais_elegido} es: {elementos[0]}."
+        elif len(elementos) == 2:
+            bullet_gasto_directo_cerrado = f"En {year_credibanco_t}, la distribución del gasto directo en turismo de los viajeros de {pais_elegido} es: {elementos[0]} y {elementos[1]}."
+        else:
+            bullet_gasto_directo_cerrado = f"En {year_credibanco_t}, la distribución del gasto directo en turismo de los viajeros de {pais_elegido} es: {elementos[0]}, {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_gasto_directo_cerrado = None
+
+    # Resultado
+    return bullet_gasto_directo_cerrado
+
+def credibanco_bullets_gasto_indirecto_cerrado(df_credibanco, year_credibanco_t, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre la distribución del gasto indirecto en turismo 
+    de los viajeros de un país en Colombia, basado en las principales categorías de gasto en un año determinado.
+
+    Parámetros:
+    -----------
+    df_credibanco : dict
+        Diccionario que contiene los datos de gasto con tarjeta de crédito categorizados por productos de gasto indirecto.
+    year_credibanco_t : int
+        Año actual de análisis (t).
+    pais_elegido : str
+        Nombre del país desde el cual provienen los viajeros cuyo gasto se analiza.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con la distribución del gasto indirecto en turismo, especificando las principales categorías de gasto 
+        y su porcentaje de participación en el año analizado. Si no hay datos disponibles, retorna None.
+    """
+
+    # Producto de gasto indirecto
+    df_gasto_indirecto_cerrado = df_credibanco.get('gasto_producto_indirecto', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_gasto_indirecto_cerrado.empty:
+
+        # Filtrar otros
+        df_gasto_indirecto_cerrado = df_gasto_indirecto_cerrado[df_gasto_indirecto_cerrado['Categoria'] != 'Otros']
+
+        # Obtener el dataframe con el topn categorias
+        df_gasto_indirecto_cerrado_topn = filtrar_df_top_n(df=df_gasto_indirecto_cerrado, year=year_credibanco_t, categoria="Categoria", top_n=5)
+
+        # Convertir las filas en una lista de strings con el formato "[categoría] ([porcentaje]%)"
+        elementos = [f"{row['Categoria']} ({row['Participación (%)']}%)" for _, row in df_gasto_indirecto_cerrado_topn.iterrows()]
+
+        # Construcción del bullet en función de la cantidad de elementos
+        if len(elementos) == 0:
+            bullet_gasto_indirecto_cerrado = None
+        if len(elementos) == 1:
+            bullet_gasto_indirecto_cerrado = f"En {year_credibanco_t}, la distribución del gasto indirecto en turismo de los viajeros de {pais_elegido} es: {elementos[0]}."
+        elif len(elementos) == 2:
+            bullet_gasto_indirecto_cerrado = f"En {year_credibanco_t}, la distribución del gasto indirecto en turismo de los viajeros de {pais_elegido} es: {elementos[0]} y {elementos[1]}."
+        else:
+            bullet_gasto_indirecto_cerrado = f"En {year_credibanco_t}, la distribución del gasto indirecto en turismo de los viajeros de {pais_elegido} es: {elementos[0]}, {', '.join(elementos[1:-1])} y {elementos[-1]}."
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_gasto_indirecto_cerrado = None
+
+    # Resultado
+    return bullet_gasto_indirecto_cerrado
+
+def fk_colombia_bullets_reservas_aereas_colombia(df_fk, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las reservas aéreas activas 
+    desde un país hacia Colombia en un periodo determinado.
+
+    Parámetros:
+    -----------
+    df_fk : dict
+        Diccionario que contiene los datos de reservas aéreas hacia Colombia en serie de tiempo.
+    pais_elegido : str
+        Nombre del país desde el cual se originan las reservas hacia Colombia.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número total de reservas aéreas en el periodo analizado. 
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Reservas aéreas hacia Colombia
+    df_reservas_aereas_colombia = df_fk.get('reservas_serie_tiempo_colombia', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_reservas_aereas_colombia.empty:
+
+        # En español:
+        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+
+        # Extraer meses
+        mes_min = df_reservas_aereas_colombia["Fecha"].min().strftime("%B")
+        mes_max = df_reservas_aereas_colombia["Fecha"].max().strftime("%B")
+        year = df_reservas_aereas_colombia["Fecha"].max().strftime("%Y")
+
+        # Calcular reservas
+        try:
+            
+            # Crear suma de reservas del periodo
+            reservas_totales = formato_miles(valor=df_reservas_aereas_colombia['Reservas'].sum(), decimales=0)
+
+            # Construcción del bullet 
+            bullet_reservas_aereas_colombia = f"Entre {mes_min} y {mes_max} de {year} se registran {reservas_totales} reservas aéreas activas provenientes de {pais_elegido} hacia Colombia."
+
+        except Exception as e:
+            bullet_reservas_aereas_colombia = None
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_reservas_aereas_colombia = None
+
+    # Resultado
+    return bullet_reservas_aereas_colombia
+
+def fk_colombia_bullets_busquedas_aereas_colombia(df_fk, pais_elegido):
+
+    """
+    Genera un texto en formato bullet con información sobre las búsquedas aéreas activas 
+    desde un país hacia Colombia en un periodo determinado.
+
+    Parámetros:
+    -----------
+    df_fk : dict
+        Diccionario que contiene los datos de búsquedas aéreas hacia Colombia en serie de tiempo.
+    pais_elegido : str
+        Nombre del país desde el cual se originan las búsquedas hacia Colombia.
+
+    Retorna:
+    --------
+    str o None
+        Un texto con el número total de búsquedas aéreas en el periodo analizado. 
+        Si no hay datos disponibles, retorna None.
+    """
+
+    # Busquedas aéreas hacia Colombia
+    df_busquedas_aereas_colombia = df_fk.get('busquedas_serie_tiempo', pd.DataFrame())
+
+    # Procesar si no llegan vacíos
+    if not df_busquedas_aereas_colombia.empty:
+
+        # En español:
+        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+
+        # Extraer meses
+        year_min = df_busquedas_aereas_colombia["Fecha"].min().strftime("%Y")
+        mes_min = df_busquedas_aereas_colombia["Fecha"].min().strftime("%B")
+
+        mes_max = df_busquedas_aereas_colombia["Fecha"].max().strftime("%B")
+        year_max = df_busquedas_aereas_colombia["Fecha"].max().strftime("%Y")
+
+        # Calcular busquedas
+        try:
+            busquedas_totales = formato_miles(valor=df_busquedas_aereas_colombia['Búsquedas'].sum(), decimales=0)
+
+            # Construcción del bullet
+            bullet_busquedas_aereas_colombia = f"Entre {mes_min} de {year_min} y {mes_max} de {year_max} se registran {busquedas_totales} búsquedas aéreas activas provenientes de {pais_elegido} hacia Colombia"
+            
+        except Exception as e:
+            bullet_busquedas_aereas_colombia = None
+
+    # En caso de que no hayan datos devolver un bullet vacío
+    else:
+        bullet_busquedas_aereas_colombia = None
+
+    # Resultado
+    return bullet_busquedas_aereas_colombia
+
+
+def obtener_bullets(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido, df_oag, year_oag_t_1, year_oag_t, sesion_activa, df_fk, df_credibanco, year_credibanco_t_1, year_credibanco_t):
+
+    """
+    Genera y retorna un conjunto de strings (bullets) que describen diversas métricas
+    y estadísticas relacionadas con el comportamiento de viajeros, conectividad aérea
+    y gastos en Colombia u otros destinos. Los datos se obtienen de distintas fuentes
+    (df_global_data, df_oag, df_fk, df_credibanco) y se comparan entre dos periodos
+    indicados.
+
+    Parámetros
+    ----------
+    df_global_data : dict
+        Diccionario con información global de viajeros (GlobalData).
+    year_global_data_t_1 : int
+        Año base para la comparación en la información de GlobalData (t-1).
+    year_global_data_t : int
+        Año actual de análisis en la información de GlobalData (t).
+    pais_elegido : str
+        País para el cual se generan las métricas y estadísticas.
+    df_oag : dict
+        Diccionario con información de conectividad aérea (OAG).
+    year_oag_t_1 : int
+        Año base para la comparación en la información de OAG (t-1).
+    year_oag_t : int
+        Año actual de análisis en la información de OAG (t).
+    sesion_activa : objeto de sesión
+        Conexión activa a la base de datos (Snowflake) para ejecutar consultas SQL.
+    df_fk : dict
+        Diccionario con información de reservas y búsquedas aéreas (ForwardKeys).
+    df_credibanco : dict
+        Diccionario con información de gastos con tarjeta de crédito (Credibanco).
+    year_credibanco_t_1 : int
+        Año base para la comparación en la información de Credibanco (t-1).
+    year_credibanco_t : int
+        Año actual de análisis en la información de Credibanco (t).
+
+    Retorna
+    -------
+    dict
+        Un diccionario con todos los bullets generados. Cada clave describe el tipo 
+        de información contenida en el bullet, y su valor es el texto generado o None 
+        si no hubo datos disponibles.
+    """
+
+    ############
+    # GlobalData
+    ############
+
+    bullet_flujos_viajeros_mundo = global_data_bullets_viajeros_mundo(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido)
+    bullet_medio_transporte = global_data_bullets_medio_transporte(df_global_data, year_global_data_t, pais_elegido)
+    bullet_noches_percnotacion = global_data_bullets_noches_percnotacion(df_global_data, year_global_data_t, pais_elegido)
+    bullet_rango_edad = global_data_bullets_rango_edad(df_global_data, year_global_data_t, pais_elegido)
+    bullet_motivo_viaje = global_data_bullets_motivo_viaje(df_global_data, year_global_data_t, pais_elegido)
+    bullet_forma_viaje = global_data_bullets_forma_viaje(df_global_data, year_global_data_t, pais_elegido)
+    (bullet_destinos_internacionales_t_1, bullet_destinos_internacionales_t) = global_data_bullets_destinos_internacionales(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido)
+    bullet_gasto_promedio = global_data_bullets_gasto_promedio(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido)
+    bullet_gasto_categoria = global_data_bullets_gasto_categoria(df_global_data, year_global_data_t, pais_elegido)
+    bullet_mice = global_data_bullets_mice(df_global_data, year_global_data_t_1, year_global_data_t, pais_elegido)
+
+    ###########
+    # OAG Mundo
+    ###########
+
+    bullet_frecuencias_mundo = oag_bullets_frecuencias_mundo(df_oag, year_oag_t_1, year_oag_t, pais_elegido)
+    bullet_paises_con_frecuencias = oag_bullets_paises_con_frecuencias(year_oag_t, pais_elegido, sesion_activa)
+    bullet_frecuencias_destino_cerrado_t = oag_bullets_frecuencias_destino_cerrado(df_oag, year_oag_t, pais_elegido)
+
+    ##########
+    # FK Mundo
+    ##########
+
+    bullet_reservas_aereas_mex_cost_chi_per = fk_mundo_bullets_reservas_aereas_mex_cost_chi_per(df_fk, pais_elegido)
+    bullet_busquedas_aereas_mex_cost_chi_per = fk_mundo_bullets_busquedas_aereas_mex_cost_chi_per(df_fk, pais_elegido)
+
+    ##############
+    # OAG Colombia
+    ##############
+
+    bullet_frecuencias_colombia = oag_bullets_frecuencias_colombia(df_oag, year_oag_t_1, year_oag_t, pais_elegido)
+    bullet_frecuencias_municipio_cerrado_t = oag_bullets_frecuencias_municipio_cerrado(df_oag, year_oag_t_1, pais_elegido)
+
+    ############
+    # Credibanco
+    ############
+
+    bullet_gasto_credibanco_cerrado_promedio = credibanco_bullets_gasto_cerrado_promedio(df_credibanco, year_credibanco_t_1, year_credibanco_t, pais_elegido)
+    bullet_gasto_directo_indirecto_credibanco_cerrado = credibanco_bullets_gasto_directo_indirecto_cerrado(df_credibanco, year_credibanco_t, pais_elegido)
+    bullet_gasto_directo_cerrado = credibanco_bullets_gasto_directo_cerrado(df_credibanco, year_credibanco_t, pais_elegido)
+    bullet_gasto_indirecto_cerrado = credibanco_bullets_gasto_indirecto_cerrado(df_credibanco, year_credibanco_t, pais_elegido)
+
+    #############
+    # FK Colombia
+    #############
+    
+    bullet_reservas_aereas_colombia = fk_colombia_bullets_reservas_aereas_colombia(df_fk, pais_elegido)
+    bullet_busquedas_aereas_colombia = fk_colombia_bullets_busquedas_aereas_colombia(df_fk, pais_elegido)
+
+    # Retornar todos los bullets en un diccionario
+    return {
+        "bullet_flujos_viajeros_mundo": bullet_flujos_viajeros_mundo,
+        "bullet_medio_transporte": bullet_medio_transporte,
+        "bullet_noches_percnotacion": bullet_noches_percnotacion,
+        "bullet_rango_edad": bullet_rango_edad,
+        "bullet_motivo_viaje": bullet_motivo_viaje,
+        "bullet_forma_viaje": bullet_forma_viaje,
+        "bullet_destinos_internacionales_t_1": bullet_destinos_internacionales_t_1,
+        "bullet_destinos_internacionales_t": bullet_destinos_internacionales_t,
+        "bullet_gasto_promedio": bullet_gasto_promedio,
+        "bullet_gasto_categoria": bullet_gasto_categoria,
+        "bullet_mice": bullet_mice,
+        "bullet_frecuencias_mundo": bullet_frecuencias_mundo,
+        "bullet_paises_con_frecuencias": bullet_paises_con_frecuencias,
+        "bullet_frecuencias_destino_cerrado_t": bullet_frecuencias_destino_cerrado_t,
+        "bullet_reservas_aereas_mex_cost_chi_per": bullet_reservas_aereas_mex_cost_chi_per,
+        "bullet_busquedas_aereas_mex_cost_chi_per": bullet_busquedas_aereas_mex_cost_chi_per,
+        "bullet_frecuencias_colombia": bullet_frecuencias_colombia,
+        "bullet_frecuencias_municipio_cerrado_t": bullet_frecuencias_municipio_cerrado_t,
+        "bullet_gasto_credibanco_cerrado_promedio": bullet_gasto_credibanco_cerrado_promedio,
+        "bullet_gasto_directo_indirecto_credibanco_cerrado": bullet_gasto_directo_indirecto_credibanco_cerrado,
+        "bullet_gasto_directo_cerrado": bullet_gasto_directo_cerrado,
+        "bullet_gasto_indirecto_cerrado": bullet_gasto_indirecto_cerrado,
+        "bullet_reservas_aereas_colombia": bullet_reservas_aereas_colombia,
+        "bullet_busquedas_aereas_colombia": bullet_busquedas_aereas_colombia
+    }
