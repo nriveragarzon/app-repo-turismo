@@ -673,7 +673,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         val = sub_dict.get('Gasto (USD)', 0)
 
         # Agregar formato
-        val_gasto_promedio_viajero_mundo =  helpers.formato_miles(valor=val, decimales=0) + ' USD'
+        val_gasto_promedio_viajero_mundo =  ' USD ' + helpers.formato_miles(valor=val, decimales=0)
 
         # Crear fila
         row_gasto_promedio_viajero_mundo = pd.DataFrame({
@@ -751,7 +751,7 @@ def generar_tabla_resumen(pais_elegido, df_global_data, df_oag, df_credibanco, d
         val = sub_dict.get('Gasto promedio tarjeta (USD)', 0)
 
         # Agregar formato
-        val_gasto_tarjeta_crédito_colombia =  helpers.formato_miles(valor=val, decimales=1) + ' USD'
+        val_gasto_tarjeta_crédito_colombia = ' USD ' +  helpers.formato_miles(valor=val, decimales=1)
 
         # Crear fila
         row_gasto_tarjeta_crédito_colombia = pd.DataFrame({

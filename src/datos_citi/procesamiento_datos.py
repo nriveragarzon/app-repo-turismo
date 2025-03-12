@@ -1966,9 +1966,9 @@ def global_data_bullets_gasto_promedio(df_global_data, year_global_data_t_1, yea
 
         # Crear bullet
         if val_gasto_promedio_variacion:
-            bullet_gasto_promedio = f"En {year_global_data_t}, el gasto promedio del viajero de {pais_elegido} es USD {val_gasto_promedio_t}, lo que representa una variación del {val_gasto_promedio_variacion} en comparación con los {val_gasto_promedio_t_1} USD de {year_global_data_t_1}."
+            bullet_gasto_promedio = f"En {year_global_data_t}, el gasto promedio del viajero de {pais_elegido} es USD {val_gasto_promedio_t}, lo que representa una variación del {val_gasto_promedio_variacion} en comparación con los USD {val_gasto_promedio_t_1} de {year_global_data_t_1}."
         else:
-            bullet_gasto_promedio = f"En {year_global_data_t}, el gasto promedio del viajero de {pais_elegido} es USD {val_gasto_promedio_t} en comparación con los {val_gasto_promedio_t_1} USD de {year_global_data_t_1}."
+            bullet_gasto_promedio = f"En {year_global_data_t}, el gasto promedio del viajero de {pais_elegido} es USD {val_gasto_promedio_t} en comparación con los USD {val_gasto_promedio_t_1} de {year_global_data_t_1}."
 
     # En caso de que no hayan datos devolver un bullet vacío
     else:
@@ -2648,9 +2648,9 @@ def credibanco_bullets_gasto_cerrado_promedio(df_credibanco, year_credibanco_t_1
 
         # Crear bullet
         if val_gasto_credibanco_cerrado_promedio_variacion:
-            bullet_gasto_credibanco_cerrado_promedio = f"En {year_credibanco_t}, el gasto promedio del viajero de {pais_elegido} en Colombia con tarjeta de crédito fue USD {val_gasto_credibanco_cerrado_promedio_t}, lo que representa una variación del {val_gasto_credibanco_cerrado_promedio_variacion} en comparación con los {val_gasto_credibanco_cerrado_promedio_t_1} USD de {year_credibanco_t_1}."
+            bullet_gasto_credibanco_cerrado_promedio = f"En {year_credibanco_t}, el gasto promedio del viajero de {pais_elegido} en Colombia con tarjeta de crédito fue USD {val_gasto_credibanco_cerrado_promedio_t}, lo que representa una variación del {val_gasto_credibanco_cerrado_promedio_variacion} en comparación con los USD {val_gasto_credibanco_cerrado_promedio_t_1} de {year_credibanco_t_1}."
         else:
-            bullet_gasto_credibanco_cerrado_promedio = f"En {year_credibanco_t}, el gasto promedio del viajero de {pais_elegido} en Colombia con tarjeta de crédito fue USD {val_gasto_credibanco_cerrado_promedio_t} en comparación con los {val_gasto_credibanco_cerrado_promedio_t_1} USD de {year_credibanco_t_1}."
+            bullet_gasto_credibanco_cerrado_promedio = f"En {year_credibanco_t}, el gasto promedio del viajero de {pais_elegido} en Colombia con tarjeta de crédito fue USD {val_gasto_credibanco_cerrado_promedio_t} en comparación con los USD {val_gasto_credibanco_cerrado_promedio_t_1} de {year_credibanco_t_1}."
 
     # En caso de que no hayan datos devolver un bullet vacío
     else:
