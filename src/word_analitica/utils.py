@@ -137,32 +137,37 @@ def agregar_tabla_contenidos(new_doc, font_size=8):
  
     p_element = paragraph._p
 
-
-def add_image_source(doc: Document, img_bytes: BytesIO, fuente: str, width_inches: float = 6.5, height_inches: float = None) -> None:
+def add_image_source(doc: Document, img_bytes: BytesIO, fuente: str, titulo: str = None, width_inches: float = 6.5, height_inches: float = None) -> None:
     """
-    Inserta una imagen y su fuente asociada en un documento Word.
+    Inserta una imagen, un título y su fuente asociada en un documento Word, 
+    centrando todos los elementos y manteniéndolos juntos en la misma página.
 
-    La función inserta la imagen en el documento con el tamaño especificado (manteniendo la relación de aspecto si no se indica la altura) y agrega un
-    párrafo con el texto de la fuente justo debajo. Se formatea el párrafo para mantener la fuente
-    en la misma página que la imagen, con sangría y espaciado predefinidos.
+    La función realiza lo siguiente:
+      1. Inserta un párrafo con el título de la imagen (parámetro 'titulo') encima de la imagen. 
+         Este párrafo se centra, tiene un tamaño de fuente de 8 puntos y se formatea para que permanezca
+         junto al siguiente elemento (la imagen).
+      2. Inserta la imagen con el tamaño especificado (manteniendo la relación de aspecto si no se indica la altura)
+         y centra el párrafo donde se inserta la imagen, configurándolo para que se mantenga unido con el siguiente párrafo.
+      3. Agrega un párrafo con la fuente (parámetro 'fuente') justo debajo de la imagen, centrado y con el mismo tamaño
+         de fuente (8 puntos), formateado para mantenerse en la misma página que la imagen.
 
     Parámetros:
         doc (Document): Objeto de documento Word (python‑docx) donde se insertará la imagen.
-        img_bytes (BytesIO): BytesIO de la imagen a insertar.
+        img_bytes (BytesIO): Objeto BytesIO de la imagen a insertar.
         fuente (str): Texto que indica la fuente de la imagen o de los datos.
+        titulo (str): Título de la imagen que se mostrará encima de la misma. (Opcional)
         width_inches (float): Ancho de la imagen en pulgadas. Por defecto es 6.5.
-        height_inches (float, opcional): Altura de la imagen en pulgadas. Si se omite, se mantiene
-                                         la proporción original de la imagen.
+        height_inches (float, opcional): Altura de la imagen en pulgadas. Si se omite, se mantiene la proporción original.
 
     Retorna:
         None: La función modifica el documento `doc` directamente.
 
     Ejemplo de uso:
         from docx import Document
-        # Supongamos que 'img_bytes' contiene los bytes de una imagen (por ejemplo, obtenidos mediante
-        # una conversión de Plotly a imagen estática).
+        from io import BytesIO
+        # Supongamos que 'img_bytes' es un objeto BytesIO obtenido a partir de una imagen.
         doc = Document()
-        add_table(doc, img_bytes, "Fuente: Datos de XYZ", width_inches=6.5)
+        add_image_source(doc, img_bytes, "Fuente: Datos de XYZ", "Título de la Imagen", width_inches=6.5)
         doc.save("documento_con_imagen.docx")
     """
     # Verificar que img_bytes sea del tipo esperado
@@ -170,31 +175,37 @@ def add_image_source(doc: Document, img_bytes: BytesIO, fuente: str, width_inche
         print("El objeto proporcionado no es de tipo 'BytesIO'.")
         return
 
-    image_stream = img_bytes
+    # Agregar el título de la imagen encima de la imagen
+    if titulo:
+        title_paragraph = doc.add_paragraph(titulo, style='Normal')
+        title_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        title_paragraph.paragraph_format.keep_together = True
+        title_paragraph.paragraph_format.keep_with_next = True  # Mantener junto al siguiente elemento (imagen)
+        for run in title_paragraph.runs:
+            run.font.size = Pt(8)
+            run.font.bold = True
 
     # Insertar la imagen en el documento con el tamaño especificado.
-    # Si se proporciona altura, se utiliza; de lo contrario, se ajusta proporcionalmente.
     if height_inches:
-        doc.add_picture(image_stream, width=Inches(width_inches), height=Inches(height_inches))
+        doc.add_picture(img_bytes, width=Inches(width_inches), height=Inches(height_inches))
     else:
-        doc.add_picture(image_stream, width=Inches(width_inches))
+        doc.add_picture(img_bytes, width=Inches(width_inches))
 
     # Centrar la imagen obteniendo el último párrafo (donde se insertó la imagen) y configurando su alineación
     if doc.paragraphs:
-        last_paragraph = doc.paragraphs[-1]
-        last_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        image_paragraph = doc.paragraphs[-1]
+        image_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        # Configurar para que la imagen se mantenga junto al siguiente elemento (la fuente)
+        image_paragraph.paragraph_format.keep_with_next = True
 
     # Agregar un párrafo para la fuente debajo de la imagen
     fuente_paragraph = doc.add_paragraph(f"Fuente: {fuente}", style='Normal')
     fuente_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
-    # Configurar el formato del párrafo para mantener la fuente en una sola página
     fuente_paragraph.paragraph_format.keep_together = True
     fuente_paragraph.paragraph_format.keep_with_next = False
-    fuente_paragraph.space_before = Pt(12)      # Espacio antes del párrafo
-    fuente_paragraph.space_after = Pt(12)       # Espacio después del párrafo
-    fuente_paragraph.paragraph_format.left_indent = Cm(0.75)  # Sangría izquierda
-
-    # Ajustar el tamaño de la fuente de cada run en el párrafo
+    fuente_paragraph.space_before = Pt(12)
+    fuente_paragraph.space_after = Pt(12)
+    fuente_paragraph.paragraph_format.left_indent = Cm(0.75)
     for run in fuente_paragraph.runs:
-        run.font.size = Pt(9)
+        run.font.size = Pt(8)
+        run.font.bold = True
