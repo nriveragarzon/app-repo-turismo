@@ -8,7 +8,7 @@ from docx.oxml.ns import qn
 from io import BytesIO
 
 
-def add_header_footer(doc: Document, header_image_left: str, footer_image: str, footer_text: str):
+def add_header_footer(doc: Document, header_image_left: str, footer_image: str):
     """
     Agrega un encabezado y un pie de página a la primera sección de un documento de Word.
     
@@ -25,7 +25,6 @@ def add_header_footer(doc: Document, header_image_left: str, footer_image: str, 
         doc (Document): El objeto Document al que se añadirán encabezado y pie de página.
         header_image_left (str): Ruta de la imagen que se ubicará en la parte izquierda del encabezado.
         footer_image (str): Ruta de la imagen que se colocará en la parte derecha del pie de página.
-        footer_text (str): Texto que aparecerá en la parte izquierda del pie de página.
     """
     # Obtener la primera sección del documento
     section = doc.sections[0]
@@ -35,8 +34,6 @@ def add_header_footer(doc: Document, header_image_left: str, footer_image: str, 
 
  # Encabezado
     header = section.header
-    #header_table = header.add_table(rows=1, cols=2, width=doc.sections[0].page_width)
-    #header_table.autofit = True
 
     # Imagen izquierda en el encabezado
     #header_cell_left = header_table.cell(0, 0)

@@ -19,6 +19,26 @@ st.markdown("""
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 """, unsafe_allow_html=True)
 
+# Ajuste de producción
+st.markdown("""
+    <style>
+    /* Ocultar el header, la decoración y la toolbar */
+    header[data-testid="stHeader"],
+    [data-testid="stDecoration"],
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    /* Opcional: Asegurarnos de que el header no deje altura en blanco */
+    header[data-testid="stHeader"] {
+        height: 0px !important;
+        max-height: 0px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Incializar el estado en la página inicial 
 if "page" not in st.query_params:
     st.query_params.page = '3'
