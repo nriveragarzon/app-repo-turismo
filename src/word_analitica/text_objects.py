@@ -225,3 +225,6 @@ def add_image_with_caption(doc: Document, image_path: str, caption_text: str = N
         caption_paragraph_format.left_indent = Cm(0.75)  # Sangría izquierda
         caption_paragraph_format.space_before = Pt(6)  # Espacio antes del párrafo
         caption_paragraph_format.space_after = Pt(6)  # Espacio después del párrafo
+
+
+        

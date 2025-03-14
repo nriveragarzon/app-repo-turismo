@@ -5,8 +5,11 @@ __pycache__/
 .scrts/
 .secrets/
 # git rm --cached .streamlit/secrets.toml
-.streamlit/
-.streamlit/secrets.toml 
+.streamlit/secrets.toml
+# git rm --cached .streamlit/snowflake_credentials_forwardkeys.json
+.streamlit/snowflake_credentials_forwardkeys.json
+# git rm --cached .streamlit/snowflake_credentials.json
+.streamlit/snowflake_credentials.json
 
 # Ambiente virtual
 .venv/

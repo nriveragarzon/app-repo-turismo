@@ -60,7 +60,7 @@ def navbar():
             integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
             crossorigin="anonymous">
         
-        <nav class="navbar fixed-top navbar-expand-lg" style="margin-top: 60px; background-color: #646464;">
+        <nav class="navbar fixed-top navbar-expand-lg" style="margin-top: 0px; background-color: #646464;">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">
                     <img src="data:image/png;base64,{logo}" width="280" height="25">
