@@ -1,4 +1,4 @@
 # Importar módulos
 from .components import home_page, navbar, footer
 from .helpers import get_icon, get_image, limpiar_cache, load_css, formato_miles
-from .utils import mostrar_mapa, mostrar_resultado_en_streamlit, excel_download_buttons, mostrar_resultado_en_streamlit, obtener_datos, obtener_graficos_global_data, obtener_graficos_oag_mundo, obtener_graficos_fk_mundo, obtener_graficos_oag_colombia, obtener_graficos_fk_colombia, obtener_graficos_credibanco, obtener_graficos_iata_colombia, generar_tabla_resumen, on_selectbox_change, boton_descarga
+from .utils import mostrar_mapa, mostrar_resultado_en_streamlit, excel_download_buttons, mostrar_resultado_en_streamlit, obtener_datos, obtener_graficos_global_data, obtener_graficos_oag_mundo, obtener_graficos_fk_mundo, obtener_graficos_oag_colombia, obtener_graficos_fk_colombia, obtener_graficos_credibanco, obtener_graficos_iata_colombia, generar_tabla_resumen, on_selectbox_change, boton_descarga, generar_documento_citi, boton_descarga_word, exportar_datos_excel, generar_documento_citi_excel, boton_descarga_reporte_excel

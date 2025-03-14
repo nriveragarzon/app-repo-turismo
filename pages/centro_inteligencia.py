@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 # Impotar modulos
 import src.streamlit_analitica as streamlit_analitica
 import src.snowflake_analitica as snowflake_analitica
+from src.datos_citi import obtener_bullets
 
 # Configuración página web - tipo wide sin sidebar activa
 st.set_page_config(page_title="Centro de Inteligencia de Turismo Internacional", 
@@ -17,6 +18,26 @@ st.set_page_config(page_title="Centro de Inteligencia de Turismo Internacional",
 # Inclusión de la hoja de estilos de Bootstrap para mejorar la apariencia.
 st.markdown("""
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+""", unsafe_allow_html=True)
+
+# Ajuste de producción
+st.markdown("""
+    <style>
+    /* Ocultar el header, la decoración y la toolbar */
+    header[data-testid="stHeader"],
+    [data-testid="stDecoration"],
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    /* Opcional: Asegurarnos de que el header no deje altura en blanco */
+    header[data-testid="stHeader"] {
+        height: 0px !important;
+        max-height: 0px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
 # Incializar el estado en la página inicial 
@@ -143,7 +164,152 @@ with body:
                 # Título
                 st.markdown("## Resumen")
                 st.dataframe(data=df_resumen, use_container_width=True, hide_index=True, key='tabla_resumen', on_select="ignore", selection_mode="multi-row")
-                
+                st.caption("Fuente: GlobalData, OAG, Credibanco y IATA-GAP")
+
+            ################# 
+            # Generar bullets
+            #################
+
+            # Parámetros de año de GlobalData
+            year_global_data_t_1 = '2024'
+            year_global_data_t = '2025'
+
+            # Parámetros de año de OAG
+            year_oag_t_1 = '2023'
+            year_oag_t = '2024'
+
+            # Parámetros de año de Credibanco
+            year_credibanco_t_1 = '2023'
+            year_credibanco_t = '2024'
+
+
+            dict_bullets = obtener_bullets(df_global_data=df_global_data, 
+                                                   year_global_data_t_1=year_global_data_t_1, 
+                                                   year_global_data_t=year_global_data_t, 
+                                                   pais_elegido=pais_elegido, 
+                                                   df_oag=df_oag, 
+                                                   year_oag_t_1=year_oag_t_1, 
+                                                   year_oag_t=year_oag_t, 
+                                                   sesion_activa=st.session_state.session, 
+                                                   df_fk=df_fk, 
+                                                   df_credibanco=df_credibanco, 
+                                                   year_credibanco_t_1=year_credibanco_t_1, 
+                                                   year_credibanco_t=year_credibanco_t)
+
+            ##################
+            # Generar gráficos
+            ##################
+
+            # Gráficos Global Data
+            (   
+                fig_time_series_viajeros,
+                fig_stacked_h_medio_viajeros,
+                fig_treemap_medio_viajeros,
+                fig_time_series_noches_percnotacion,
+                fig_time_series_gasto,
+                fig_stacked_h_categoria_gasto,
+                fig_treemap_categoria_gasto,
+                fig_stacked_h_edad_viajeros,
+                fig_treemap_edad_viajeros,
+                fig_stacked_h_motivo_viajeros,
+                fig_treemap_motivo_viajeros,
+                fig_stacked_h_forma_viajeros,
+                fig_treemap_forma_viajeros,
+                fig_stacked_h_destinos_viajeros,
+                fig_treemap_destinos_viajeros,
+                fig_time_series_mice
+                                                        
+            ) = streamlit_analitica.obtener_graficos_global_data(df_global_data, pais_elegido)
+
+            # Obtener gráficos OAG Mundo
+            (
+                fig_single_barchart_conectividad_mundo_sillas,
+                fig_single_barchart_conectividad_mundo_frecuencias,
+                fig_stacked_h_conectividad_frecuencias_destinos_cerrado,
+                fig_stacked_h_conectividad_frecuencias_destinos_corrido
+            ) = streamlit_analitica.obtener_graficos_oag_mundo(df_oag, pais_elegido)
+            
+             # Obtener gráficos FK Mundo
+            (
+                fig_multiple_time_series_reservas_mundo,
+                fig_multiple_time_series_busquedas_mundo
+            ) = streamlit_analitica.obtener_graficos_fk_mundo(df_fk, pais_elegido)
+
+            # Obtener gráficos OAG Colombia
+            (
+                fig_single_barchart_conectividad_colombia_sillas,
+                fig_single_barchart_conectividad_colombia_frecuencias,
+                fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado,
+                fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido
+            ) = streamlit_analitica.obtener_graficos_oag_colombia(df_oag, pais_elegido)
+
+            # Obtener gráficos Credibanco
+            (
+                fig_side_by_side_bar_gasto_promedio,
+                fig_stacked_h_gasto_categoria_credibanco,
+                fig_treemap_gasto_categoria_credibanco,
+                fig_stacked_h_gasto_categoria_directo_credibanco,
+                fig_treemap_gasto_categoria_directo_credibanco,
+                fig_stacked_h_gasto_categoria_indirecto_credibanco,
+                fig_treemap_gasto_categoria_indirecto_credibanco
+            ) = streamlit_analitica.obtener_graficos_credibanco(df_credibanco, pais_elegido)
+
+            # Obtener gráficos FK Colombia
+            (
+                fig_single_time_series_reservas_colombia,
+                fig_single_time_series_busquedas_colombia
+            ) = streamlit_analitica.obtener_graficos_fk_colombia(df_fk, pais_elegido)
+
+            # Obtener gráficos IATA-GAP
+            (
+                fig_single_time_series_agencias_colombia, 
+                fig_stacked_h_agencias_ciudades
+            ) = streamlit_analitica.obtener_graficos_iata_colombia(df_iata, pais_elegido)
+
+            #########################
+            # Crear documento de Word
+            #########################
+
+            streamlit_analitica.generar_documento_citi(
+                                                        dict_bullets,
+                                                        fig_time_series_viajeros,
+                                                        fig_time_series_gasto,
+                                                        fig_time_series_mice,
+                                                        fig_single_barchart_conectividad_mundo_frecuencias,
+                                                        fig_single_barchart_conectividad_colombia_frecuencias,
+                                                        fig_side_by_side_bar_gasto_promedio,
+                                                        df_resumen,
+                                                        pais_elegido,
+                                                        header_image_left="src/word_analitica/assets/doc_top_left.png",
+                                                        footer_image="src/word_analitica/assets/doc_bottom_right.png"
+                                                    )
+            # Comunicado
+            st.markdown(f"""
+            ### Accede a un informe en formato Word hecho a la medida sobre {pais_elegido} con el siguiente botón:
+            """)
+
+            # Habilitar botón de descarga:
+            streamlit_analitica.boton_descarga_word(unidad=pais_elegido, llave='boton_0_word')
+
+            ##########################
+            # Crear documento de Excel
+            ##########################
+            
+            streamlit_analitica.generar_documento_citi_excel(pais_elegido=pais_elegido, 
+                                                             df_global_data=df_global_data, 
+                                                             df_oag=df_oag, 
+                                                             df_credibanco=df_credibanco, 
+                                                             df_iata=df_iata, 
+                                                             df_fk=df_fk)
+            
+            # Comunicado
+            st.markdown(f"""
+            ### Accede a todos los datos del informe en formato Excel con el siguiente botón:
+            """)
+
+            # Habilitar botón de descarga:
+            streamlit_analitica.boton_descarga_reporte_excel(unidad=pais_elegido, llave='boton_0_excel')
+
 
             ####################
             # TABLA DE CONTENIDO
@@ -187,27 +353,6 @@ with body:
 
             # Fuente
             global_data_fuente = 'GlobalData'
-
-            # Gráficos Global Data
-            (   
-                fig_time_series_viajeros,
-                fig_stacked_h_medio_viajeros,
-                fig_treemap_medio_viajeros,
-                fig_time_series_noches_percnotacion,
-                fig_time_series_gasto,
-                fig_stacked_h_categoria_gasto,
-                fig_treemap_categoria_gasto,
-                fig_stacked_h_edad_viajeros,
-                fig_treemap_edad_viajeros,
-                fig_stacked_h_motivo_viajeros,
-                fig_treemap_motivo_viajeros,
-                fig_stacked_h_forma_viajeros,
-                fig_treemap_forma_viajeros,
-                fig_stacked_h_destinos_viajeros,
-                fig_treemap_destinos_viajeros,
-                fig_time_series_mice
-                                                        
-            ) = streamlit_analitica.obtener_graficos_global_data(df_global_data, pais_elegido)
 
             # Crear dataframe para MICE para botón de descarga
             if 'Motivo de viaje' in df_global_data['flujos_negocios'].columns:
@@ -422,14 +567,6 @@ with body:
             # Fuente
             oag_fuente = 'OAG'
 
-            # Obtener gráficos OAG Mundo
-            (
-                fig_single_barchart_conectividad_mundo_sillas,
-                fig_single_barchart_conectividad_mundo_frecuencias,
-                fig_stacked_h_conectividad_frecuencias_destinos_cerrado,
-                fig_stacked_h_conectividad_frecuencias_destinos_corrido
-            ) = streamlit_analitica.obtener_graficos_oag_mundo(df_oag, pais_elegido)
-            
             # Expander
             with st.expander("Explora todos los indicadores"):
 
@@ -498,12 +635,6 @@ with body:
             # Fuente
             fk_fuente = 'ForwardKeys'
 
-            # Obtener gráficos FK Mundo
-            (
-                fig_multiple_time_series_reservas_mundo,
-                fig_multiple_time_series_busquedas_mundo
-            ) = streamlit_analitica.obtener_graficos_fk_mundo(df_fk, pais_elegido)
-
             # Expander
             with st.expander("Explora todos los indicadores"):
 
@@ -546,21 +677,13 @@ with body:
 
             # Expander
             with st.expander("Explora todos los indicadores"):
-                st.write("Contenido")
+                st.write("En construcción...")
 
             ###########################
             # Conectividad con Colombia
             ###########################
             st.markdown("<a id='conectividad-con-colombia'></a>", unsafe_allow_html=True)
             st.subheader(f"Conectividad de {pais_elegido} con Colombia")
-
-            # Obtener gráficos OAG Colombia
-            (
-                fig_single_barchart_conectividad_colombia_sillas,
-                fig_single_barchart_conectividad_colombia_frecuencias,
-                fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado,
-                fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido
-            ) = streamlit_analitica.obtener_graficos_oag_colombia(df_oag, pais_elegido)
 
             # Expander
             with st.expander("Explora todos los indicadores"):
@@ -609,7 +732,7 @@ with body:
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_conectividad_colombia_frecuencias_destinos_cerrado, fuente=oag_fuente, llave='graph_25')
                         # Botón de descarga fuera del contenedor y dentro de la columna
                         if not df_oag['conectividad_colombia_municipio_cerrado'].empty:
-                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año cerrado', llave='boton_23', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_cerrado'][['Año', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con municipios - Frecuencias - Año cerrado', llave='boton_23', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_cerrado'][['Año', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
                     with col2: 
                         # Título
                         st.markdown(f'<h6 class="custom-header" style="text-align:center;">Conectividad del {pais_elegido} con Colombia: Frecuencias - Año corrido</h6>', unsafe_allow_html=True)
@@ -619,7 +742,7 @@ with body:
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_conectividad_colombia_frecuencias_destinos_corrido, fuente=oag_fuente, llave='graph_26')
                         # Botón de descarga fuera del contenedor y dentro de la columna
                         if not df_oag['conectividad_colombia_municipio_corrido'].empty:
-                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con algunos destinos internacionales - Frecuencias - Año corrido', llave='boton_24', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_corrido'][['Periodo', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
+                            streamlit_analitica.boton_descarga(fuente=oag_fuente, variable='Conectividad del país con municipios - Frecuencias - Año corrido', llave='boton_24', unidad=pais_elegido, df=df_oag['conectividad_colombia_municipio_corrido'][['Periodo', 'Municipio Destino', 'Frecuencias', 'Sillas', 'Participación Frecuencias (%)', 'Participación Sillas (%)']])
 
 
             ##########################################
@@ -630,17 +753,6 @@ with body:
             
             # Fuente
             credibanco_fuente = 'Credibanco'
-
-            # Obtener gráficos Credibanco
-            (
-                fig_side_by_side_bar_gasto_promedio,
-                fig_stacked_h_gasto_categoria_credibanco,
-                fig_treemap_gasto_categoria_credibanco,
-                fig_stacked_h_gasto_categoria_directo_credibanco,
-                fig_treemap_gasto_categoria_directo_credibanco,
-                fig_stacked_h_gasto_categoria_indirecto_credibanco,
-                fig_treemap_gasto_categoria_indirecto_credibanco
-            ) = streamlit_analitica.obtener_graficos_credibanco(df_credibanco, pais_elegido)
 
             # Expander
             with st.expander("Explora todos los indicadores"):
@@ -673,7 +785,7 @@ with body:
                             streamlit_analitica.mostrar_resultado_en_streamlit(resultado=fig_stacked_h_gasto_categoria_credibanco, fuente=credibanco_fuente, llave='graph_28')
                         # Botón de descarga fuera del contenedor y dentro de la columna
                         if not df_credibanco['gasto_categoria'].empty:
-                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por categoria', llave='boton_26', unidad=pais_elegido, df=df_credibanco['gasto_categoria'])
+                            streamlit_analitica.boton_descarga(fuente=credibanco_fuente, variable='Gasto por categoria', llave='boton_26', unidad=pais_elegido, df=df_credibanco['gasto_categoria'][['Año',	'Clasificación', 'Facturación (USD)', 'Total Anual (USD)', 'Participación (%)']])
                     with col2: 
                         # Contenedor con el gráfico
                         with st.container(height = 500, border=True):
@@ -742,12 +854,6 @@ with body:
             st.markdown("<a id='reservas-y-busquedas-hacia-colombia'></a>", unsafe_allow_html=True)
             st.subheader(f"Reservas y Búsquedas de {pais_elegido} hacia Colombia")
 
-            # Obtener gráficos FK Colombia
-            (
-                fig_single_time_series_reservas_colombia,
-                fig_single_time_series_busquedas_colombia
-            ) = streamlit_analitica.obtener_graficos_fk_colombia(df_fk, pais_elegido)
-
             # Expander
             with st.expander("Explora todos los indicadores"):
 
@@ -784,12 +890,6 @@ with body:
             # Fuente
             iata_fuente = 'IATA-GAP'
             iata_nota = 'Datos de 2024 actualizados al tercer trimestre'
-
-            # Obtener gráficos IATA-GAP
-            (
-                fig_single_time_series_agencias_colombia, 
-                fig_stacked_h_agencias_ciudades
-            ) = streamlit_analitica.obtener_graficos_iata_colombia(df_iata, pais_elegido)
 
             # Expander
             with st.expander("Explora todos los indicadores"):
@@ -831,7 +931,7 @@ with body:
 
             # Expander
             with st.expander("Explora todos los indicadores"):
-                st.write("Contenido")
+                st.write("En construcción...")
 
 # Agregar footer
 streamlit_analitica.footer()

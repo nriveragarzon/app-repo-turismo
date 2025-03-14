@@ -1,0 +1,16 @@
+[theme]
+base = "light"
+primaryColor = "#646464"
+backgroundColor = "#F6F5F5"  # Color de fondo
+secondaryBackgroundColor = "#FFFFFF"  # Color de fondo secundario
+textColor = "#000000"  # Color del texto
+
+[server]
+enableXsrfProtection = false
+
+[client]
+showSidebarNavigation = false
+toolbarMode = "viewer"
+
+[ui]
+hideTopBar = true
