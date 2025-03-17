@@ -22,3 +22,10 @@ __pycache__
 
 # Datos
 data/
+
+# Keys
+rsa_key_1.der
+rsa_key_2.der
+
+# Ambiente virtual
+.env
