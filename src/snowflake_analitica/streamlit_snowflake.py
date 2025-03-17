@@ -2,6 +2,9 @@
 import streamlit as st
 import time
 from datetime import datetime, timedelta
+import os
+from snowflake.snowpark import Session
+from dotenv import load_dotenv
 
 # Inicializar variables de sesión si no existen
 if 'session' not in st.session_state:
@@ -13,31 +16,84 @@ if 'last_activity_time' not in st.session_state:
 SESSION_TIMEOUT = timedelta(minutes=15)
 
 # Función para crear una nueva sesión con Snowflake
-def create_session(retries=3, wait=5):
+def create_session(retries=5, wait=10):
     """
-    Crea una nueva sesión de Snowflake, con lógica de reintentos en caso de fallo.
-    
-    Args:
-        retries (int): Número máximo de intentos de conexión. Por defecto, 3.
-        wait (int): Tiempo en segundos entre intentos. Por defecto, 5.
+    Crea y configura una sesión de Snowflake con reintentos en caso de fallos.
 
-    Returns:
-        session: Objeto de sesión activa de Snowflake o None si todos los intentos fallan.
+    Parámetros
+        - **retries**: Número máximo de intentos para establecer la conexión (por defecto 5).
+        - **wait**: Tiempo de espera en segundos entre reintentos (por defecto 10).
+
+    Retorna:
+        - **Session**: Objeto de sesión de Snowflake si la conexión es exitosa.
+        - **None**: Si todos los intentos fallan.
+
+    Excepciones:
+        - **ValueError**: Si alguna variable de entorno requerida está vacía o no definida.
+
+    Acciones:
+        - Intenta conectarse a Snowflake utilizando las credenciales especificadas en las variables de entorno.
+        - Cambia a una segunda clave privada si se detecta un error de token JWT.
+
+    Ejemplo de uso:
+        session = create_session(retries=3, wait=5)
     """
+    load_dotenv()
+
+    private_key_path = os.getenv('SF_PRIVATE_KEY_PATH_1')
+    private_key_passphrase = os.getenv('SF_PRIVATE_KEY_PASSPHRASE_1')
+
+    if not private_key_path:
+        raise ValueError("La ruta de la llave privada del usuario de servicio no está definida o está vacía.")
+
+    with open(private_key_path, "rb") as key_file:
+        private_key = key_file.read()
+
+    session_config = {
+        "account": os.getenv('SF_ACCOUNT'),
+        "user": os.getenv('SF_USER'),
+        "private_key": private_key,
+        "private_key_passphrase": private_key_passphrase,
+        "database": os.getenv('SF_DATABASE'),
+        "schema": os.getenv('SF_SCHEMA'),
+        "warehouse": os.getenv('SF_WAREHOUSE'),
+        "role": os.getenv('SF_ROLE'),
+        "query_tag": "SEGMENTATION_APP"
+    }
+
+    if any(value is None or value == '' for value in session_config.values()):
+        raise ValueError("Una o más variables de entorno están indefinidas o vacías.")
+
     success = False
     for attempt in range(retries):
         try:
-            # Conectar a Snowflake
-            connection = st.connection("snowflake") # Establecer conexión con Snowflake
-            sesion_activa = connection.session()  # Obtener sesión acti
+            session = Session.builder.configs(session_config).create()
             success = True
             break
+        
         except Exception as e:
             print(f"Intento {attempt + 1} de {retries} fallido: \n{str(e)}")
+            
+            if 'JWT token is invalid' in str(e):
+                print("Error de token JWT, intentando con SF_PRIVATE_KEY_PATH_2 y SF_PRIVATE_KEY_PASSPHRASE_2")
+                private_key_path_2 = os.getenv('SF_PRIVATE_KEY_PATH_2')
+                private_key_passphrase_2 = os.getenv('SF_PRIVATE_KEY_PASSPHRASE_2')
+
+                if not private_key_path_2 or not private_key_passphrase_2:
+                    print("Las variables de entorno para la segunda clave privada no están definidas correctamente.")
+                    return None
+
+                with open(private_key_path_2, "rb") as key_file:
+                    private_key_2 = key_file.read()
+
+                session_config["private_key"] = private_key_2
+                session_config["private_key_passphrase"] = private_key_passphrase_2
+                
             if attempt < retries - 1:
-                time.sleep(wait) # Esperar antes del siguiente intento
+                time.sleep(wait)
+
     if success:
-        return sesion_activa # Return el objeto de sesión de Snowflake
+        return session
     else:
         print("Todos los intentos de conexión fallaron.")
         return None
